@@ -1,11 +1,7 @@
-﻿using PictureManagerApp.src.Lib;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Drawing;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+using PictureManagerApp.src.Lib;
 
 namespace PictureManagerApp.src.Model
 {
@@ -17,8 +13,11 @@ namespace PictureManagerApp.src.Model
         private readonly string mPath;
         private int mGroupNo;
         private Image mImage;
+        private Image mThumbnail;
 
-        public bool MarkRemove { set; get; }
+
+        public bool Mark { set; get; }
+        public bool Removed { set; get; }
 
         //=====================================================================
         // public
@@ -30,6 +29,13 @@ namespace PictureManagerApp.src.Model
         {
             mPath = path;
             mGroupNo = groupNo;
+        }
+
+        public FileItem(FileItem org)
+        {
+            this.mPath = org.mPath;
+            this.mGroupNo = org.mGroupNo;
+            this.Mark = org.Mark;
         }
 
         public string Path
@@ -60,8 +66,34 @@ namespace PictureManagerApp.src.Model
             {
                 string path = Path;
                 mImage = ImageModule.GetImage(path);
+                Log.trc(path);
             }
             return mImage;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public Image GetThumbnailImage(int thumbWidth, int thumbHeight, bool force = false)
+        {
+            if (force &&
+                ((mThumbnail == null) ||
+                (thumbWidth > mThumbnail.Width || thumbHeight > mThumbnail.Height)))
+            {
+                string path = Path;
+                mThumbnail = ImageModule.GetImage(path, thumbWidth, thumbHeight);
+                Log.trc(path);
+            }
+            return mThumbnail;
+        }
+
+        public bool HasThumbnailImage()
+        {
+            if (mThumbnail == null)
+            {
+                return false;
+            }
+            return true;
         }
 
         //=====================================================================

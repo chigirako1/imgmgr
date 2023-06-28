@@ -1,18 +1,35 @@
-﻿using PictureManagerApp.src.Lib;
-using System;
+﻿using System.Collections;
 using System.Collections.Generic;
-using System.IO;
-using System.Text;
+using System.Drawing;
+using PictureManagerApp.src.Lib;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace PictureManagerApp.src.Model
 {
-    public class FileList
+    public class FileList : IEnumerable, IEnumerator
     {
+        //=====================================================================
+        // 
+        //=====================================================================
         private List<FileItem> mFileList;
 
+        //=====================================================================
+        // 
+        //=====================================================================
         public FileList()
         {
             mFileList = new List<FileItem>();
+        }
+
+        public FileItem this[int index]
+        {
+            //set { mFileList[index] = value; }
+            get { return mFileList[index]; }
+        }
+
+        public int Count
+        {
+            get { return mFileList.Count; }
         }
 
         public void Add(FileItem fitem)
@@ -25,15 +42,9 @@ namespace PictureManagerApp.src.Model
             mFileList.Remove(fitem);
         }
 
-        public FileItem this[int index]
+        public void RemoveAt(int index)
         {
-            set { mFileList[index] = value; }
-            get { return mFileList[index]; }
-        }
-
-        public int Count
-        {
-            get { return mFileList.Count; }
+            mFileList.RemoveAt(index);
         }
 
         public bool Contains(FileItem fitem)
@@ -41,20 +52,67 @@ namespace PictureManagerApp.src.Model
             return mFileList.Contains(fitem);
         }
 
-        public void RemoveAt(int index)
+        public FileList DupSel()
         {
-            mFileList.RemoveAt(index);
+            FileList flist = new FileList();
+            foreach (FileItem item in mFileList)
+            {
+                if (item.Mark)
+                {
+                    var fitem = new FileItem(item);
+                    fitem.Mark = false;
+                    flist.Add(fitem);
+                }
+            }
+            return flist;
         }
 
         public void Batch(string rootpath)
         {
             foreach (var fitem in mFileList)
             {
-                if (fitem.MarkRemove)
+                if (fitem.Mark)
                 {
                     MyFiles.moveToTrashDir(fitem.Path, rootpath);
+                    fitem.Removed = true;
                 }
             }
+            mFileList.RemoveAll(p => p.Removed);
+        }
+
+        public void Swap(int idx1, int idx2)
+        {
+            (mFileList[idx1], mFileList[idx2]) = (mFileList[idx2], mFileList[idx1]);
+        }
+
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        private int CurrPos = -1;
+        public IEnumerator GetEnumerator()
+        {
+            return (IEnumerator)this;
+        }
+
+        bool IEnumerator.MoveNext()
+        {
+            if (CurrPos < mFileList.Count - 1)
+            {
+                CurrPos++;
+                return true;
+            }
+            return false;
+        }
+
+        void IEnumerator.Reset()
+        {
+            CurrPos = -1;
+        }
+
+        object IEnumerator.Current
+        {
+            get { return mFileList[CurrPos]; }
         }
     }
 }

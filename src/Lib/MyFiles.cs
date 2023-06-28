@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.IO;
 
 namespace PictureManagerApp.src.Lib
 {
@@ -16,6 +11,7 @@ namespace PictureManagerApp.src.Lib
 
         public static void move(string path, string rootpath, string appendStr)
         {
+            Log.trc("------");
             Log.log($"path={path}");
 
             FileInfo fi = new FileInfo(path);
@@ -40,6 +36,7 @@ namespace PictureManagerApp.src.Lib
             {
                 Log.err($"{e}");
             }
+            Log.trc("------");
         }
     }
 }

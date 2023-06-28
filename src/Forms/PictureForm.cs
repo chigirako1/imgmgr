@@ -1,23 +1,35 @@
-﻿using PictureManagerApp.src.Lib;
-using PictureManagerApp.src.Model;
-using System;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
-///using System.Management.Instrumentation;
 using System.Threading;
 using System.Windows.Forms;
-//using static System.Net.Mime.MediaTypeNames;
+using PictureManagerApp.src.Forms;
+using PictureManagerApp.src.Lib;
+using PictureManagerApp.src.Model;
 
 namespace PictureManagerApp
 {
     public partial class PictureForm : Form
     {
-        private const int FPS = 60;
-        private const int TIMER_PERIOD = 1000 / FPS;
-        private const int DUE_TIME = 500;
+        //=====================================================================
+        // const
+        //=====================================================================
+        private const int TRANSITION_FPS = 60;
+        private const int TRANSITION_TIMER_PERIOD = 1000 / TRANSITION_FPS;
+        private const int TRANSITION_DUE_TIME = 500;
+        private const int THUMBNAIL_TIMER_PERIOD = 200;
+        private static Brush BRUSH_MARK = Brushes.DarkRed;
+        private static Brush BG_BRUSH = Brushes.Black;
+        private static Color COLOR_MARK = Color.Red;
 
-        private const int ROW = 3;
-        private const int COL = 3;
+        private int Col = 4;
+        private int Row = 3;
+
+        //=====================================================================
+        // delegate
+        //=====================================================================
+        private delegate bool KeyDownFunc(object sender, KeyEventArgs e);
 
         //=====================================================================
         // field
@@ -28,7 +40,10 @@ namespace PictureManagerApp
         private int mAlphaPercent = 0;
         private int startTickCnt;
         private Boolean mTransitionEffect = false;
-        private System.Threading.Timer mTimer;
+        private System.Threading.Timer mTransitionTimer;
+        private System.Threading.Timer mThumbnailTimer;
+
+        private Dictionary<Keys, KeyDownFunc> KeyFuncTbl = new Dictionary<Keys, KeyDownFunc>();
 
         //=====================================================================
         // public
@@ -37,13 +52,16 @@ namespace PictureManagerApp
         {
             Log.trc($"[S]");
             InitializeComponent();
+
+            InitKeys();
+
             Log.trc($"[E]");
         }
 
         public void SetModel(PictureModel model)
         {
             mModel = model;
-            mModel.UpDownCount = COL;
+            mModel.UpDownCount = Col;
         }
 
         //=====================================================================
@@ -83,11 +101,36 @@ namespace PictureManagerApp
 
             pictureBox.Width = 1300;
 
-            mTimer = new System.Threading.Timer(TimerTick, null, 0, TIMER_PERIOD);
-            mTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            mTransitionTimer = new System.Threading.Timer(TimerTickTransition, null, 0, TRANSITION_TIMER_PERIOD);
+            mTransitionTimer.Change(Timeout.Infinite, Timeout.Infinite);
+
+            mThumbnailTimer = new System.Threading.Timer(TimerTickThumbnail, null, 0, THUMBNAIL_TIMER_PERIOD);
+            mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            mThumbnailTimer.Change(0, THUMBNAIL_TIMER_PERIOD);
+
 
             UpdatePicture();
+
             Log.trc($"[E]");
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        private void PictureForm_FormClosed(object sender, FormClosedEventArgs e)
+        {
+            if (mTransitionTimer != null)
+            {
+                //mTimer.Stop();
+                mTransitionTimer.Dispose();
+                Log.trc("timer dispose");
+            }
+
+            if (mThumbnailTimer != null)
+            {
+                mThumbnailTimer.Dispose();
+                Log.trc("timer dispose");
+            }
         }
 
         //---------------------------------------------------------------------
@@ -96,7 +139,7 @@ namespace PictureManagerApp
         private void PictureForm_Resize(object sender, EventArgs e)
         {
             Log.trc($"[S]");
-            if (this.Width < 1600)
+            if (this.Width < 1300)
             {
                 pictureBox.Width = (int)(this.Width * 0.8);
             }
@@ -108,56 +151,117 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+
+        private void InitKeys()
+        {
+            KeyFuncTbl[Keys.Left] = KeyDownFunc_Left;
+            KeyFuncTbl[Keys.Right] = KeyDownFunc_Right;
+            KeyFuncTbl[Keys.Up] = KeyDownFunc_Up;
+            KeyFuncTbl[Keys.Down] = KeyDownFunc_Down;
+            KeyFuncTbl[Keys.Home] = KeyDownFunc_Home;
+            KeyFuncTbl[Keys.End] = KeyDownFunc_End;
+            KeyFuncTbl[Keys.NumPad0] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.Space] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.Escape] = KeyDownFunc_Escape;
+        }
+
+
+        private bool KeyDownFunc_Left(object sender, KeyEventArgs e)
+        {
+            mModel.Prev();
+            return true;
+        }
+
+        private bool KeyDownFunc_Right(object sender, KeyEventArgs e)
+        {
+            if (e.Shift)
+            {
+                mModel.NextMarkedImage();
+            }
+            else
+            {
+                mModel.Next();
+            }
+            return true;
+        }
+
+        private bool KeyDownFunc_Up(object sender, KeyEventArgs e)
+        {
+            mModel.Up();
+            return true;
+        }
+
+        private bool KeyDownFunc_Down(object sender, KeyEventArgs e)
+        {
+            mModel.Down();
+            return true;
+        }
+
+        private bool KeyDownFunc_Home(object sender, KeyEventArgs e)
+        {
+            mModel.MovePos(POS_MOVE_TYPE.MOVE_HOME);
+            return true;
+        }
+
+        private bool KeyDownFunc_End(object sender, KeyEventArgs e)
+        {
+            mModel.MovePos(POS_MOVE_TYPE.MOVE_LAST);
+            return true;
+        }
+
+        private bool KeyDownFunc_SelectToggle(object sender, KeyEventArgs e)
+        {
+            mModel.toggleMark();
+            mModel.Next();
+            return true;
+        }
+
+        private bool KeyDownFunc_Escape(object sender, KeyEventArgs e)
+        {
+            if (mFullscreen)
+            {
+                ToggleFulscreen();
+                return false;
+            }
+
+            if (mModel.mMarkCount == 0)
+            {
+                Close();
+                return false;
+            }
+
+            DialogResult result = MessageBox.Show("選択したファイルを移動しますか？",
+                "移動？",
+                MessageBoxButtons.YesNoCancel,
+                MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button3);
+            if (result == DialogResult.Yes)
+            {
+                mModel.Batch();
+            }
+            if (result != DialogResult.Cancel)
+            {
+                Close();
+            }
+
+            return false;
+        }
+
         private void PictureForm_KeyDown(object sender, KeyEventArgs e)
         {
             Log.trc($"[S]:{e.KeyCode}");
-            switch (e.KeyCode)
+            if (KeyFuncTbl.ContainsKey(e.KeyCode))
             {
-                case Keys.Left:
-                    mModel.Prev();
-                    UpdatePicture();//本来はモデルからの通知で動くべき（observer pattern)
-                    break;
-                case Keys.Right:
-                    mModel.Next();
+                if (KeyFuncTbl[e.KeyCode](sender, e))
+                {
                     UpdatePicture();
-                    break;
-                case Keys.Up:
-                    mModel.Up();
-                    UpdatePicture();
-                    break;
-                case Keys.Down:
-                    mModel.Down();
-                    UpdatePicture();
-                    break;
-                case Keys.Home:
-                    mModel.MovePos(POS_MOVE_TYPE.MOVE_HOME);
-                    UpdatePicture();
-                    break;
-                case Keys.End:
-                    mModel.MovePos(POS_MOVE_TYPE.MOVE_LAST);
-                    UpdatePicture();
-                    break;
-                case Keys.NumPad0:
-                    //mModel.RemoveCurrentFile();
-                    mModel.toggleRemoveMark();
-                    mModel.Next();
-                    UpdatePicture();
-                    break;
-                case Keys.Escape:
-                    if (mFullscreen)
-                    {
-                        ToggleFulscreen();
-                    }
-                    else
-                    {
-                        mModel.Batch();
-                        this.Close();
-                    }
-                    break;
-                default:
-                    break;
+                }
             }
             Log.trc($"[E]");
+        }
+
+        private void KeyDownFunc_(object sender, KeyEventArgs e)
+        {
         }
 
         //---------------------------------------------------------------------
@@ -168,18 +272,18 @@ namespace PictureManagerApp
             Log.trc("[S]");
             if (mPrevImg != null)
             {
-                mPrevImg.Dispose();
+                //mPrevImg.Dispose();
             }
             mPrevImg = mCurrentImg;
 
-            string filepath = mModel.GetCurrentFilePath();
-            Image img = GetImage(filepath);
+            var fitem = mModel.GetCurrentFileItem();
+            var img = fitem.GetImage();
             mCurrentImg = img;
 
-            SetPic(img);
+            SetPic();
             if (mFullscreen == false)
             {
-                SetStatusBar(filepath, img);
+                SetStatusBar(fitem.Path, img);
             }
 
             picBoxUpdate();
@@ -193,35 +297,27 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         private void picBoxUpdate()
         {
-            Log.trc("[S]");
+            //Log.trc("[S]");
             Refresh();
-            Log.trc("[E]");
+            //Log.trc("[E]");
         }
 
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        private Image GetImage(string path)
-        {
-            return ImageModule.GetImage(path);
-        }
-
-        //---------------------------------------------------------------------
-        // 
-        //---------------------------------------------------------------------
-        private void SetPic(Image img)
+        private void SetPic()
         {
             Log.trc("[S]");
             startTickCnt = 0;
             mAlphaPercent = 0;
 
-            int period = TIMER_PERIOD;
+            int period = TRANSITION_TIMER_PERIOD;
 
             //picTimer.Interval = interval;//10;
             //picTimer.Start();
             if (mTransitionEffect)
             {
-                mTimer.Change(0, period);
+                mTransitionTimer.Change(0, period);
             }
             Log.trc("[E]");
         }
@@ -236,6 +332,7 @@ namespace PictureManagerApp
             SetStatusBar_FileInfo(filepath);
             SetStatusBar_ImageSize(img);
             SetStatusBar_ImageRatio(img);
+            SetStatusBar_SelectedItemCount();
         }
 
         private void SetStatusBar_ProgressBar()
@@ -247,14 +344,25 @@ namespace PictureManagerApp
         {
             string no = String.Format("{0,5}/{1,5}", mModel.PictureNumber + 1, mModel.PictureTotalNumber);
             statusLbl_No.Text = no;
+
+            /*if (mModel.PictureNumber == 0)
+            {
+                statusLbl_No.BackColor = Color.Red;
+            }
+            else
+            {
+                statusLbl_No.BackColor = Color.Gray;
+            }*/
         }
 
         private void SetStatusBar_FileInfo(string filepath)
         {
             SetStatusBar_Dirname(filepath);
             SetStatusBar_Filename(filepath);
-            SetStatusBar_FileSize(filepath);
-            SetStatusBar_FileDateTime(filepath);
+
+            FileInfo fileinfo = new FileInfo(filepath);
+            SetStatusBar_FileSize(fileinfo);
+            SetStatusBar_FileDateTime(fileinfo);
         }
 
         private void SetStatusBar_Dirname(string filepath)
@@ -273,19 +381,14 @@ namespace PictureManagerApp
             statusLbl_Filename.Text = Path.GetFileName(filepath);
         }
 
-        private void SetStatusBar_FileSize(string filepath)
+        private void SetStatusBar_FileSize(FileInfo fi)
         {
-            FileInfo file = new FileInfo(filepath);
-            //file.Name
-
-            long filesize = file.Length;
+            long filesize = fi.Length;
             statusLbl_FileSize.Text = String.Format("{0:#,0} Bytes", filesize);
         }
 
-        private void SetStatusBar_FileDateTime(string filepath)
+        private void SetStatusBar_FileDateTime(FileInfo fi)
         {
-            FileInfo fi = new FileInfo(filepath);
-
             string lwt = fi.LastWriteTime.ToShortDateString();
             StatusLbl_LWTime.Text = lwt;
         }
@@ -300,6 +403,11 @@ namespace PictureManagerApp
         {
             string imageratio = img.Width + "x" + img.Height;
             statusLbl_ratio.Text = imageratio;
+        }
+
+        private void SetStatusBar_SelectedItemCount()
+        {
+            StatusLbl_MarkCnt.Text = mModel.mMarkCount.ToString();
         }
 
         //---------------------------------------------------------------------
@@ -338,9 +446,9 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        private void TimerTick(object state)
+        private void TimerTickTransition(object state)
         {
-            //Log.trc("[S]");
+            Log.trc("[S]");
 
             int tickCnt = Environment.TickCount & Int32.MaxValue;
             if (startTickCnt == 0)
@@ -353,17 +461,44 @@ namespace PictureManagerApp
                 int delta = tickCnt - startTickCnt;
                 Log.log($"delta={delta}");
 
-                int incVal = (delta * 100) / DUE_TIME;
+                int incVal = (delta * 100) / TRANSITION_DUE_TIME;
                 mAlphaPercent = incVal;
                 Log.log($"mAlphaPercent={mAlphaPercent}");
                 if (100 <= mAlphaPercent)
                 {
                     mAlphaPercent = 100;
-                    mTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                    mTransitionTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
 
             UI_change();
+            Log.trc("[E]");
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        private void TimerTickThumbnail(object state)
+        {
+            //Log.trc("[S]");
+
+            int tickCnt = Environment.TickCount & Int32.MaxValue;
+            if (startTickCnt == 0)
+            {
+                startTickCnt = tickCnt;
+            }
+            else
+            {
+                var tsize = GetThumbnailSize();
+                var done = mModel.MakeThumbnail(tsize.Width, tsize.Height);
+                if (done)
+                {
+                    Log.log("done");
+                    mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
+                }
+            }
+            UI_change();
+
             //Log.trc("[E]");
         }
 
@@ -395,152 +530,79 @@ namespace PictureManagerApp
             }
         }
 
-        //---------------------------------------------------------------------
-        // 
-        //---------------------------------------------------------------------
-        private void PictureForm_FormClosed(object sender, FormClosedEventArgs e)
+        private void x2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            if (mTimer != null)
+            this.Col = 2;
+            this.Row = 2;
+            mModel.UpDownCount = this.Col;
+            Refresh();
+        }
+
+        private void x4ToolStripMenuItem1_Click(object sender, EventArgs e)
+        {
+            this.Col = 4;
+            this.Row = 3;
+            mModel.UpDownCount = this.Col;
+            Refresh();
+        }
+
+        private void TToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            ColRowForm crForm = new ColRowForm(this.Col, this.Row);
+            DialogResult result = crForm.ShowDialog();
+            if (result == DialogResult.OK)
             {
-                //mTimer.Stop();
-                mTimer.Dispose();
+                (int col, int row) = crForm.GetColRow();
+                this.Col = col;
+                this.Row = row;
+                mModel.UpDownCount = this.Col;
+                Refresh();
             }
         }
 
-        //---------------------------------------------------------------------
-        // 
-        //---------------------------------------------------------------------
-        private void PictureBox_Paint(object sender, PaintEventArgs e)
+        private void ToolStripMenuItem_SelImg_Click(object sender, EventArgs e)
         {
-            //Log.trc("[S]");
-            Graphics g = e.Graphics;
 
-            FileItem fitem = mModel.GetCurrentFileItem();
-            Brush bgbrush;
-            if (fitem.MarkRemove)
+            if (mModel.mMarkCount == 0)
             {
-                bgbrush = Brushes.Navy;
-            }
-            else
-            {
-                bgbrush = Brushes.Black;
-            }
-            g.FillRectangle(bgbrush, 0, 0, pictureBox.Width, pictureBox.Height);
-
-            if (mCurrentImg == null)
-            {
-                Log.err("!!! image not found !!!");
+                MessageBox.Show("no selected file",
+                    "file 0",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
                 return;
             }
+            PictureModel model = mModel.DuplicateSelectOnly();
 
-            int alphaPercent = 100;
-            if (mTransitionEffect)
-            {
-                alphaPercent = mAlphaPercent;
-            }
-
-            DrawDimension d = ImageModule.DrawCompositedImage(
-                g,
-                pictureBox.Width,
-                pictureBox.Height,
-                mCurrentImg,
-                mPrevImg,
-                alphaPercent);
-
-
-            // テキストの描画
-            int fsize = 20;
-            int x = 0;
-            int y = 0;
-            Brush txtbrush = Brushes.Aqua;
-            Font fnt = new Font("MS ゴシック", fsize);
-
-            //
-            string txt = mModel.GetPictureInfoText();
-            g.DrawString(txt, fnt, txtbrush, x, y);
-
-            //
-            y += fsize + 3;
-            txt = string.Format("{0,4}x{1,4}", pictureBox.Width, pictureBox.Height);
-            g.DrawString(txt, fnt, txtbrush, x, y);
-
-            //
-            y += fsize + 3;
-            txt = string.Format("{0,4}x{1,4}", mCurrentImg.Width, mCurrentImg.Height);
-            g.DrawString(txt, fnt, txtbrush, x, y);
-
-            //
-            y += fsize + 3;
-            txt = string.Format("{0,4}x{1,4}({2}%)", d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1, d.ratio);
-            g.DrawString(txt, fnt, txtbrush, x, y);
-
-
-            fnt.Dispose();
-
-            //Log.trc("[E]");
+            PictureForm picForm = new PictureForm();
+            picForm.SetModel(model);
+            picForm.ShowDialog();
         }
 
-        private void rightPicBox_Paint(object sender, PaintEventArgs e)
+        private void ToolStripMenuItem_fwd_one_Click(object sender, EventArgs e)
         {
-            PictureBox p = rightPicBox;
-            Graphics g = e.Graphics;
-            //g.FillRectangle(Brushes.Beige, 0, 0, p.Width, p.Height);
+            mModel.ChangeOrderForward();
+            Refresh();
+        }
 
-            int col = COL;
-            int row = ROW;
 
-            int thumWidth = p.Width / col;
-            int thumHeight = p.Height / row;
+        private void ToolStripMenuItem_PathCopy_Click(object sender, EventArgs e)
+        {
+            FileItem fitem = mModel.GetCurrentFileItem();
+            string path = fitem.Path;
+            Clipboard.SetText(path);
+        }
 
-            int x = 0;
-            int y = 0;
-            for (int i = 0; i < (col * row); i++)
+        private void ToolStripMenuItem_SelectedImageMove_Click(object sender, EventArgs e)
+        {
+            DialogResult result = MessageBox.Show("選択中のファイルを移動しますか？",
+                "移動？",
+                MessageBoxButtons.YesNo,
+                MessageBoxIcon.Question,
+                MessageBoxDefaultButton.Button2);
+            if (result == DialogResult.Yes)
             {
-                FileItem fitem = mModel.GetCurrentFileItemByRelativeIndex(i);
-                Image img = fitem.GetImage();
-
-                Brush bgbrush;
-                if (fitem.MarkRemove)
-                {
-                    bgbrush = Brushes.Navy;
-                }
-                else
-                {
-                    bgbrush = Brushes.Black;
-                }
-
-                g.FillRectangle(bgbrush, x, y, thumWidth, thumHeight);
-
-                DrawDimension d = ImageModule.DrawImage(
-                    g,
-                    x,
-                    y,
-                    thumWidth,
-                    thumHeight,
-                    img);
-
-                if (img.Width * img.Height < 640 * 480)
-                {
-                    int fsize = 20;
-                    //int txtx = 0;
-                    //int txty = 0;
-
-                    var opaqueBrush = new SolidBrush(Color.FromArgb(128, Color.Black));
-                    g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
-
-                    Brush txtbrush = Brushes.Red;
-                    Font fnt = new Font("MS ゴシック", fsize);
-                    string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", img.Width, img.Height, thumWidth, thumHeight);
-                    g.DrawString(txt, fnt, txtbrush, x, y);
-                }
-
-                x += thumWidth;
-
-                if ((i + 1) % col == 0)
-                {
-                    x = 0;
-                    y += thumHeight;
-                }
+                mModel.Batch();
+                UpdatePicture();
             }
         }
     }

@@ -50,6 +50,31 @@ namespace PictureManagerApp.src.Lib
             return img;
         }
 
+        public static Image GetImage(string path, int thumbWidth, int thumbHeight)
+        {
+            var orgImg = GetImage(path);
+
+            var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
+            Graphics g = Graphics.FromImage(bmpCanvas);
+
+            var d = getDispParam(thumbWidth, thumbHeight, orgImg.Width, orgImg.Height);
+            var dstRect = new Rectangle(
+                                d.dst_x1,
+                                d.dst_y1,
+                                d.dst_x2 - d.dst_x1,
+                                d.dst_y2 - d.dst_y1);
+            g.DrawImage(orgImg,
+                dstRect,
+                0,
+                0,
+                orgImg.Width,
+                orgImg.Height,
+                GraphicsUnit.Pixel);
+
+
+            return bmpCanvas;
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------

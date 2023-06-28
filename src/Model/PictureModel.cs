@@ -1,9 +1,9 @@
-﻿using PictureManagerApp.src.Lib;
-using System;
-using System.Collections.Generic;
+﻿using System;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using PictureManagerApp.src.Lib;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace PictureManagerApp.src.Model
 {
@@ -18,6 +18,8 @@ namespace PictureManagerApp.src.Model
         MOVE_PREV_DIR,
         MOVE_NEXT_ARTIST,
         MOVE_PREV_ARTIST,
+        MOVE_NEXT_MARKED_FILE,
+        MOVE_PREV_MARKED_FILE,
         MOVE_MAX
     }
 
@@ -34,12 +36,13 @@ namespace PictureManagerApp.src.Model
     {
         private string mPath;
         //private SORT_TYPE mSortType;
-        private FileList mFileList = new FileList();
+        private FileList mFileList;
 
         private int mIdx = -1;
         private DateTime? mDtFrom;
         private DateTime? mDtTo;
 
+        public int mMarkCount { private set; get; }//都度集計したほうが良いのでは？漏れ
         public int UpDownCount { set; get; }
 
         //---------------------------------------------------------------------
@@ -48,13 +51,25 @@ namespace PictureManagerApp.src.Model
         public PictureModel()
         {
             Log.trc("[S]");
+            mFileList = new FileList();
+            mMarkCount = 0;
+            mIdx = 0;
+            Log.trc("[E]");
+        }
+
+        public PictureModel(FileList flist): this()
+        {
+            Log.trc("[S]");
+
+            mFileList = flist.DupSel();
+
             Log.trc("[E]");
         }
 
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public void setDate(DateTime? dtFrom, DateTime? dtTo)
+        public void SetDate(DateTime? dtFrom, DateTime? dtTo)
         {
             mDtFrom = dtFrom;
             mDtTo = dtTo;
@@ -63,7 +78,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public void buildFileList(string path)
+        public void BuildFileList(string path)
         {
             Log.log($"[S]:path={path}");
 
@@ -83,8 +98,60 @@ namespace PictureManagerApp.src.Model
                 }
             }
 
-            mIdx = 0;
             Log.trc("[E]");
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public PictureModel DuplicateSelectOnly()
+        {
+            PictureModel newObj = new PictureModel(mFileList);
+            newObj.mPath = mPath;
+            
+            return newObj;
+        }
+
+        public bool MakeThumbnail(int thumWidth, int thumHeight)
+        {
+            int idx = mIdx;
+            int cnt;
+            for (cnt = 0; cnt < mFileList.Count; cnt++)
+            {
+                FileItem item = mFileList[idx];
+                if (item.HasThumbnailImage())
+                {
+                }
+                else
+                {
+                    Log.log($"#{idx}:no thumbnail.");
+                    break;
+                }
+                idx++;
+                if (idx == mFileList.Count)
+                {
+                    idx = 0;
+                }
+            }
+            if (cnt >= mFileList.Count)
+            {
+                Log.trc("thumbnail make done");
+                return true;
+            }
+
+            FileItem fitem = mFileList[idx];
+            if (fitem.HasThumbnailImage())
+            {
+                Log.err($"??? !!! ??? #{idx}.");
+            }
+            else
+            {
+                Log.log($"making thumbnail #{idx}.");
+                Image thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight, true);
+            }
+
+            Log.trc("thumbnail make cont.");
+            return false;
         }
 
         //---------------------------------------------------------------------
@@ -124,6 +191,10 @@ namespace PictureManagerApp.src.Model
             if (mIdx < 0)
             {
                 mIdx += mFileList.Count;
+                if (mIdx < 0)
+                {
+                    mIdx = 0;
+                }
             }
 
             Update();
@@ -139,12 +210,29 @@ namespace PictureManagerApp.src.Model
             mIdx += UpDownCount;
             if (mIdx >= mFileList.Count)
             {
-                mIdx = mIdx % UpDownCount;
+                mIdx = mIdx - mFileList.Count;
+                if (mIdx >= mFileList.Count)
+                {
+                    mIdx = mFileList.Count - 1;
+                }
             }
             Update();
             Log.trc($"[E]{mIdx}");
         }
 
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void NextMarkedImage()
+        {
+            mIdx++;
+            if (mIdx == mFileList.Count)
+            {
+                mIdx = 0;
+            }
+            Update();
+        }
+        
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -172,10 +260,35 @@ namespace PictureManagerApp.src.Model
                     break;
                 case POS_MOVE_TYPE.MOVE_PREV_ARTIST:
                     break;
+                case POS_MOVE_TYPE.MOVE_NEXT_MARKED_FILE:
+                    break;
+                case POS_MOVE_TYPE.MOVE_PREV_MARKED_FILE:
+                    break;
                 default:
                     break;
             }
             Update();
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void ChangeOrderForward()
+        {
+            int idx = mIdx;
+            int dstIdx = idx - 1;
+            if (dstIdx < 0)
+            {
+                dstIdx = mFileList.Count - 1;
+            }
+            //Collections.swap(mFileList, idx, dstIdx);
+            mFileList.Swap(idx, dstIdx);
+
+            mIdx--;
+            if (mIdx < 0)
+            { 
+                mIdx = mFileList.Count - 1;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -209,11 +322,12 @@ namespace PictureManagerApp.src.Model
             return mFileList[idx];
         }
 
+        /*
         public Image GetImageByRelativeNo(int relativeNo)
         {
             var fitem = GetCurrentFileItemByRelativeIndex(relativeNo);
             return fitem.GetImage();
-        }
+        }*/
 
         //---------------------------------------------------------------------
         // 
@@ -221,14 +335,23 @@ namespace PictureManagerApp.src.Model
         public void Batch()
         {
             mFileList.Batch(mPath);
+            mMarkCount = 0;
         }
 
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public void toggleRemoveMark()
+        public void toggleMark()
         {
-            mFileList[mIdx].MarkRemove = !mFileList[mIdx].MarkRemove;
+            mFileList[mIdx].Mark = !mFileList[mIdx].Mark;
+            if (mFileList[mIdx].Mark)
+            {
+                mMarkCount++;
+            }
+            else
+            {
+                mMarkCount--;
+            }
         }
 
         public void RemoveCurrentFile()

@@ -1,13 +1,8 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Linq;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 using System.Windows.Forms;
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
@@ -16,6 +11,8 @@ namespace PictureManagerApp
 {
     public partial class MainForm : Form
     {
+        private static string PATH = @"F:\download\PxDl";
+
         private int Radius { get; set; }
         private int Ox { get; set; }
         private int Oy { get; set; }
@@ -38,7 +35,12 @@ namespace PictureManagerApp
         private void MainForm_Load(object sender, EventArgs e)
         {
             Log.trc($"[S]");
-            txtPath.Text = @"";
+
+            string[] args = Environment.GetCommandLineArgs();
+
+            cmbBoxPath.Text = PATH;
+            cmbBoxPath.Text = args[1];
+            cmbBoxPath.Items.Add(cmbBoxPath.Text);
 
             int duration = 100;
             Animator.Animate(duration, (frame, frequency) =>
@@ -61,7 +63,7 @@ namespace PictureManagerApp
         private void btnStart_Click(object sender, EventArgs e)
         {
             Log.trc("[S]");
-            string pathStr = txtPath.Text;
+            string pathStr = cmbBoxPath.Text;
 
             DateTime? dtFrom = null;// DateTime.MinValue;
             DateTime? dtTo = null;// DateTime.Now; ;
@@ -70,17 +72,23 @@ namespace PictureManagerApp
                 DateTime date = dtPicker_from.Value;
                 dtFrom = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0);
             }
-            if (chkBox_to.Checked)
+
+            if (checkBox_SameDate.Checked)
+            {
+                DateTime date = dtPicker_from.Value;
+                dtTo = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59);
+            }
+            else if (chkBox_to.Checked)
             {
                 DateTime date = dtPicker_to.Value;
                 dtTo = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59);
             }
 
             PictureModel model = new PictureModel();
-            model.setDate(dtFrom, dtTo);
+            model.SetDate(dtFrom, dtTo);
             try
             {
-                model.buildFileList(pathStr);
+                model.BuildFileList(pathStr);
                 // TODO: progress 
 
                 PictureForm picForm = new PictureForm();
@@ -90,7 +98,7 @@ namespace PictureManagerApp
             catch (Exception ex)
             {
                 Log.trc("{1}", ex.ToString());
-                MessageBox.Show("入力されたパスが不正です",
+                MessageBox.Show(ex.ToString(),//"入力されたパスが不正です",
                     "エラー",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
@@ -104,7 +112,8 @@ namespace PictureManagerApp
         private void btnPaste_Click(object sender, EventArgs e)
         {
             Log.trc("[S]");
-            txtPath.Text = Clipboard.GetText();
+            cmbBoxPath.Text = Clipboard.GetText();
+            cmbBoxPath.Items.Add(cmbBoxPath.Text);
             Log.trc("[E]");
         }
 
@@ -112,6 +121,32 @@ namespace PictureManagerApp
         {
             Log.trc("[S]");
             this.Close();
+            Log.trc("[E]");
+        }
+
+        private void checkBox_SameDate_CheckedChanged(object sender, EventArgs e)
+        {
+            if (checkBox_SameDate.Checked)
+            {
+                dtPicker_to.Enabled = false;
+            }
+            else
+            {
+                dtPicker_to.Enabled = true;
+            }
+        }
+
+        private void btnAppendSubDir_Click(object sender, EventArgs e)
+        {
+            Log.trc("[S]");
+            string path = cmbBoxPath.Text;
+            var dirs = Directory.EnumerateDirectories(path);
+
+            foreach (var dir in dirs.OrderBy(x => x))
+            {
+                cmbBoxPath.Items.Add(dir);
+            }
+
             Log.trc("[E]");
         }
     }
