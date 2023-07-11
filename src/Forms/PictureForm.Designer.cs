@@ -51,6 +51,7 @@
             ToolStripMenuItem_fwd_one = new System.Windows.Forms.ToolStripMenuItem();
             ツールToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelImg = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
             設定SToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             MenuItem_TransitionEffect = new System.Windows.Forms.ToolStripMenuItem();
             TToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -60,7 +61,7 @@
             ウィンドウToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             rightPicBox = new System.Windows.Forms.PictureBox();
-            ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_ThumbnailOn = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             contextMenuStrip_pic.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -187,7 +188,7 @@
             // 
             // 表示ToolStripMenuItem
             // 
-            表示ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItem_FullScreen, MenuItem_MagSub, ToolStripMenuItem_fwd_one });
+            表示ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItem_FullScreen, MenuItem_MagSub, ToolStripMenuItem_fwd_one, ToolStripMenuItem_ThumbnailOn });
             表示ToolStripMenuItem.Name = "表示ToolStripMenuItem";
             表示ToolStripMenuItem.Size = new System.Drawing.Size(94, 34);
             表示ToolStripMenuItem.Text = "表示(&V)";
@@ -227,6 +228,13 @@
             ToolStripMenuItem_SelImg.Size = new System.Drawing.Size(340, 34);
             ToolStripMenuItem_SelImg.Text = "選択中画像のみ表示(&S)";
             ToolStripMenuItem_SelImg.Click += ToolStripMenuItem_SelImg_Click;
+            // 
+            // ToolStripMenuItem_SelectedImageMove
+            // 
+            ToolStripMenuItem_SelectedImageMove.Name = "ToolStripMenuItem_SelectedImageMove";
+            ToolStripMenuItem_SelectedImageMove.Size = new System.Drawing.Size(340, 34);
+            ToolStripMenuItem_SelectedImageMove.Text = "選択中の画像を移動";
+            ToolStripMenuItem_SelectedImageMove.Click += ToolStripMenuItem_SelectedImageMove_Click;
             // 
             // 設定SToolStripMenuItem
             // 
@@ -292,12 +300,15 @@
             rightPicBox.TabStop = false;
             rightPicBox.Paint += rightPicBox_Paint;
             // 
-            // ToolStripMenuItem_SelectedImageMove
+            // ToolStripMenuItem_ThumbnailOn
             // 
-            ToolStripMenuItem_SelectedImageMove.Name = "ToolStripMenuItem_SelectedImageMove";
-            ToolStripMenuItem_SelectedImageMove.Size = new System.Drawing.Size(340, 34);
-            ToolStripMenuItem_SelectedImageMove.Text = "選択中の画像を移動";
-            ToolStripMenuItem_SelectedImageMove.Click += ToolStripMenuItem_SelectedImageMove_Click;
+            ToolStripMenuItem_ThumbnailOn.Checked = true;
+            ToolStripMenuItem_ThumbnailOn.CheckOnClick = true;
+            ToolStripMenuItem_ThumbnailOn.CheckState = System.Windows.Forms.CheckState.Checked;
+            ToolStripMenuItem_ThumbnailOn.Name = "ToolStripMenuItem_ThumbnailOn";
+            ToolStripMenuItem_ThumbnailOn.Size = new System.Drawing.Size(434, 34);
+            ToolStripMenuItem_ThumbnailOn.Text = "サムネイル表示";
+            ToolStripMenuItem_ThumbnailOn.Click += ToolStripMenuItem_ThumbnailOn_Click;
             // 
             // PictureForm
             // 
@@ -361,5 +372,6 @@
         private System.Windows.Forms.ContextMenuStrip contextMenuStrip_pic;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_PathCopy;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelectedImageMove;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_ThumbnailOn;
     }
 }

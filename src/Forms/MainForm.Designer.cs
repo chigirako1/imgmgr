@@ -43,6 +43,7 @@
             EndBtn = new System.Windows.Forms.Button();
             cmbBoxPath = new System.Windows.Forms.ComboBox();
             btnAppendSubDir = new System.Windows.Forms.Button();
+            btnNext = new System.Windows.Forms.Button();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             gpBox_Date.SuspendLayout();
@@ -60,13 +61,13 @@
             // 
             // startBtn
             // 
-            startBtn.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            startBtn.Location = new System.Drawing.Point(1385, 920);
+            startBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            startBtn.Location = new System.Drawing.Point(20, 1027);
             startBtn.Margin = new System.Windows.Forms.Padding(7, 8, 7, 8);
             startBtn.Name = "startBtn";
             startBtn.Size = new System.Drawing.Size(151, 46);
             startBtn.TabIndex = 2;
-            startBtn.Text = "&Start";
+            startBtn.Text = "開始(&S)";
             startBtn.UseVisualStyleBackColor = true;
             startBtn.Click += btnStart_Click;
             // 
@@ -79,7 +80,7 @@
             tabControl.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
-            tabControl.Size = new System.Drawing.Size(1098, 900);
+            tabControl.Size = new System.Drawing.Size(1734, 900);
             tabControl.TabIndex = 4;
             // 
             // tabPageAttr
@@ -89,7 +90,7 @@
             tabPageAttr.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             tabPageAttr.Name = "tabPageAttr";
             tabPageAttr.Padding = new System.Windows.Forms.Padding(5, 7, 5, 7);
-            tabPageAttr.Size = new System.Drawing.Size(1090, 857);
+            tabPageAttr.Size = new System.Drawing.Size(1726, 857);
             tabPageAttr.TabIndex = 0;
             tabPageAttr.Text = "Attr";
             tabPageAttr.UseVisualStyleBackColor = true;
@@ -154,8 +155,6 @@
             // chkBox_from
             // 
             chkBox_from.AutoSize = true;
-            chkBox_from.Checked = true;
-            chkBox_from.CheckState = System.Windows.Forms.CheckState.Checked;
             chkBox_from.Location = new System.Drawing.Point(44, 131);
             chkBox_from.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             chkBox_from.Name = "chkBox_from";
@@ -170,7 +169,7 @@
             tabPage2.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             tabPage2.Name = "tabPage2";
             tabPage2.Padding = new System.Windows.Forms.Padding(5, 7, 5, 7);
-            tabPage2.Size = new System.Drawing.Size(1229, 857);
+            tabPage2.Size = new System.Drawing.Size(1726, 857);
             tabPage2.TabIndex = 1;
             tabPage2.Text = "tabPage2";
             tabPage2.UseVisualStyleBackColor = true;
@@ -178,18 +177,19 @@
             // btnPaste
             // 
             btnPaste.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnPaste.Location = new System.Drawing.Point(1134, 33);
+            btnPaste.Location = new System.Drawing.Point(1758, 33);
             btnPaste.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             btnPaste.Name = "btnPaste";
-            btnPaste.Size = new System.Drawing.Size(119, 50);
+            btnPaste.Size = new System.Drawing.Size(119, 38);
             btnPaste.TabIndex = 5;
-            btnPaste.Text = "Paste(&V)";
+            btnPaste.Text = "貼り付け(&V)";
             btnPaste.UseVisualStyleBackColor = true;
             btnPaste.Click += btnPaste_Click;
             // 
             // EndBtn
             // 
-            EndBtn.Location = new System.Drawing.Point(1385, 989);
+            EndBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
+            EndBtn.Location = new System.Drawing.Point(2018, 1027);
             EndBtn.Margin = new System.Windows.Forms.Padding(4);
             EndBtn.Name = "EndBtn";
             EndBtn.Size = new System.Drawing.Size(151, 46);
@@ -200,27 +200,44 @@
             // 
             // cmbBoxPath
             // 
+            cmbBoxPath.AllowDrop = true;
+            cmbBoxPath.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             cmbBoxPath.FormattingEnabled = true;
             cmbBoxPath.Location = new System.Drawing.Point(88, 33);
             cmbBoxPath.Name = "cmbBoxPath";
-            cmbBoxPath.Size = new System.Drawing.Size(1030, 38);
+            cmbBoxPath.Size = new System.Drawing.Size(1662, 38);
             cmbBoxPath.TabIndex = 7;
+            cmbBoxPath.DragDrop += cmbBoxPath_DragDrop;
+            cmbBoxPath.DragEnter += cmbBoxPath_DragEnter;
             // 
             // btnAppendSubDir
             // 
-            btnAppendSubDir.Location = new System.Drawing.Point(1134, 132);
+            btnAppendSubDir.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnAppendSubDir.Location = new System.Drawing.Point(1885, 33);
             btnAppendSubDir.Name = "btnAppendSubDir";
-            btnAppendSubDir.Size = new System.Drawing.Size(275, 50);
+            btnAppendSubDir.Size = new System.Drawing.Size(227, 38);
             btnAppendSubDir.TabIndex = 8;
             btnAppendSubDir.Text = "サブディレクトリを追加";
             btnAppendSubDir.UseVisualStyleBackColor = true;
             btnAppendSubDir.Click += btnAppendSubDir_Click;
             // 
+            // btnNext
+            // 
+            btnNext.Location = new System.Drawing.Point(193, 1027);
+            btnNext.Name = "btnNext";
+            btnNext.Size = new System.Drawing.Size(143, 44);
+            btnNext.TabIndex = 9;
+            btnNext.Text = "次を開始";
+            btnNext.UseVisualStyleBackColor = true;
+            btnNext.Click += btnNext_Click;
+            // 
             // MainForm
             // 
+            AcceptButton = startBtn;
             AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            ClientSize = new System.Drawing.Size(1559, 1090);
+            ClientSize = new System.Drawing.Size(2195, 1090);
+            Controls.Add(btnNext);
             Controls.Add(btnAppendSubDir);
             Controls.Add(cmbBoxPath);
             Controls.Add(EndBtn);
@@ -257,6 +274,7 @@
         private System.Windows.Forms.CheckBox checkBox_SameDate;
         private System.Windows.Forms.ComboBox cmbBoxPath;
         private System.Windows.Forms.Button btnAppendSubDir;
+        private System.Windows.Forms.Button btnNext;
     }
 }
 

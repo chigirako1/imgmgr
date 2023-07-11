@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using PictureManagerApp.src.Forms;
@@ -18,7 +19,8 @@ namespace PictureManagerApp
         private const int TRANSITION_FPS = 60;
         private const int TRANSITION_TIMER_PERIOD = 1000 / TRANSITION_FPS;
         private const int TRANSITION_DUE_TIME = 500;
-        private const int THUMBNAIL_TIMER_PERIOD = 200;
+        //private const int THUMBNAIL_TIMER_PERIOD = 250;
+        private const int THUMBNAIL_TIMER_PERIOD = 100;
         private static Brush BRUSH_MARK = Brushes.DarkRed;
         private static Brush BG_BRUSH = Brushes.Black;
         private static Color COLOR_MARK = Color.Red;
@@ -139,11 +141,21 @@ namespace PictureManagerApp
         private void PictureForm_Resize(object sender, EventArgs e)
         {
             Log.trc($"[S]");
-            if (this.Width < 1300)
+
+            if (this.WindowState == FormWindowState.Minimized)
             {
-                pictureBox.Width = (int)(this.Width * 0.8);
+                //最小化されたときは何もしない
+                //nop
             }
-            //pictureBox.Size = this.ClientSize;
+            else
+            {
+                if (this.Width < 1000)
+                {
+                    pictureBox.Width = (int)(this.Width * 0.8);
+                    Log.trc($"picbox w={pictureBox.Width}, this w={this.Width}");
+                }
+                //pictureBox.Size = this.ClientSize;
+            }
             picBoxUpdate();
             Log.trc($"[E]");
         }
@@ -283,7 +295,7 @@ namespace PictureManagerApp
             SetPic();
             if (mFullscreen == false)
             {
-                SetStatusBar(fitem.Path, img);
+                SetStatusBar(fitem, img);
             }
 
             picBoxUpdate();
@@ -325,11 +337,11 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        private void SetStatusBar(string filepath, Image img)
+        private void SetStatusBar(FileItem fitem, Image img)
         {
             SetStatusBar_ProgressBar();
             SetStatusBar_FileNo();
-            SetStatusBar_FileInfo(filepath);
+            SetStatusBar_FileInfo(fitem);
             SetStatusBar_ImageSize(img);
             SetStatusBar_ImageRatio(img);
             SetStatusBar_SelectedItemCount();
@@ -355,42 +367,21 @@ namespace PictureManagerApp
             }*/
         }
 
-        private void SetStatusBar_FileInfo(string filepath)
+        private void SetStatusBar_FileInfo(FileItem fitem)
         {
-            SetStatusBar_Dirname(filepath);
-            SetStatusBar_Filename(filepath);
+            StatusLbl_Dirname.Text = fitem.GetRelativePath(mModel.Path);
+            statusLbl_Filename.Text = Path.GetFileName(fitem.FilePath);
 
-            FileInfo fileinfo = new FileInfo(filepath);
-            SetStatusBar_FileSize(fileinfo);
-            SetStatusBar_FileDateTime(fileinfo);
-        }
+            if (fitem.IsZipEntry)
+            {
 
-        private void SetStatusBar_Dirname(string filepath)
-        {
-            Uri basepath = new Uri(mModel.Path + Path.DirectorySeparatorChar);
-            string dirname = Path.GetDirectoryName(filepath); ;
-            Uri dirUri = new Uri(dirname);
-
-            Uri relUri = basepath.MakeRelativeUri(dirUri);
-
-            StatusLbl_Dirname.Text = relUri.ToString();
-        }
-
-        private void SetStatusBar_Filename(string filepath)
-        {
-            statusLbl_Filename.Text = Path.GetFileName(filepath);
-        }
-
-        private void SetStatusBar_FileSize(FileInfo fi)
-        {
-            long filesize = fi.Length;
-            statusLbl_FileSize.Text = String.Format("{0:#,0} Bytes", filesize);
-        }
-
-        private void SetStatusBar_FileDateTime(FileInfo fi)
-        {
-            string lwt = fi.LastWriteTime.ToShortDateString();
-            StatusLbl_LWTime.Text = lwt;
+            }
+            else
+            {
+                FileInfo fi = new FileInfo(fitem.FilePath);
+                statusLbl_FileSize.Text = String.Format("{0:#,0} Bytes", fi.Length);
+                StatusLbl_LWTime.Text = fi.LastWriteTime.ToShortDateString();
+            }
         }
 
         private void SetStatusBar_ImageSize(Image img)
@@ -497,7 +488,10 @@ namespace PictureManagerApp
                     mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
-            UI_change();
+            if (this != null)
+            {
+                UI_change();
+            }
 
             //Log.trc("[E]");
         }
@@ -588,7 +582,7 @@ namespace PictureManagerApp
         private void ToolStripMenuItem_PathCopy_Click(object sender, EventArgs e)
         {
             FileItem fitem = mModel.GetCurrentFileItem();
-            string path = fitem.Path;
+            string path = fitem.FilePath;
             Clipboard.SetText(path);
         }
 
@@ -603,6 +597,20 @@ namespace PictureManagerApp
             {
                 mModel.Batch();
                 UpdatePicture();
+            }
+        }
+
+        private void ToolStripMenuItem_ThumbnailOn_Click(object sender, EventArgs e)
+        {
+            if (ToolStripMenuItem_ThumbnailOn.Checked)
+            {
+                rightPicBox.Visible = true;
+            }
+            else
+            {
+                rightPicBox.Visible = false;
+                rightPicBox.Width = 0;
+                rightPicBox.Height = 0;
             }
         }
     }

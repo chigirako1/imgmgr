@@ -1,9 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using System.Linq;
 using PictureManagerApp.src.Lib;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace PictureManagerApp.src.Model
 {
@@ -83,7 +84,20 @@ namespace PictureManagerApp.src.Model
             Log.log($"[S]:path={path}");
 
             mPath = path;
+            if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+            {
+                BuildFileList_Dir(path);
+            }
+            else
+            {
+                BuildFileList_Zip(path);
+            }
 
+            Log.trc("[E]");
+        }
+
+        private void BuildFileList_Dir(string path)
+        {
             var fileArray = Directory.GetFiles(
                             mPath,
                             "*.jpg",
@@ -97,8 +111,49 @@ namespace PictureManagerApp.src.Model
                     mFileList.Add(fi);
                 }
             }
+        }
 
-            Log.trc("[E]");
+        private void BuildFileList_Zip(string path)
+        {
+            var encode = "utf-8";
+            //encode = "sjis";
+            //encode = "shift_jis";
+            //using (var archive = ZipFile.OpenRead(path))
+            using (ZipArchive archive = ZipFile.Open(path,
+                ZipArchiveMode.Read,
+                System.Text.Encoding.GetEncoding(encode)))
+            {
+                foreach (var e in archive.Entries)
+                {
+                    //filelist.Add(e.FullName);
+                    //Console.WriteLine("名前       : {0}", e.Name);
+                    Console.WriteLine("フルパス   : {0}", e.FullName);
+                    //Console.WriteLine("サイズ     : {0}", e.Length);
+                    //Console.WriteLine("圧縮サイズ : {0}", e.CompressedLength);
+                    //Console.WriteLine("更新日時   : {0}", e.LastWriteTime);
+                }
+
+                var files = archive.Entries.OrderBy(e => e.FullName).
+                    Where(e =>
+                        e.FullName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
+                        e.FullName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
+                        e.FullName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
+                        e.FullName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
+                );
+
+                List<string> filelist = new List<string>();
+                files.ToList().ForEach(f => filelist.Add(f.FullName));
+
+                mFileList.ZipList = true;
+                foreach (var f in filelist.OrderBy(x => x))
+                {
+                    //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
+                    {
+                        FileItem fi = new FileItem(f, path);
+                        mFileList.Add(fi);
+                    }
+                }
+            }
         }
 
         //---------------------------------------------------------------------
@@ -114,6 +169,8 @@ namespace PictureManagerApp.src.Model
 
         public bool MakeThumbnail(int thumWidth, int thumHeight)
         {
+            if (thumWidth == 0 || thumHeight == 0) return false;
+
             int idx = mIdx;
             int cnt;
             for (cnt = 0; cnt < mFileList.Count; cnt++)
@@ -299,14 +356,15 @@ namespace PictureManagerApp.src.Model
             return mFileList[mIdx];
         }
 
-        public string GetCurrentFilePath() => mFileList[mIdx].Path;
+        public string GetCurrentFilePath() => mFileList[mIdx].FilePath;
 
         public string GetPictureInfoText()
         {
             string txt;
 
             FileItem fi = mFileList[mIdx];
-            txt = String.Format("[{0,3}/{1}] {2}", mIdx + 1, mFileList.Count, fi.Path);
+            var fpath = fi.GetRelativePath(Path);
+            txt = String.Format("[{0,3}/{1}] {2}", mIdx + 1, mFileList.Count, fpath);
 
             return txt;
         }
@@ -356,7 +414,7 @@ namespace PictureManagerApp.src.Model
 
         public void RemoveCurrentFile()
         {
-            string path = mFileList[mIdx].Path;
+            string path = mFileList[mIdx].FilePath;
 
             MyFiles.moveToTrashDir(path, mPath);
 

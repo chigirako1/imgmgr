@@ -50,10 +50,8 @@ namespace PictureManagerApp.src.Lib
             return img;
         }
 
-        public static Image GetImage(string path, int thumbWidth, int thumbHeight)
+        public static Image GetThumbnailImage(Image orgImg, int thumbWidth, int thumbHeight)
         {
-            var orgImg = GetImage(path);
-
             var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
             Graphics g = Graphics.FromImage(bmpCanvas);
 

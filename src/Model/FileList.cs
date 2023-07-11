@@ -12,6 +12,7 @@ namespace PictureManagerApp.src.Model
         // 
         //=====================================================================
         private List<FileItem> mFileList;
+        public bool ZipList { set; get; }
 
         //=====================================================================
         // 
@@ -60,7 +61,7 @@ namespace PictureManagerApp.src.Model
                 if (item.Mark)
                 {
                     var fitem = new FileItem(item);
-                    fitem.Mark = false;
+                    //fitem.Mark = false;
                     flist.Add(fitem);
                 }
             }
@@ -73,7 +74,7 @@ namespace PictureManagerApp.src.Model
             {
                 if (fitem.Mark)
                 {
-                    MyFiles.moveToTrashDir(fitem.Path, rootpath);
+                    MyFiles.moveToTrashDir(fitem.FilePath, rootpath);
                     fitem.Removed = true;
                 }
             }

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Drawing;
 using System.IO;
+using System.IO.Compression;
 using PictureManagerApp.src.Lib;
 
 namespace PictureManagerApp.src.Model
@@ -11,38 +12,67 @@ namespace PictureManagerApp.src.Model
         // private field
         //=====================================================================
         private readonly string mPath;
-        private int mGroupNo;
-        private Image mImage;
-        private Image mThumbnail;
+        private string mZipPath;
+        private Size ImageSize;
 
+        //private Image mImage;
+        private Image mThumbnail;
 
         public bool Mark { set; get; }
         public bool Removed { set; get; }
+        public bool IsZipEntry { private set; get; }
+
+        public int FileSize { set; get; }
+
 
         //=====================================================================
-        // public
+        // 
         //=====================================================================
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public FileItem(string path, int groupNo = 0)
+        public FileItem(string path, string zipPath = "")
         {
             mPath = path;
-            mGroupNo = groupNo;
+            mZipPath = zipPath;
+            if (mZipPath != "")
+            {
+                IsZipEntry = true;
+            }
         }
 
         public FileItem(FileItem org)
         {
             this.mPath = org.mPath;
-            this.mGroupNo = org.mGroupNo;
+            this.mZipPath = "";
             this.Mark = org.Mark;
+            this.mThumbnail = org.mThumbnail;
         }
 
-        public string Path
+        public string FilePath
         {
             get { return mPath; }
         }
 
+        public string GetRelativePath(string basePath)
+        {
+            if (mZipPath != "")
+            {
+                return mZipPath;
+            }
+
+            Uri basepath = new Uri(basePath + Path.DirectorySeparatorChar);
+            string dirname = Path.GetDirectoryName(mPath);
+            Uri dirUri = new Uri(dirname);
+
+            Uri relUri = basepath.MakeRelativeUri(dirUri);
+
+            return relUri.ToString();
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public static bool isSpecifiedFile(string filepath, DateTime? from, DateTime? to)
         {
             FileInfo fi = new FileInfo(filepath);
@@ -60,15 +90,52 @@ namespace PictureManagerApp.src.Model
             return true;
         }
 
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public Image GetImage()
         {
+            if (mZipPath == "")
+            {
+                return GetImageFromFile();
+            }
+            else
+            {
+                using (var archive = ZipFile.OpenRead(mZipPath))
+                {
+                    var ent = archive.GetEntry(FilePath);
+                    var img = Image.FromStream(ent.Open());
+                    ImageSize.Width = img.Width;
+                    ImageSize.Height = img.Height;
+                    return img;
+                }
+            }
+        }
+
+        private Image GetImageFromFile()
+        {
+#if false
+//メモリ大量使用
             if (mImage == null)
             {
-                string path = Path;
+                string path = FilePath;
                 mImage = ImageModule.GetImage(path);
+                ImageSize.Width = mImage.Width;
+                ImageSize.Height = mImage.Height;
                 Log.trc(path);
             }
             return mImage;
+#else
+            var img = ImageModule.GetImage(this.FilePath);
+            ImageSize.Width = img.Width;
+            ImageSize.Height = img.Height;
+            return img;
+#endif
+        }
+
+        public Size GetImageSize()
+        {
+            return ImageSize;
         }
 
         //---------------------------------------------------------------------
@@ -80,8 +147,9 @@ namespace PictureManagerApp.src.Model
                 ((mThumbnail == null) ||
                 (thumbWidth > mThumbnail.Width || thumbHeight > mThumbnail.Height)))
             {
-                string path = Path;
-                mThumbnail = ImageModule.GetImage(path, thumbWidth, thumbHeight);
+                string path = FilePath;
+                var img = GetImage();
+                mThumbnail = ImageModule.GetThumbnailImage(img, thumbWidth, thumbHeight);
                 Log.trc(path);
             }
             return mThumbnail;
@@ -95,9 +163,5 @@ namespace PictureManagerApp.src.Model
             }
             return true;
         }
-
-        //=====================================================================
-        // private method
-        //=====================================================================
     }
 }

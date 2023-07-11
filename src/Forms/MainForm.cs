@@ -3,6 +3,7 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
@@ -38,8 +39,14 @@ namespace PictureManagerApp
 
             string[] args = Environment.GetCommandLineArgs();
 
-            cmbBoxPath.Text = PATH;
-            cmbBoxPath.Text = args[1];
+            if (args.Count() > 1)
+            {
+                cmbBoxPath.Text = args[1];
+            }
+            else
+            {
+                cmbBoxPath.Text = PATH;
+            }
             cmbBoxPath.Items.Add(cmbBoxPath.Text);
 
             int duration = 100;
@@ -60,9 +67,8 @@ namespace PictureManagerApp
             Log.trc($"[E]");
         }
 
-        private void btnStart_Click(object sender, EventArgs e)
+        private void Start()
         {
-            Log.trc("[S]");
             string pathStr = cmbBoxPath.Text;
 
             DateTime? dtFrom = null;// DateTime.MinValue;
@@ -73,7 +79,7 @@ namespace PictureManagerApp
                 dtFrom = new DateTime(date.Year, date.Month, date.Day, 0, 0, 0);
             }
 
-            if (checkBox_SameDate.Checked)
+            if (checkBox_SameDate.Checked && chkBox_from.Checked)
             {
                 DateTime date = dtPicker_from.Value;
                 dtTo = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59);
@@ -105,15 +111,22 @@ namespace PictureManagerApp
             }
             finally
             {
-                Log.trc("[E]");
             }
+        }
+
+        private void btnStart_Click(object sender, EventArgs e)
+        {
+            Log.trc("[S]");
+            Start();
+            Log.trc("[E]");
         }
 
         private void btnPaste_Click(object sender, EventArgs e)
         {
             Log.trc("[S]");
-            cmbBoxPath.Text = Clipboard.GetText();
-            cmbBoxPath.Items.Add(cmbBoxPath.Text);
+            var txt = Clipboard.GetText();
+            cmbBoxPath.Text = txt;
+            cmbBoxPath.Items.Add(txt);
             Log.trc("[E]");
         }
 
@@ -139,6 +152,7 @@ namespace PictureManagerApp
         private void btnAppendSubDir_Click(object sender, EventArgs e)
         {
             Log.trc("[S]");
+
             string path = cmbBoxPath.Text;
             var dirs = Directory.EnumerateDirectories(path);
 
@@ -147,7 +161,62 @@ namespace PictureManagerApp
                 cmbBoxPath.Items.Add(dir);
             }
 
+
+            var fileArray = Directory.GetFiles(
+                path,
+                "*.zip",
+                SearchOption.TopDirectoryOnly);
+
+            foreach (var f in fileArray.OrderBy(x => x))
+            {
+                {
+                    cmbBoxPath.Items.Add(f);
+                }
+            }
+
+
             Log.trc("[E]");
+        }
+
+        private void cmbBoxPath_DragDrop(object sender, DragEventArgs e)
+        {
+            Log.trc("[S]");
+
+            // ファイルが渡されていなければ、何もしない
+            if (!e.Data.GetDataPresent(DataFormats.FileDrop))
+                return;
+
+            // 渡されたファイルに対して処理を行う
+            foreach (var filePath in (string[])e.Data.GetData(DataFormats.FileDrop))
+            {
+                cmbBoxPath.Text = filePath;
+                cmbBoxPath.Items.Add(filePath);
+            }
+
+            Log.trc("[E]");
+        }
+
+        private void cmbBoxPath_DragEnter(object sender, DragEventArgs e)
+        {
+            // ドラッグドロップ時にカーソルの形状を変更
+            e.Effect = DragDropEffects.All;
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            var idx = cmbBoxPath.Items.IndexOf(cmbBoxPath.Text);
+            idx++;
+            if (idx >= cmbBoxPath.Items.Count)
+            {
+                MessageBox.Show("次はない",
+                    "エラー",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+
+            }
+            cmbBoxPath.SelectedIndex = idx;
+            Start();
         }
     }
 }

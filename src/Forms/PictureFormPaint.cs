@@ -106,7 +106,7 @@ namespace PictureManagerApp
             for (int i = 0; i < (col * row) && i < mModel.PictureTotalNumber; i++)
             {
                 FileItem fitem = mModel.GetCurrentFileItemByRelativeIndex(i);
-                Image img = fitem.GetImage();
+                Size imgsize = fitem.GetImageSize();
                 Image thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight);
 
                 Brush bgbrush;
@@ -130,21 +130,21 @@ namespace PictureManagerApp
                                           thumWidth,
                                           thumHeight,
                                           thumbImg);
-                }
 
-                if (img.Width * img.Height < 640 * 480)
-                {
-                    int fsize = 20;
-                    //int txtx = 0;
-                    //int txty = 0;
+                    if (imgsize.Width * imgsize.Height < 640 * 480)
+                    {
+                        int fsize = 20;
+                        //int txtx = 0;
+                        //int txty = 0;
 
-                    //var opaqueBrush = new SolidBrush(Color.FromArgb(64, Color.Black));
-                    //g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
+                        //var opaqueBrush = new SolidBrush(Color.FromArgb(64, Color.Black));
+                        //g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
 
-                    Brush txtbrush = Brushes.Red;
-                    Font fnt = new Font("MS ゴシック", fsize);
-                    string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", img.Width, img.Height, thumWidth, thumHeight);
-                    g.DrawString(txt, fnt, txtbrush, x, y);
+                        Brush txtbrush = Brushes.Red;
+                        Font fnt = new Font("MS ゴシック", fsize);
+                        string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", imgsize.Width, imgsize.Height, thumWidth, thumHeight);
+                        g.DrawString(txt, fnt, txtbrush, x, y);
+                    }
                 }
 
                 if (fitem.Mark)
