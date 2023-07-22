@@ -38,13 +38,17 @@ namespace PictureManagerApp
                 alphaPercent = mAlphaPercent;
             }
 
+
+            IMAGE_DISPLAY_MAGNIFICATION_TYPE magType = mMagType;
+            //magType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_AS_IS;
             DrawDimension d = ImageModule.DrawCompositedImage(
                 g,
                 pictureBox.Width,
                 pictureBox.Height,
                 mCurrentImg,
                 mPrevImg,
-                alphaPercent);
+                alphaPercent,
+                magType);
 
             PictureBox_PaintTxt(g, d);
         }

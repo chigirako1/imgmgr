@@ -3,10 +3,12 @@ using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace PictureManagerApp
 {
@@ -23,6 +25,13 @@ namespace PictureManagerApp
             Log.trc($"[S]");
 
             InitializeComponent();
+
+            // check
+            for (int i = 0; i < chkListBox_Ext.Items.Count; i++)
+            {
+                chkListBox_Ext.SetItemChecked(i, true);
+            }
+
             Opacity = 0;
 
             Radius = (int)(Math.Sqrt(Width * Width + Height * Height) / 2);
@@ -69,8 +78,80 @@ namespace PictureManagerApp
 
         private void Start()
         {
-            string pathStr = cmbBoxPath.Text;
+            var pathStr = cmbBoxPath.Text;
 
+            var model = new PictureModel();
+            setModelParam(model);
+            try
+            {
+                if (txtBox_FileList.Text == "")
+                {
+                    model.BuildFileList(pathStr);
+                }
+                else
+                {
+                    model.BuildFileListFromText(txtBox_FileList.Text, pathStr);
+                }
+                // TODO: progress bar
+
+                PictureForm picForm = new PictureForm();
+                picForm.SetModel(model);
+                picForm.ShowDialog();
+            }
+            catch (Exception ex)
+            {
+                Log.trc("{1}", ex.ToString());
+                MessageBox.Show(ex.ToString(),
+                    "エラー",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            finally
+            {
+            }
+        }
+
+        private void setModelParam(PictureModel model)
+        {
+            setModelParam_date(model);
+            setModelParam_picSize(model);
+
+            //ファイルサイズmin
+            var minfilesize = (int)numUD_MinFilesize.Value;
+            if (minfilesize != 0)
+            {
+                model.SetMinFileSize(minfilesize * 1024);
+            }
+
+            //ファイルサイズmax
+            var maxfilesize = (int)numUD_MaxFilesize.Value;
+            if (maxfilesize != 0)
+            {
+                model.SetMaxFileSize(maxfilesize * 1024);
+            }
+
+            // 拡張子
+            var ext = "";
+            foreach (var item in chkListBox_Ext.CheckedItems)
+            {
+                if (ext != "")
+                {
+                    ext += ",";
+                }
+                ext += item.ToString();
+            }
+            model.SetExt(ext);
+
+            // ファイル名フィルター
+            if (cmbBox_FilenameFilter.Text != "")
+            {
+                var word = cmbBox_FilenameFilter.Text;
+                model.SetSeachWord(word);
+            }
+        }
+
+        private void setModelParam_date(PictureModel model)
+        {
             DateTime? dtFrom = null;// DateTime.MinValue;
             DateTime? dtTo = null;// DateTime.Now; ;
             if (chkBox_from.Checked)
@@ -89,28 +170,31 @@ namespace PictureManagerApp
                 DateTime date = dtPicker_to.Value;
                 dtTo = new DateTime(date.Year, date.Month, date.Day, 23, 59, 59);
             }
-
-            PictureModel model = new PictureModel();
             model.SetDate(dtFrom, dtTo);
-            try
-            {
-                model.BuildFileList(pathStr);
-                // TODO: progress 
+        }
 
-                PictureForm picForm = new PictureForm();
-                picForm.SetModel(model);
-                picForm.ShowDialog();
-            }
-            catch (Exception ex)
+        private void setModelParam_picSize(PictureModel model)
+        {
+            var width = (int)numUD_Width.Value;
+            var height = (int)numUD_Height.Value;
+            if (width != 0 && height != 0)
             {
-                Log.trc("{1}", ex.ToString());
-                MessageBox.Show(ex.ToString(),//"入力されたパスが不正です",
-                    "エラー",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                Size size = new Size(width, height);
+
+                model.SetMaxPicSize(size);
             }
-            finally
+
+            if (radioBtn_PicOrinet_All.Checked)
             {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_ALL);
+            }
+            else if (radioBtn_PicOrinet_PR.Checked)
+            {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_PORTRAIT);
+            }
+            else if (radioBtn_PicOrinet_LS.Checked)
+            {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE);
             }
         }
 
@@ -217,6 +301,16 @@ namespace PictureManagerApp
             }
             cmbBoxPath.SelectedIndex = idx;
             Start();
+        }
+
+        private void groupBox1_Enter(object sender, EventArgs e)
+        {
+
+        }
+
+        private void chkListBox_Ext_SelectedIndexChanged(object sender, EventArgs e)
+        {
+
         }
     }
 }

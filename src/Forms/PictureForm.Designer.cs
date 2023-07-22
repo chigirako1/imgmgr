@@ -49,6 +49,7 @@
             MenuItem_FullScreen = new System.Windows.Forms.ToolStripMenuItem();
             MenuItem_MagSub = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_fwd_one = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_ThumbnailOn = new System.Windows.Forms.ToolStripMenuItem();
             ツールToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelImg = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
@@ -61,7 +62,7 @@
             ウィンドウToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             rightPicBox = new System.Windows.Forms.PictureBox();
-            ToolStripMenuItem_ThumbnailOn = new System.Windows.Forms.ToolStripMenuItem();
+            MenuItem_MagSub_FitNoMag = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             contextMenuStrip_pic.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -203,9 +204,11 @@
             // 
             // MenuItem_MagSub
             // 
+            MenuItem_MagSub.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItem_MagSub_FitNoMag });
             MenuItem_MagSub.Name = "MenuItem_MagSub";
             MenuItem_MagSub.Size = new System.Drawing.Size(434, 34);
             MenuItem_MagSub.Text = "倍率";
+            MenuItem_MagSub.Click += MenuItem_MagSub_Click;
             // 
             // ToolStripMenuItem_fwd_one
             // 
@@ -213,6 +216,16 @@
             ToolStripMenuItem_fwd_one.Size = new System.Drawing.Size(434, 34);
             ToolStripMenuItem_fwd_one.Text = "現在の画像の表示位置を一つ前に移動";
             ToolStripMenuItem_fwd_one.Click += ToolStripMenuItem_fwd_one_Click;
+            // 
+            // ToolStripMenuItem_ThumbnailOn
+            // 
+            ToolStripMenuItem_ThumbnailOn.Checked = true;
+            ToolStripMenuItem_ThumbnailOn.CheckOnClick = true;
+            ToolStripMenuItem_ThumbnailOn.CheckState = System.Windows.Forms.CheckState.Checked;
+            ToolStripMenuItem_ThumbnailOn.Name = "ToolStripMenuItem_ThumbnailOn";
+            ToolStripMenuItem_ThumbnailOn.Size = new System.Drawing.Size(434, 34);
+            ToolStripMenuItem_ThumbnailOn.Text = "サムネイル表示";
+            ToolStripMenuItem_ThumbnailOn.Click += ToolStripMenuItem_ThumbnailOn_Click;
             // 
             // ツールToolStripMenuItem
             // 
@@ -261,20 +274,20 @@
             // x3ToolStripMenuItem
             // 
             x3ToolStripMenuItem.Name = "x3ToolStripMenuItem";
-            x3ToolStripMenuItem.Size = new System.Drawing.Size(132, 34);
+            x3ToolStripMenuItem.Size = new System.Drawing.Size(224, 34);
             x3ToolStripMenuItem.Text = "3x3";
             // 
             // x2ToolStripMenuItem
             // 
             x2ToolStripMenuItem.Name = "x2ToolStripMenuItem";
-            x2ToolStripMenuItem.Size = new System.Drawing.Size(132, 34);
+            x2ToolStripMenuItem.Size = new System.Drawing.Size(224, 34);
             x2ToolStripMenuItem.Text = "2x2";
             x2ToolStripMenuItem.Click += x2ToolStripMenuItem_Click;
             // 
             // x4ToolStripMenuItem1
             // 
             x4ToolStripMenuItem1.Name = "x4ToolStripMenuItem1";
-            x4ToolStripMenuItem1.Size = new System.Drawing.Size(132, 34);
+            x4ToolStripMenuItem1.Size = new System.Drawing.Size(224, 34);
             x4ToolStripMenuItem1.Text = "4x3";
             x4ToolStripMenuItem1.Click += x4ToolStripMenuItem1_Click;
             // 
@@ -300,15 +313,13 @@
             rightPicBox.TabStop = false;
             rightPicBox.Paint += rightPicBox_Paint;
             // 
-            // ToolStripMenuItem_ThumbnailOn
+            // MenuItem_MagSub_FitNoMag
             // 
-            ToolStripMenuItem_ThumbnailOn.Checked = true;
-            ToolStripMenuItem_ThumbnailOn.CheckOnClick = true;
-            ToolStripMenuItem_ThumbnailOn.CheckState = System.Windows.Forms.CheckState.Checked;
-            ToolStripMenuItem_ThumbnailOn.Name = "ToolStripMenuItem_ThumbnailOn";
-            ToolStripMenuItem_ThumbnailOn.Size = new System.Drawing.Size(434, 34);
-            ToolStripMenuItem_ThumbnailOn.Text = "サムネイル表示";
-            ToolStripMenuItem_ThumbnailOn.Click += ToolStripMenuItem_ThumbnailOn_Click;
+            MenuItem_MagSub_FitNoMag.Checked = true;
+            MenuItem_MagSub_FitNoMag.CheckState = System.Windows.Forms.CheckState.Checked;
+            MenuItem_MagSub_FitNoMag.Name = "MenuItem_MagSub_FitNoMag";
+            MenuItem_MagSub_FitNoMag.Size = new System.Drawing.Size(253, 34);
+            MenuItem_MagSub_FitNoMag.Text = "縮小のみ拡大なし";
             // 
             // PictureForm
             // 
@@ -373,5 +384,6 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_PathCopy;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelectedImageMove;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_ThumbnailOn;
+        private System.Windows.Forms.ToolStripMenuItem MenuItem_MagSub_FitNoMag;
     }
 }

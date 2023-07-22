@@ -20,6 +20,7 @@ namespace PictureManagerApp.src.Lib
         IMG_DISP_MAG_FIT_WIDTH,                 /* 幅に合わせて拡大縮小(縦にはみ出る場合がある) */
         IMG_DISP_MAG_FIT_HEIGHT,				/* 高さを画面に合わせて拡大縮小(横がはみ出る場合がある */
         IMG_DISP_MAG_AS_IS,                     /* 拡大縮小を行わない */
+
         IMG_DISP_MAG_MAX
     }
 
@@ -40,7 +41,8 @@ namespace PictureManagerApp.src.Lib
     {
         public static Image GetImage(string path)
         {
-            FileStream fs = new FileStream(
+            // Log.trc($"path={path}");
+            using FileStream fs = new FileStream(
                         path,
                         FileMode.Open,
                         FileAccess.Read);
@@ -225,9 +227,14 @@ namespace PictureManagerApp.src.Lib
             else
             {
                 DrawDimension d = getDispParam(w, h, currentImg.Width, currentImg.Height, magType);
+                var dstRect = new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1);
                 g.DrawImage(currentImg,
-                    new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1),
-                    0, 0, currentImg.Width, currentImg.Height,
+                    dstRect,
+                    //0, 0, currentImg.Width, currentImg.Height,
+                    d.src_x1,
+                    d.src_y1,
+                    d.src_x2 - d.src_x1,
+                    d.src_y2 - d.src_y1,
                     GraphicsUnit.Pixel);
                 return d;
             }
@@ -270,8 +277,10 @@ namespace PictureManagerApp.src.Lib
                 d.dst_x2 = scrnW - 1;
 
                 //元画像の表示する部分の幅(x1,x2)の計算
-                d.src_x1 = 0;
-                d.src_x2 = scrnW * 100 / ratio;
+                //d.src_x1 = 0;
+                //d.src_x2 = scrnW * 100 / ratio;
+                d.src_x1 = (imgW - scrnW) / 2;
+                d.src_x2 = imgW - d.src_x1;
             }
 
             if (scrnH > d.height)
@@ -294,8 +303,10 @@ namespace PictureManagerApp.src.Lib
                 d.dst_y2 = scrnH - 1;
 
                 //元画像の表示する部分の計算
-                d.src_y1 = 0;
-                d.src_y2 = scrnH * 100 / ratio;
+                //d.src_y1 = 0;
+                //d.src_y2 = scrnH * 100 / ratio;
+                d.src_y1 = (imgH - scrnH) / 2;
+                d.src_y2 = imgH - d.src_y1;
             }
 
             d.ratio = ratio;

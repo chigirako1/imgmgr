@@ -2,6 +2,7 @@
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using System.Security.Policy;
 using PictureManagerApp.src.Lib;
 
 namespace PictureManagerApp.src.Model
@@ -54,26 +55,55 @@ namespace PictureManagerApp.src.Model
             get { return mPath; }
         }
 
-        public string GetRelativePath(string basePath)
+        public string GetRelativePath(string basePath, bool filename_p = false)
         {
             if (mZipPath != "")
             {
                 return mZipPath;
             }
 
-            Uri basepath = new Uri(basePath + Path.DirectorySeparatorChar);
-            string dirname = Path.GetDirectoryName(mPath);
-            Uri dirUri = new Uri(dirname);
+            if (basePath == "")
+            {
+                string dirname;
+                if (filename_p)
+                {
+                    dirname = mPath;
+                }
+                else
+                {
+                    dirname = Path.GetDirectoryName(mPath);
+                }
 
-            Uri relUri = basepath.MakeRelativeUri(dirUri);
+                Uri dirUri = new Uri(dirname);
 
-            return relUri.ToString();
+                return dirUri.ToString();
+            }
+            else
+            {
+                Uri basepath = new Uri(basePath + Path.DirectorySeparatorChar);
+
+                string dirname;
+                if (filename_p)
+                {
+                    dirname = mPath;
+                }
+                else
+                {
+                    dirname = Path.GetDirectoryName(mPath);
+                }
+
+                Uri dirUri = new Uri(dirname);
+
+                Uri relUri = basepath.MakeRelativeUri(dirUri);
+
+                return relUri.ToString();
+            }
         }
 
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public static bool isSpecifiedFile(string filepath, DateTime? from, DateTime? to)
+        public static bool isSpecifiedDateFile(string filepath, DateTime? from, DateTime? to)
         {
             FileInfo fi = new FileInfo(filepath);
             DateTime dt = fi.LastWriteTime;
@@ -85,6 +115,116 @@ namespace PictureManagerApp.src.Model
             if (to != null && dt.CompareTo(to) > 0)
             {
                 return false;
+            }
+
+            return true;
+        }
+
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public static bool isAboveOfMaxFilesizeImage(string filepath, int minFileSize)
+        {
+            if (minFileSize == 0)
+            {
+                return true;
+            }
+
+            FileInfo fi = new FileInfo(filepath);
+            if (fi.Length >= minFileSize)
+            {
+                return true;
+            }
+
+            return false;
+        }
+        
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public static bool isBelowOfMaxFilesizeImage(string filepath, int maxFileSize)
+        {
+            if (maxFileSize == 0)
+            {
+                return true;
+            }
+
+            FileInfo fi = new FileInfo(filepath);
+            if (fi.Length <= maxFileSize)
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public bool isSpecifiedPicOrinet(PIC_ORIENT_TYPE orient)
+        {
+            if (orient == PIC_ORIENT_TYPE.PIC_ORINET_ALL)
+            {
+                return true;
+            }
+
+            using var img = GetImageFromFile();
+            switch (orient)
+            {
+                case PIC_ORIENT_TYPE.PIC_ORINET_PORTRAIT:
+                    if (img.Width <= img.Height)
+                    {
+                        return true;
+                    }
+                    break;
+                case PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE:
+                    if (img.Width >= img.Height)
+                    {
+                        return true;
+                    }
+                    break;
+                default:
+                    return false;
+            }
+
+            return false;
+        }
+
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public bool isSpecifiedSizeImage(Size? mMaxPicSize)
+        {
+            if (mMaxPicSize.HasValue)
+            {
+                Size size = mMaxPicSize.Value;
+                if (IsZipEntry)
+                {
+                    return true;
+                }
+                else
+                {
+                    using var img = GetImageFromFile();
+#if false
+                    if (size.Width != 0 && img.Width > size.Width)
+                    {
+                        return false;
+                    }
+                    if (size.Height != 0 && img.Height > size.Height)
+                    {
+                        return false;
+                    }
+#else
+                    var pixel = size.Width * size.Height;
+                    if (pixel != 0 && img.Width * img.Height > pixel)
+                    {
+                        return false;
+                    }
+#endif
+                }
             }
 
             return true;

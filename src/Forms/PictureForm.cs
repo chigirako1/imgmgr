@@ -20,7 +20,7 @@ namespace PictureManagerApp
         private const int TRANSITION_TIMER_PERIOD = 1000 / TRANSITION_FPS;
         private const int TRANSITION_DUE_TIME = 500;
         //private const int THUMBNAIL_TIMER_PERIOD = 250;
-        private const int THUMBNAIL_TIMER_PERIOD = 100;
+        private const int THUMBNAIL_TIMER_PERIOD = 150;
         private static Brush BRUSH_MARK = Brushes.DarkRed;
         private static Brush BG_BRUSH = Brushes.Black;
         private static Color COLOR_MARK = Color.Red;
@@ -39,6 +39,7 @@ namespace PictureManagerApp
         private PictureModel mModel;
         private Boolean mFullscreen = false;
         private Image mCurrentImg, mPrevImg;
+        private IMAGE_DISPLAY_MAGNIFICATION_TYPE mMagType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND;
         private int mAlphaPercent = 0;
         private int startTickCnt;
         private Boolean mTransitionEffect = false;
@@ -369,7 +370,7 @@ namespace PictureManagerApp
 
         private void SetStatusBar_FileInfo(FileItem fitem)
         {
-            StatusLbl_Dirname.Text = fitem.GetRelativePath(mModel.Path);
+            StatusLbl_Dirname.Text = fitem.GetRelativePath(mModel.WorkingRootPath);
             statusLbl_Filename.Text = Path.GetFileName(fitem.FilePath);
 
             if (fitem.IsZipEntry)
@@ -550,6 +551,9 @@ namespace PictureManagerApp
                 this.Col = col;
                 this.Row = row;
                 mModel.UpDownCount = this.Col;
+
+                mMagType = crForm.GetMagType();
+
                 Refresh();
             }
         }
@@ -570,6 +574,9 @@ namespace PictureManagerApp
             PictureForm picForm = new PictureForm();
             picForm.SetModel(model);
             picForm.ShowDialog();
+
+            //TODO: 選択が解除されていたらこちらのほうの選択も解除する
+            //picForm.
         }
 
         private void ToolStripMenuItem_fwd_one_Click(object sender, EventArgs e)
@@ -612,6 +619,11 @@ namespace PictureManagerApp
                 rightPicBox.Width = 0;
                 rightPicBox.Height = 0;
             }
+        }
+
+        private void MenuItem_MagSub_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

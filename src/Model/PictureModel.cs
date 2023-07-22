@@ -1,10 +1,16 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.Eventing.Reader;
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Security.Policy;
+using System.Windows.Forms.VisualStyles;
 using PictureManagerApp.src.Lib;
+//using static System.Net.Mime.MediaTypeNames;
+//using static System.Net.WebRequestMethods;
+using static System.Windows.Forms.LinkLabel;
 
 namespace PictureManagerApp.src.Model
 {
@@ -21,6 +27,7 @@ namespace PictureManagerApp.src.Model
         MOVE_PREV_ARTIST,
         MOVE_NEXT_MARKED_FILE,
         MOVE_PREV_MARKED_FILE,
+
         MOVE_MAX
     }
 
@@ -30,8 +37,19 @@ namespace PictureManagerApp.src.Model
         SORT_FILESIZE,
         SORT_IMAGESIZE,
         SORT_LAST_WRITE_TIME,
+
         SORT_MAX
     }
+
+    public enum PIC_ORIENT_TYPE
+    {
+        PIC_ORINET_ALL,
+        PIC_ORINET_PORTRAIT,
+        PIC_ORINET_LANDSCAPE,
+
+        PIC_ORINET_MAX
+    }
+
 
     public class PictureModel
     {
@@ -42,6 +60,14 @@ namespace PictureManagerApp.src.Model
         private int mIdx = -1;
         private DateTime? mDtFrom;
         private DateTime? mDtTo;
+
+        private Size? mMaxPicSize = null;
+        private int mMinFileSize = 0;
+        private int mMaxFileSize = 0;
+        private PIC_ORIENT_TYPE mTargetPicOrinet = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
+
+        private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
+        private string mSeachWord = "";
 
         public int mMarkCount { private set; get; }//都度集計したほうが良いのでは？漏れ
         public int UpDownCount { set; get; }
@@ -72,6 +98,8 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void SetDate(DateTime? dtFrom, DateTime? dtTo)
         {
+            Log.log($"date from={dtFrom}");
+            Log.log($"date to={dtTo}");
             mDtFrom = dtFrom;
             mDtTo = dtTo;
         }
@@ -79,6 +107,74 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        public void SetMaxPicSize(Size size)
+        {
+            Log.log($"max pic size={size}");
+            mMaxPicSize = size;
+        }
+
+        public void SetMinFileSize(int minfilesize)
+        {
+            Log.log($"min file size={minfilesize}");
+            mMinFileSize = minfilesize;
+        }
+
+        public void SetMaxFileSize(int maxfilesize)
+        {
+            Log.log($"max file size={maxfilesize}");
+            mMaxFileSize = maxfilesize;
+        }
+
+        public void SetPicOrient(PIC_ORIENT_TYPE targetPicOrient)
+        {
+            Log.log($"orinet={targetPicOrient}");
+            mTargetPicOrinet = targetPicOrient;
+        }
+        
+        public void SetExt(string ext)
+        {
+            mExtList = ext;
+        }
+
+        public void SetSeachWord(string word)
+        {
+            mSeachWord = word;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void BuildFileListFromText(string filelist, string rootPath = "")
+        {
+            Log.log($"[S] root=#{rootPath}");
+            mPath = rootPath;
+
+            string[] filelistarray = filelist.Split(
+                            Environment.NewLine,
+                            StringSplitOptions.RemoveEmptyEntries);
+            foreach (var file in filelistarray)
+            {
+                var pathtmp = "";
+                if (mPath == "")
+                {
+                    pathtmp = file;
+                }
+                else
+                {
+                    pathtmp = Path.Combine(rootPath, file);
+                }
+                if (!File.Exists(pathtmp))
+                {
+                    Log.err($"存在しないファイルを無視します #{pathtmp}");
+                    continue;
+                }
+                var fi = new FileItem(pathtmp);
+                mFileList.Add(fi);
+            }
+
+            Log.trc("[E]");
+        }
+
         public void BuildFileList(string path)
         {
             Log.log($"[S]:path={path}");
@@ -86,40 +182,97 @@ namespace PictureManagerApp.src.Model
             mPath = path;
             if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
             {
-                BuildFileList_Dir(path);
+                BuildFileList_Dir();
             }
             else
             {
-                BuildFileList_Zip(path);
+                BuildFileList_Zip();
             }
 
             Log.trc("[E]");
         }
 
-        private void BuildFileList_Dir(string path)
+        private void BuildFileList_Dir()
         {
             var fileArray = Directory.GetFiles(
                             mPath,
-                            "*.jpg",
+                            "*.*",//"*.jpg",
                             SearchOption.AllDirectories);
 
-            foreach (var f in fileArray.OrderBy(x => x))
+#if false
+            var files = new List<string>();
+            var extlist = mExtList.Split(",");
+            foreach (var ext in extlist)
             {
-                if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
+                var tmpfiles = fileArray.Where(e => e.EndsWith(ext, StringComparison.OrdinalIgnoreCase));
+                files.AddRange(tmpfiles);
+            }
+#else
+            var extensions = mExtList.Split(",");
+            var files = fileArray.Where(f => extensions.Contains(Path.GetExtension(f)));
+#endif
+
+            if (mSeachWord != "")
+            {
+                files = files.Where(e => e.Contains(mSeachWord));
+            }
+
+            foreach (var f in files.OrderBy(x => x))
+            {
+                if (SpecFileP(f))
                 {
-                    FileItem fi = new FileItem(f);
-                    mFileList.Add(fi);
+                    var fi = new FileItem(f);
+                    if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrinet))
+                    {
+                        mFileList.Add(fi);
+
+                        if (mSeachWord != "")
+                        {
+                            var tmp = f.Replace(mSeachWord, "");
+                            if (File.Exists(tmp))
+                            {
+                                var tmpfi = new FileItem(tmp);
+                                tmpfi.Mark = true;
+                                mMarkCount++;
+                                mFileList.Add(tmpfi);
+                            }
+                        }
+                    }
+                    else
+                    {
+                        Log.log($"非対象ファイル={f}");
+                    }
                 }
             }
         }
 
-        private void BuildFileList_Zip(string path)
+        private bool SpecFileP(string filename)
+        {
+            if (FileItem.isSpecifiedDateFile(filename, mDtFrom, mDtTo) == false)
+            {
+                return false;
+            }
+
+            if (FileItem.isAboveOfMaxFilesizeImage(filename, mMinFileSize) == false)
+            {
+                return false;
+            }
+
+            if (FileItem.isBelowOfMaxFilesizeImage(filename, mMaxFileSize) == false)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        private void BuildFileList_Zip()
         {
             var encode = "utf-8";
             //encode = "sjis";
             //encode = "shift_jis";
             //using (var archive = ZipFile.OpenRead(path))
-            using (ZipArchive archive = ZipFile.Open(path,
+            using (ZipArchive archive = ZipFile.Open(mPath,
                 ZipArchiveMode.Read,
                 System.Text.Encoding.GetEncoding(encode)))
             {
@@ -149,7 +302,7 @@ namespace PictureManagerApp.src.Model
                 {
                     //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
                     {
-                        FileItem fi = new FileItem(f, path);
+                        FileItem fi = new FileItem(f, mPath);
                         mFileList.Add(fi);
                     }
                 }
@@ -363,7 +516,7 @@ namespace PictureManagerApp.src.Model
             string txt;
 
             FileItem fi = mFileList[mIdx];
-            var fpath = fi.GetRelativePath(Path);
+            var fpath = fi.GetRelativePath(WorkingRootPath, true);
             txt = String.Format("[{0,3}/{1}] {2}", mIdx + 1, mFileList.Count, fpath);
 
             return txt;
@@ -421,7 +574,7 @@ namespace PictureManagerApp.src.Model
             mFileList.RemoveAt(mIdx);
         }
 
-        public string Path
+        public string WorkingRootPath
         {
             get { return mPath; }
         }
