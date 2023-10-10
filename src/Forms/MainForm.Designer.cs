@@ -60,6 +60,7 @@
             cmbBoxPath = new System.Windows.Forms.ComboBox();
             btnAppendSubDir = new System.Windows.Forms.Button();
             btnNext = new System.Windows.Forms.Button();
+            btnPicSizeToggle = new System.Windows.Forms.Button();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -257,6 +258,7 @@
             // 
             // tabPage2
             // 
+            tabPage2.Controls.Add(btnPicSizeToggle);
             tabPage2.Controls.Add(label2);
             tabPage2.Controls.Add(grpBox_PicOrient);
             tabPage2.Controls.Add(numUD_Height);
@@ -416,6 +418,16 @@
             btnNext.UseVisualStyleBackColor = true;
             btnNext.Click += btnNext_Click;
             // 
+            // btnPicSizeToggle
+            // 
+            btnPicSizeToggle.Location = new System.Drawing.Point(486, 105);
+            btnPicSizeToggle.Name = "btnPicSizeToggle";
+            btnPicSizeToggle.Size = new System.Drawing.Size(112, 35);
+            btnPicSizeToggle.TabIndex = 5;
+            btnPicSizeToggle.Text = "変更";
+            btnPicSizeToggle.UseVisualStyleBackColor = true;
+            btnPicSizeToggle.Click += btnPicSizeToggle_Click;
+            // 
             // MainForm
             // 
             AcceptButton = startBtn;
@@ -487,6 +499,7 @@
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_PR;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_All;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_LS;
+        private System.Windows.Forms.Button btnPicSizeToggle;
     }
 }
 

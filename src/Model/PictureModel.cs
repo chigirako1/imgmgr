@@ -240,7 +240,7 @@ namespace PictureManagerApp.src.Model
                     }
                     else
                     {
-                        Log.log($"非対象ファイル={f}");
+                        //Log.log($"非対象ファイル={f}");
                     }
                 }
             }
@@ -286,7 +286,7 @@ namespace PictureManagerApp.src.Model
                     //Console.WriteLine("更新日時   : {0}", e.LastWriteTime);
                 }
 
-                var files = archive.Entries.OrderBy(e => e.FullName).
+                var files = archive.Entries.//OrderBy(e => e.FullName).
                     Where(e =>
                         e.FullName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
                         e.FullName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
@@ -294,11 +294,13 @@ namespace PictureManagerApp.src.Model
                         e.FullName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
                 );
 
+
                 List<string> filelist = new List<string>();
                 files.ToList().ForEach(f => filelist.Add(f.FullName));
+                filelist.Sort(new NaturalStringComparer());
 
                 mFileList.ZipList = true;
-                foreach (var f in filelist.OrderBy(x => x))
+                foreach (var f in filelist)//.OrderBy(x => x))
                 {
                     //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
                     {

@@ -46,7 +46,9 @@ namespace PictureManagerApp.src.Lib
                         path,
                         FileMode.Open,
                         FileAccess.Read);
+
             Image img = Image.FromStream(fs);
+
             fs.Close();
 
             return img;
@@ -259,7 +261,7 @@ namespace PictureManagerApp.src.Lib
             d.width = imgW * ratio / 100;
             d.height = imgH * ratio / 100;
 
-            if (scrnW > d.width)
+            if (scrnW >= d.width)
             {
                 //画面の幅に収まっている
 
@@ -283,7 +285,7 @@ namespace PictureManagerApp.src.Lib
                 d.src_x2 = imgW - d.src_x1;
             }
 
-            if (scrnH > d.height)
+            if (scrnH >= d.height)
             {
                 //画面の高さに収まっている
 

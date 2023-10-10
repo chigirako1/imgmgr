@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
 using PictureManagerApp.src.Forms;
@@ -387,13 +388,21 @@ namespace PictureManagerApp
 
         private void SetStatusBar_ImageSize(Image img)
         {
-            string imagesize = img.Width + "x" + img.Height;
+            string imagesize = "";
+            if (img != null)
+            {
+                imagesize = img.Width + "x" + img.Height;
+            }
             statusLbl_WxH.Text = imagesize;
         }
 
         private void SetStatusBar_ImageRatio(Image img)
         {
-            string imageratio = img.Width + "x" + img.Height;
+            string imageratio = "";
+            if (img != null)
+            {
+                imageratio = "?";// img.Width + "x" + img.Height;
+            }
             statusLbl_ratio.Text = imageratio;
         }
 
@@ -624,6 +633,13 @@ namespace PictureManagerApp
         private void MenuItem_MagSub_Click(object sender, EventArgs e)
         {
 
+        }
+
+        private void ToolStripMenuItem_CopyParentDirPath_Click(object sender, EventArgs e)
+        {
+            FileItem fitem = mModel.GetCurrentFileItem();
+            string parentPath = Path.GetDirectoryName(fitem.FilePath);
+            Clipboard.SetText(parentPath);
         }
     }
 }

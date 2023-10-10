@@ -74,9 +74,9 @@ namespace PictureManagerApp.src.Model
                     dirname = Path.GetDirectoryName(mPath);
                 }
 
-                Uri dirUri = new Uri(dirname);
-
-                return dirUri.ToString();
+                //Uri dirUri = new Uri(dirname);
+                //return dirUri.ToString();
+                return dirname;
             }
             else
             {
@@ -93,9 +93,7 @@ namespace PictureManagerApp.src.Model
                 }
 
                 Uri dirUri = new Uri(dirname);
-
                 Uri relUri = basepath.MakeRelativeUri(dirUri);
-
                 return relUri.ToString();
             }
         }
@@ -266,9 +264,17 @@ namespace PictureManagerApp.src.Model
             }
             return mImage;
 #else
-            var img = ImageModule.GetImage(this.FilePath);
-            ImageSize.Width = img.Width;
-            ImageSize.Height = img.Height;
+            Image img = null;
+            try {
+                img = ImageModule.GetImage(this.FilePath);
+                ImageSize.Width = img.Width;
+                ImageSize.Height = img.Height;
+            } catch {
+                img = null;
+                ImageSize.Width = 0;
+                ImageSize.Height = 0;
+            }
+
             return img;
 #endif
         }
@@ -289,7 +295,13 @@ namespace PictureManagerApp.src.Model
             {
                 string path = FilePath;
                 var img = GetImage();
-                mThumbnail = ImageModule.GetThumbnailImage(img, thumbWidth, thumbHeight);
+                if (img != null)
+                {
+                    mThumbnail = ImageModule.GetThumbnailImage(img, thumbWidth, thumbHeight);
+                }else
+                {
+                    mThumbnail = null;
+                }
                 Log.trc(path);
             }
             return mThumbnail;

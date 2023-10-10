@@ -61,7 +61,7 @@ namespace PictureManagerApp.src.Model
                 if (item.Mark)
                 {
                     var fitem = new FileItem(item);
-                    //fitem.Mark = false;
+                    fitem.Mark = false;
                     flist.Add(fitem);
                 }
             }

@@ -56,7 +56,14 @@ namespace PictureManagerApp
             {
                 cmbBoxPath.Text = PATH;
             }
-            cmbBoxPath.Items.Add(cmbBoxPath.Text);
+            cmbBoxPath.Items.Add(PATH);
+            cmbBoxPath.Items.Add(@"F:\download\PxDl-0trash");
+            cmbBoxPath.Items.Add(@"D:\dl\AnkPixiv\Twitter");
+
+            cmbBox_FilenameFilter.Text = "-w2x";
+            cmbBox_FilenameFilter.Items.Add(cmbBox_FilenameFilter.Text);
+            cmbBox_FilenameFilter.Text = "";
+            cmbBox_FilenameFilter.Items.Add(cmbBox_FilenameFilter.Text);
 
             int duration = 100;
             Animator.Animate(duration, (frame, frequency) =>
@@ -311,6 +318,22 @@ namespace PictureManagerApp
         private void chkListBox_Ext_SelectedIndexChanged(object sender, EventArgs e)
         {
 
+        }
+
+        private void btnPicSizeToggle_Click(object sender, EventArgs e)
+        {
+            var width = (int)numUD_Width.Value;
+            var height = (int)numUD_Height.Value;
+
+            if (width == 0 && height == 0)
+            {
+                numUD_Width.Value = 1200 / 2;
+                numUD_Height.Value = 1920 / 2;
+            } else
+            {
+                numUD_Width.Value = 0;
+                numUD_Height.Value = 0;
+            }
         }
     }
 }
