@@ -14,7 +14,7 @@ namespace PictureManagerApp
 {
     public partial class MainForm : Form
     {
-        private static string PATH = @"F:\download\PxDl";
+        private static readonly string PATH = @"F:\download\PxDl";
 
         private int Radius { get; set; }
         private int Ox { get; set; }
@@ -48,7 +48,7 @@ namespace PictureManagerApp
 
             string[] args = Environment.GetCommandLineArgs();
 
-            if (args.Count() > 1)
+            if (args.Length > 1)
             {
                 cmbBoxPath.Text = args[1];
             }
@@ -59,6 +59,7 @@ namespace PictureManagerApp
             cmbBoxPath.Items.Add(PATH);
             cmbBoxPath.Items.Add(@"F:\download\PxDl-0trash");
             cmbBoxPath.Items.Add(@"D:\dl\AnkPixiv\Twitter");
+            cmbBoxPath.Items.Add(@"D:\dl\AnkPixiv\Twitter-0trash");
 
             cmbBox_FilenameFilter.Text = "-w2x";
             cmbBox_FilenameFilter.Items.Add(cmbBox_FilenameFilter.Text);
@@ -101,7 +102,7 @@ namespace PictureManagerApp
                 }
                 // TODO: progress bar
 
-                PictureForm picForm = new PictureForm();
+                PictureForm picForm = new();
                 picForm.SetModel(model);
                 picForm.ShowDialog();
             }
@@ -186,7 +187,7 @@ namespace PictureManagerApp
             var height = (int)numUD_Height.Value;
             if (width != 0 && height != 0)
             {
-                Size size = new Size(width, height);
+                Size size = new(width, height);
 
                 model.SetMaxPicSize(size);
             }
@@ -329,11 +330,19 @@ namespace PictureManagerApp
             {
                 numUD_Width.Value = 1200 / 2;
                 numUD_Height.Value = 1920 / 2;
-            } else
+            }
+            else
             {
                 numUD_Width.Value = 0;
                 numUD_Height.Value = 0;
             }
+        }
+
+        private void btnNextDay_Click(object sender, EventArgs e)
+        {
+            DateTime dt = dtPicker_from.Value;
+            dtPicker_from.Value = dt.AddDays(1);
+            Start();
         }
     }
 }

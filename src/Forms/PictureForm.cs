@@ -22,9 +22,9 @@ namespace PictureManagerApp
         private const int TRANSITION_DUE_TIME = 500;
         //private const int THUMBNAIL_TIMER_PERIOD = 250;
         private const int THUMBNAIL_TIMER_PERIOD = 150;
-        private static Brush BRUSH_MARK = Brushes.DarkRed;
-        private static Brush BG_BRUSH = Brushes.Black;
-        private static Color COLOR_MARK = Color.Red;
+        private static readonly Brush BRUSH_MARK = Brushes.DarkRed;
+        private static readonly Brush BG_BRUSH = Brushes.Black;
+        private static readonly Color COLOR_MARK = Color.Red;
 
         private int Col = 4;
         private int Row = 3;
@@ -47,7 +47,7 @@ namespace PictureManagerApp
         private System.Threading.Timer mTransitionTimer;
         private System.Threading.Timer mThumbnailTimer;
 
-        private Dictionary<Keys, KeyDownFunc> KeyFuncTbl = new Dictionary<Keys, KeyDownFunc>();
+        private readonly Dictionary<Keys, KeyDownFunc> KeyFuncTbl = [];
 
         //=====================================================================
         // public
@@ -248,7 +248,7 @@ namespace PictureManagerApp
                 "移動？",
                 MessageBoxButtons.YesNoCancel,
                 MessageBoxIcon.Question,
-                MessageBoxDefaultButton.Button3);
+                MessageBoxDefaultButton.Button1);
             if (result == DialogResult.Yes)
             {
                 mModel.Batch();
@@ -264,9 +264,9 @@ namespace PictureManagerApp
         private void PictureForm_KeyDown(object sender, KeyEventArgs e)
         {
             Log.trc($"[S]:{e.KeyCode}");
-            if (KeyFuncTbl.ContainsKey(e.KeyCode))
+            if (KeyFuncTbl.TryGetValue(e.KeyCode, out KeyDownFunc value))
             {
-                if (KeyFuncTbl[e.KeyCode](sender, e))
+                if (value(sender, e))
                 {
                     UpdatePicture();
                 }
@@ -380,7 +380,7 @@ namespace PictureManagerApp
             }
             else
             {
-                FileInfo fi = new FileInfo(fitem.FilePath);
+                FileInfo fi = new(fitem.FilePath);
                 statusLbl_FileSize.Text = String.Format("{0:#,0} Bytes", fi.Length);
                 StatusLbl_LWTime.Text = fi.LastWriteTime.ToShortDateString();
             }
@@ -552,7 +552,7 @@ namespace PictureManagerApp
 
         private void TToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ColRowForm crForm = new ColRowForm(this.Col, this.Row);
+            ColRowForm crForm = new(this.Col, this.Row);
             DialogResult result = crForm.ShowDialog();
             if (result == DialogResult.OK)
             {
@@ -580,7 +580,7 @@ namespace PictureManagerApp
             }
             PictureModel model = mModel.DuplicateSelectOnly();
 
-            PictureForm picForm = new PictureForm();
+            PictureForm picForm = new();
             picForm.SetModel(model);
             picForm.ShowDialog();
 

@@ -19,7 +19,7 @@ namespace PictureManagerApp.src.Model
         //=====================================================================
         public FileList()
         {
-            mFileList = new List<FileItem>();
+            mFileList = [];
         }
 
         public FileItem this[int index]
@@ -55,7 +55,7 @@ namespace PictureManagerApp.src.Model
 
         public FileList DupSel()
         {
-            FileList flist = new FileList();
+            FileList flist = [];
             foreach (FileItem item in mFileList)
             {
                 if (item.Mark)

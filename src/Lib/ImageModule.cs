@@ -42,7 +42,7 @@ namespace PictureManagerApp.src.Lib
         public static Image GetImage(string path)
         {
             // Log.trc($"path={path}");
-            using FileStream fs = new FileStream(
+            using FileStream fs = new(
                         path,
                         FileMode.Open,
                         FileAccess.Read);
@@ -82,18 +82,18 @@ namespace PictureManagerApp.src.Lib
         //---------------------------------------------------------------------
         public static Image CreateTranslucentImage(Image img, float alpha)
         {
-            Bitmap transImg = new Bitmap(img.Width, img.Height);
+            Bitmap transImg = new(img.Width, img.Height);
             Graphics g = Graphics.FromImage(transImg);
 
             System.Drawing.Imaging.ColorMatrix cm =
-                new System.Drawing.Imaging.ColorMatrix();
+                new();
             cm.Matrix00 = 1;
             cm.Matrix11 = 1;
             cm.Matrix22 = 1;
             cm.Matrix33 = alpha;
             cm.Matrix44 = 1;
             System.Drawing.Imaging.ImageAttributes ia =
-                new System.Drawing.Imaging.ImageAttributes();
+                new();
             ia.SetColorMatrix(cm);
             g.DrawImage(img,
                 new Rectangle(0, 0, img.Width, img.Height),
@@ -114,17 +114,17 @@ namespace PictureManagerApp.src.Lib
             Image prevImg,
             int alphaPercent)
         {
-            Bitmap drawImg = new Bitmap(w, h);
+            Bitmap drawImg = new(w, h);
             Graphics g = Graphics.FromImage(drawImg);
 
             System.Drawing.Imaging.ColorMatrix cm =
-                new System.Drawing.Imaging.ColorMatrix();
+                new();
             cm.Matrix00 = 1;
             cm.Matrix11 = 1;
             cm.Matrix22 = 1;
             cm.Matrix44 = 1;
             System.Drawing.Imaging.ImageAttributes ia =
-                new System.Drawing.Imaging.ImageAttributes();
+                new();
 
             if (prevImg != null)
             {
@@ -194,13 +194,13 @@ namespace PictureManagerApp.src.Lib
             if (alphaPercent != 100)
             {
                 System.Drawing.Imaging.ColorMatrix cm =
-                    new System.Drawing.Imaging.ColorMatrix();
+                    new();
                 cm.Matrix00 = 1;
                 cm.Matrix11 = 1;
                 cm.Matrix22 = 1;
                 cm.Matrix44 = 1;
                 System.Drawing.Imaging.ImageAttributes ia =
-                    new System.Drawing.Imaging.ImageAttributes();
+                    new();
 
                 if (prevImg != null)
                 {

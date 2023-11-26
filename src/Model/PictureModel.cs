@@ -78,7 +78,7 @@ namespace PictureManagerApp.src.Model
         public PictureModel()
         {
             Log.trc("[S]");
-            mFileList = new FileList();
+            mFileList = [];
             mMarkCount = 0;
             mIdx = 0;
             Log.trc("[E]");
@@ -295,7 +295,7 @@ namespace PictureManagerApp.src.Model
                 );
 
 
-                List<string> filelist = new List<string>();
+                List<string> filelist = [];
                 files.ToList().ForEach(f => filelist.Add(f.FullName));
                 filelist.Sort(new NaturalStringComparer());
 
@@ -304,7 +304,7 @@ namespace PictureManagerApp.src.Model
                 {
                     //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
                     {
-                        FileItem fi = new FileItem(f, mPath);
+                        FileItem fi = new(f, mPath);
                         mFileList.Add(fi);
                     }
                 }
@@ -316,7 +316,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public PictureModel DuplicateSelectOnly()
         {
-            PictureModel newObj = new PictureModel(mFileList);
+            PictureModel newObj = new(mFileList);
             newObj.mPath = mPath;
             
             return newObj;

@@ -60,7 +60,7 @@ namespace PictureManagerApp
             int x = 0;
             int y = 0;
             Brush txtbrush = Brushes.Aqua;
-            Font fnt = new Font("MS ゴシック", fsize);
+            Font fnt = new("MS ゴシック", fsize);
 
             //
             string txt = mModel.GetPictureInfoText();
@@ -145,7 +145,7 @@ namespace PictureManagerApp
                         //g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
 
                         Brush txtbrush = Brushes.Red;
-                        Font fnt = new Font("MS ゴシック", fsize);
+                        Font fnt = new("MS ゴシック", fsize);
                         string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", imgsize.Width, imgsize.Height, thumWidth, thumHeight);
                         g.DrawString(txt, fnt, txtbrush, x, y);
                     }

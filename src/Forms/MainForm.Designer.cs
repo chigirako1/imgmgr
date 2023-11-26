@@ -46,6 +46,7 @@
             chkBox_to = new System.Windows.Forms.CheckBox();
             chkBox_from = new System.Windows.Forms.CheckBox();
             tabPage2 = new System.Windows.Forms.TabPage();
+            btnPicSizeToggle = new System.Windows.Forms.Button();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
             radioBtn_PicOrinet_LS = new System.Windows.Forms.RadioButton();
@@ -60,7 +61,7 @@
             cmbBoxPath = new System.Windows.Forms.ComboBox();
             btnAppendSubDir = new System.Windows.Forms.Button();
             btnNext = new System.Windows.Forms.Button();
-            btnPicSizeToggle = new System.Windows.Forms.Button();
+            btnNextDay = new System.Windows.Forms.Button();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -272,6 +273,16 @@
             tabPage2.Text = "pic";
             tabPage2.UseVisualStyleBackColor = true;
             // 
+            // btnPicSizeToggle
+            // 
+            btnPicSizeToggle.Location = new System.Drawing.Point(486, 105);
+            btnPicSizeToggle.Name = "btnPicSizeToggle";
+            btnPicSizeToggle.Size = new System.Drawing.Size(112, 35);
+            btnPicSizeToggle.TabIndex = 5;
+            btnPicSizeToggle.Text = "変更";
+            btnPicSizeToggle.UseVisualStyleBackColor = true;
+            btnPicSizeToggle.Click += btnPicSizeToggle_Click;
+            // 
             // label2
             // 
             label2.AutoSize = true;
@@ -412,21 +423,21 @@
             // 
             btnNext.Location = new System.Drawing.Point(193, 1027);
             btnNext.Name = "btnNext";
-            btnNext.Size = new System.Drawing.Size(143, 44);
+            btnNext.Size = new System.Drawing.Size(175, 44);
             btnNext.TabIndex = 5;
-            btnNext.Text = "次を開始";
+            btnNext.Text = "次のパスで開始";
             btnNext.UseVisualStyleBackColor = true;
             btnNext.Click += btnNext_Click;
             // 
-            // btnPicSizeToggle
+            // btnNextDay
             // 
-            btnPicSizeToggle.Location = new System.Drawing.Point(486, 105);
-            btnPicSizeToggle.Name = "btnPicSizeToggle";
-            btnPicSizeToggle.Size = new System.Drawing.Size(112, 35);
-            btnPicSizeToggle.TabIndex = 5;
-            btnPicSizeToggle.Text = "変更";
-            btnPicSizeToggle.UseVisualStyleBackColor = true;
-            btnPicSizeToggle.Click += btnPicSizeToggle_Click;
+            btnNextDay.Location = new System.Drawing.Point(383, 1027);
+            btnNextDay.Name = "btnNextDay";
+            btnNextDay.Size = new System.Drawing.Size(175, 44);
+            btnNextDay.TabIndex = 5;
+            btnNextDay.Text = "次の日付で開始";
+            btnNextDay.UseVisualStyleBackColor = true;
+            btnNextDay.Click += btnNextDay_Click;
             // 
             // MainForm
             // 
@@ -434,6 +445,7 @@
             AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(2195, 1090);
+            Controls.Add(btnNextDay);
             Controls.Add(btnNext);
             Controls.Add(btnAppendSubDir);
             Controls.Add(cmbBoxPath);
@@ -500,6 +512,7 @@
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_All;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_LS;
         private System.Windows.Forms.Button btnPicSizeToggle;
+        private System.Windows.Forms.Button btnNextDay;
     }
 }
 

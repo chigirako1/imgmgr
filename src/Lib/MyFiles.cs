@@ -14,7 +14,7 @@ namespace PictureManagerApp.src.Lib
             Log.trc("------");
             Log.log($"path={path}");
 
-            FileInfo fi = new FileInfo(path);
+            FileInfo fi = new(path);
 
             string p = Path.GetRelativePath(rootpath, path);
             Log.log($"p={p}");

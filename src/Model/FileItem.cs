@@ -48,6 +48,7 @@ namespace PictureManagerApp.src.Model
             this.mZipPath = "";
             this.Mark = org.Mark;
             this.mThumbnail = org.mThumbnail;
+            this.ImageSize = org.ImageSize;
         }
 
         public string FilePath
@@ -80,7 +81,7 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                Uri basepath = new Uri(basePath + Path.DirectorySeparatorChar);
+                Uri basepath = new(basePath + Path.DirectorySeparatorChar);
 
                 string dirname;
                 if (filename_p)
@@ -92,7 +93,7 @@ namespace PictureManagerApp.src.Model
                     dirname = Path.GetDirectoryName(mPath);
                 }
 
-                Uri dirUri = new Uri(dirname);
+                Uri dirUri = new(dirname);
                 Uri relUri = basepath.MakeRelativeUri(dirUri);
                 return relUri.ToString();
             }
@@ -103,7 +104,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public static bool isSpecifiedDateFile(string filepath, DateTime? from, DateTime? to)
         {
-            FileInfo fi = new FileInfo(filepath);
+            FileInfo fi = new(filepath);
             DateTime dt = fi.LastWriteTime;
             if (from != null && dt.CompareTo(from) < 0)
             {
@@ -129,7 +130,7 @@ namespace PictureManagerApp.src.Model
                 return true;
             }
 
-            FileInfo fi = new FileInfo(filepath);
+            FileInfo fi = new(filepath);
             if (fi.Length >= minFileSize)
             {
                 return true;
@@ -149,7 +150,7 @@ namespace PictureManagerApp.src.Model
                 return true;
             }
 
-            FileInfo fi = new FileInfo(filepath);
+            FileInfo fi = new(filepath);
             if (fi.Length <= maxFileSize)
             {
                 return true;
