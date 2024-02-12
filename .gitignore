@@ -1,4 +1,6 @@
-Properties/launchSettings.json
+bin/
+Properties/
+obj/
 obj/Debug/netcoreapp3.1/.NETCoreApp,Version=v3.1.AssemblyAttributes.cs
 obj/Debug/netcoreapp3.1/PictureManagerApp.GeneratedMSBuildEditorConfig.editorconfig
 obj/Debug/netcoreapp3.1/PictureManagerApp.csproj.AssemblyReference.cache

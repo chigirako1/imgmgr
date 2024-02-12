@@ -135,7 +135,7 @@ namespace PictureManagerApp
                                           thumHeight,
                                           thumbImg);
 
-                    if (imgsize.Width * imgsize.Height < 640 * 480)
+                    if (imgsize.Width * imgsize.Height < 600 * 960)
                     {
                         int fsize = 20;
                         //int txtx = 0;

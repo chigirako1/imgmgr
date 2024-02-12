@@ -15,6 +15,7 @@ namespace PictureManagerApp.src.Model
         private readonly string mPath;
         private string mZipPath;
         private Size ImageSize;
+        private bool mThumbnailFail;
 
         //private Image mImage;
         private Image mThumbnail;
@@ -217,6 +218,7 @@ namespace PictureManagerApp.src.Model
                         return false;
                     }
 #else
+                    if (img == null) return false;
                     var pixel = size.Width * size.Height;
                     if (pixel != 0 && img.Width * img.Height > pixel)
                     {
@@ -301,6 +303,8 @@ namespace PictureManagerApp.src.Model
                     mThumbnail = ImageModule.GetThumbnailImage(img, thumbWidth, thumbHeight);
                 }else
                 {
+                    Log.trc($"GetImage null");
+                    mThumbnailFail = true;
                     mThumbnail = null;
                 }
                 Log.trc(path);
@@ -310,11 +314,16 @@ namespace PictureManagerApp.src.Model
 
         public bool HasThumbnailImage()
         {
+            if (mThumbnailFail) return true;
+
             if (mThumbnail == null)
             {
                 return false;
             }
-            return true;
+            else
+            {
+                return true;
+            }
         }
     }
 }

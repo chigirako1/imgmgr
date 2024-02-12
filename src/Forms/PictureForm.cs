@@ -158,7 +158,7 @@ namespace PictureManagerApp
                 }
                 //pictureBox.Size = this.ClientSize;
             }
-            picBoxUpdate();
+            PicBoxUpdate();
             Log.trc($"[E]");
         }
 
@@ -244,7 +244,8 @@ namespace PictureManagerApp
                 return false;
             }
 
-            DialogResult result = MessageBox.Show("選択したファイルを移動しますか？",
+            var msg = String.Format("選択したファイル({0})を移動しますか？", mModel.mMarkCount.ToString());
+            DialogResult result = MessageBox.Show(msg,
                 "移動？",
                 MessageBoxButtons.YesNoCancel,
                 MessageBoxIcon.Question,
@@ -300,7 +301,7 @@ namespace PictureManagerApp
                 SetStatusBar(fitem, img);
             }
 
-            picBoxUpdate();
+            PicBoxUpdate();
 
             //img.Dispose();
             Log.trc("[E]");
@@ -309,7 +310,7 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        private void picBoxUpdate()
+        private void PicBoxUpdate()
         {
             //Log.trc("[S]");
             Refresh();
@@ -516,7 +517,7 @@ namespace PictureManagerApp
                 Invoke(new Action(UI_change));
                 return;
             }
-            picBoxUpdate();
+            PicBoxUpdate();
         }
 
         //---------------------------------------------------------------------
@@ -534,7 +535,7 @@ namespace PictureManagerApp
             }
         }
 
-        private void x2ToolStripMenuItem_Click(object sender, EventArgs e)
+        private void X2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
             this.Col = 2;
             this.Row = 2;
@@ -542,7 +543,7 @@ namespace PictureManagerApp
             Refresh();
         }
 
-        private void x4ToolStripMenuItem1_Click(object sender, EventArgs e)
+        private void X4ToolStripMenuItem1_Click(object sender, EventArgs e)
         {
             this.Col = 4;
             this.Row = 3;
@@ -578,7 +579,7 @@ namespace PictureManagerApp
                     MessageBoxIcon.Error);
                 return;
             }
-            PictureModel model = mModel.DuplicateSelectOnly();
+            var model = mModel.DuplicateSelectOnly();
 
             PictureForm picForm = new();
             picForm.SetModel(model);
@@ -597,8 +598,8 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_PathCopy_Click(object sender, EventArgs e)
         {
-            FileItem fitem = mModel.GetCurrentFileItem();
-            string path = fitem.FilePath;
+            var fitem = mModel.GetCurrentFileItem();
+            var path = fitem.FilePath;
             Clipboard.SetText(path);
         }
 
@@ -637,9 +638,25 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_CopyParentDirPath_Click(object sender, EventArgs e)
         {
-            FileItem fitem = mModel.GetCurrentFileItem();
-            string parentPath = Path.GetDirectoryName(fitem.FilePath);
+            var fitem = mModel.GetCurrentFileItem();
+            var parentPath = Path.GetDirectoryName(fitem.FilePath);
             Clipboard.SetText(parentPath);
+        }
+
+        private void sQLTestToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+
+        }
+
+        private void sQLToolStripMenuItem_Click(object sender, EventArgs e)
+        {
+            var fitem = mModel.GetCurrentFileItem();
+            var path = fitem.FilePath;
+            var pxv = new PxvArtist(path);
+
+            var caption = $"{pxv.PxvName}({pxv.PxvID})";
+            var msg = $"{pxv.Rating}\n{pxv.R18}\n{pxv.Feature}";
+            MessageBox.Show(msg, caption);
         }
     }
 }

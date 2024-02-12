@@ -217,24 +217,45 @@ namespace PictureManagerApp.src.Model
                 files = files.Where(e => e.Contains(mSeachWord));
             }
 
+            var total = files.Count();
+            //Log.log($"ファイル数={total}");
+            var cnt = 0;
             foreach (var f in files.OrderBy(x => x))
             {
+                cnt++;
+                if (cnt % 500 == 0) Log.log($"#{cnt}/{total}");
                 if (SpecFileP(f))
                 {
                     var fi = new FileItem(f);
                     if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrinet))
                     {
+                        //Log.log($"対象ファイル={f}");
                         mFileList.Add(fi);
 
                         if (mSeachWord != "")
                         {
                             var tmp = f.Replace(mSeachWord, "");
+                            Log.log($"w2x:{tmp}/{mSeachWord}");
                             if (File.Exists(tmp))
                             {
                                 var tmpfi = new FileItem(tmp);
                                 tmpfi.Mark = true;
                                 mMarkCount++;
                                 mFileList.Add(tmpfi);
+                            }
+                            else
+                            {
+                                if (Path.GetExtension(tmp) == ".jpg")
+                                {
+                                    tmp = tmp.Replace(".jpg", ".png");
+                                }
+                                if (File.Exists(tmp))
+                                {
+                                    var tmpfi = new FileItem(tmp);
+                                    tmpfi.Mark = true;
+                                    mMarkCount++;
+                                    mFileList.Add(tmpfi);
+                                }
                             }
                         }
                     }

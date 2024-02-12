@@ -14,7 +14,14 @@ namespace PictureManagerApp
 {
     public partial class MainForm : Form
     {
-        private static readonly string PATH = @"F:\download\PxDl";
+        private static readonly string[] PATH = [
+            //@"F:\download\PxDl",
+            //@"F:\download\PxDl-0trash",
+            @"D:\download\PxDl",
+            @"D:\download\PxDl-0trash",
+            @"D:\dl\AnkPixiv\Twitter",
+            @"D:\dl\AnkPixiv\Twitter-0trash",
+        ];
 
         private int Radius { get; set; }
         private int Ox { get; set; }
@@ -54,12 +61,14 @@ namespace PictureManagerApp
             }
             else
             {
-                cmbBoxPath.Text = PATH;
+                cmbBoxPath.Text = PATH[0];
             }
-            cmbBoxPath.Items.Add(PATH);
-            cmbBoxPath.Items.Add(@"F:\download\PxDl-0trash");
-            cmbBoxPath.Items.Add(@"D:\dl\AnkPixiv\Twitter");
-            cmbBoxPath.Items.Add(@"D:\dl\AnkPixiv\Twitter-0trash");
+
+            foreach (string arg in PATH)
+            {
+                cmbBoxPath.Items.Add(arg);
+            }
+           
 
             cmbBox_FilenameFilter.Text = "-w2x";
             cmbBox_FilenameFilter.Items.Add(cmbBox_FilenameFilter.Text);
