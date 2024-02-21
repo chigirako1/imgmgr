@@ -10,3 +10,4 @@ obj/PictureManagerApp.csproj.nuget.dgspec.json
 obj/project.assets.json
 src/Forms/PictureForm.resx
 src/Forms/PictureForm.resx
+obj/Debug/net8.0-windows7.0/PictureManagerApp.assets.cache
