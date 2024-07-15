@@ -23,6 +23,8 @@ namespace PictureManagerApp.src.Lib
         public long Filenum { set; get; }
         public string Status { set; get; }
 
+        public string Warnings { set; get; }
+
 
         public PxvArtist()
         {
@@ -50,6 +52,7 @@ namespace PictureManagerApp.src.Lib
             Feature = (string)reader["feature"];
             Filenum = (long)reader["filenum"];
             Status = (string)reader["status"];
+            Warnings = (string)reader["warnings"];
         }
     }
 
@@ -108,12 +111,11 @@ namespace PictureManagerApp.src.Lib
     {
         //private const string DATA_SRC = @"D:\data\src\vs_cs\development.sqlite3";
         //private const string DATA_SRC = @"D:\data\src\ror\myapp\db\development - bak240324.sqlite3";
-        private const string DATA_SRC = @"D:\data\src\ror\myapp\db\development.sqlite3";
+        private const string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\development.sqlite3";
 
         public static void GetPxvArtistInfo(int pxvid, PxvArtist pxvartist)
         {
-            var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = DATA_SRC };
-            using (var cn = new SQLiteConnection(sqlConnectionSb.ToString()))
+            using (var cn = GetSQLiteConnection())
             {
                 cn.Open();
                 using (var cmd = new SQLiteCommand(cn))
@@ -140,8 +142,8 @@ namespace PictureManagerApp.src.Lib
         {
             var pxv_artists = new List<PxvArtist>();
 
-            var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = DATA_SRC };
-            using (var cn = new SQLiteConnection(sqlConnectionSb.ToString()))
+            
+            using (var cn = GetSQLiteConnection())
             {
                 cn.Open();
                 using (var cmd = new SQLiteCommand(cn))
@@ -175,6 +177,12 @@ namespace PictureManagerApp.src.Lib
             }
 
             return pxv_artists;
+        }
+
+        private static SQLiteConnection GetSQLiteConnection()
+        {
+            var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = DATA_SRC_PATH };
+            return new SQLiteConnection(sqlConnectionSb.ToString());
         }
 
         private static void SetPxvArtistInfo(SQLiteDataReader reader, PxvArtist pxvartist)

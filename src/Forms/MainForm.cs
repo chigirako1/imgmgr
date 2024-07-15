@@ -87,7 +87,19 @@ namespace PictureManagerApp
                 cmbBox_FilenameFilter.Items.Add(word);
             }
 
-            this.Height = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height - 100;
+            //高さ
+            var w = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
+            var h = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
+            Log.trc($"{w}x{h}");
+            if (w > h)
+            {
+                this.StartPosition = FormStartPosition.CenterScreen;
+            }
+            else
+            {
+                this.Height = h - 300;
+
+            }
 
             int duration = 100;
             Animator.Animate(duration, (frame, frequency) =>
@@ -116,6 +128,9 @@ namespace PictureManagerApp
             setModelParam(model);
             try
             {
+                // TODO: progress bar
+                //...
+
                 if (filelist != null)
                 {
                     model.SetFileList(filelist);
@@ -128,7 +143,6 @@ namespace PictureManagerApp
                 {
                     model.BuildFileListFromText(txtBox_FileList.Text, pathStr);
                 }
-                // TODO: progress bar
 
                 PictureForm picForm = new();
                 picForm.SetModel(model);
@@ -137,7 +151,8 @@ namespace PictureManagerApp
                 var pics = model.GetSelectedPic();
                 foreach (var pic in pics)
                 {
-                    mFavFileList.Add((FileItem)pic);
+                    var fitem = (FileItem)pic;
+                    mFavFileList.Add(fitem);
                 }
             }
             catch (Exception ex)

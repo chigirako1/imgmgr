@@ -7,10 +7,11 @@ using System.IO.Compression;
 using System.Linq;
 using System.Security.Policy;
 using System.Windows.Forms.VisualStyles;
+
 using PictureManagerApp.src.Lib;
-//using static System.Net.Mime.MediaTypeNames;
-//using static System.Net.WebRequestMethods;
+
 using static System.Windows.Forms.LinkLabel;
+using static PictureManagerApp.src.Model.FileList;
 
 namespace PictureManagerApp.src.Model
 {
@@ -29,16 +30,6 @@ namespace PictureManagerApp.src.Model
         MOVE_PREV_MARKED_FILE,
 
         MOVE_MAX
-    }
-
-    public enum SORT_TYPE
-    {
-        SORT_PATH,
-        SORT_FILESIZE,
-        SORT_IMAGESIZE,
-        SORT_LAST_WRITE_TIME,
-
-        SORT_MAX
     }
 
     public enum PIC_ORIENT_TYPE
@@ -62,6 +53,27 @@ namespace PictureManagerApp.src.Model
         DATA_SOURCE_MAX
     }
 
+    public enum ACTION_TYPE
+    {
+        ACTION_DO_NOTHING,
+
+        ACTION_MOV_NEXT,
+        ACTION_MOV_PREV,
+
+        ACTION_ADD_DEL_LIST,
+        ACTION_ADD_FAV_LIST,
+
+        ACTION_MAX
+    }
+
+    public enum THUMBNAIL_VIEW_TYPE
+    {
+        THUMBNAIL_VIEW_LINEAR,
+        THUMBNAIL_VIEW_NEXT,
+        THUMBNAIL_VIEW_LIST,
+
+        THUMBNAIL_VIEW_MAX
+    }
 
     public class PictureModel
     {
@@ -76,8 +88,12 @@ namespace PictureManagerApp.src.Model
         private Size? mMaxPicSize = null;
         private int mMinFileSize = 0;
         private int mMaxFileSize = 0;
-        private PIC_ORIENT_TYPE mTargetPicOrinet = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
+        private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
 
+        
+        public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
+
+        private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
         private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
         private string mSeachWord = "";
 
@@ -94,6 +110,7 @@ namespace PictureManagerApp.src.Model
             mFileList = [];
             mMarkCount = 0;
             mIdx = 0;
+            ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR;
             Log.trc("[E]");
         }
 
@@ -141,7 +158,7 @@ namespace PictureManagerApp.src.Model
         public void SetPicOrient(PIC_ORIENT_TYPE targetPicOrient)
         {
             Log.log($"orinet={targetPicOrient}");
-            mTargetPicOrinet = targetPicOrient;
+            mTargetPicOrient = targetPicOrient;
         }
         
         public void SetExt(string ext)
@@ -153,6 +170,21 @@ namespace PictureManagerApp.src.Model
         {
             mSeachWord = word;
         }
+
+        public void SetThumbView(THUMBNAIL_VIEW_TYPE thumbViewType)
+        {
+            ThumbViewType = thumbViewType;
+        }
+
+        public void ToggleThumbView()
+        {
+            ThumbViewType++;
+            if (ThumbViewType == THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MAX)
+            {
+                ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR;
+            }
+        }
+
 
         //---------------------------------------------------------------------
         // 
@@ -200,7 +232,7 @@ namespace PictureManagerApp.src.Model
 
         public bool IsZip()
         {
-            if (File.GetAttributes(mPath).HasFlag(FileAttributes.Directory))
+            if (mPath != "" && File.GetAttributes(mPath).HasFlag(FileAttributes.Directory))
             {
                 return false;
             }
@@ -258,11 +290,15 @@ namespace PictureManagerApp.src.Model
             foreach (var f in files.OrderBy(x => x))
             {
                 cnt++;
-                if (cnt % 1000 == 0) Log.log($"#{cnt}/{total}");
+                if (cnt % 1000 == 0)
+                {
+                    Log.log($"#{cnt}/{total}");
+                }
+
                 if (SpecFileP(f))
                 {
                     var fi = new FileItem(f);
-                    if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrinet))
+                    if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrient))
                     {
                         //Log.log($"対象ファイル={f}");
                         mFileList.Add(fi);
@@ -443,6 +479,55 @@ namespace PictureManagerApp.src.Model
 
             //Log.trc("thumbnail make cont.");
             return false;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void ListPrev()
+        {
+            if (mIdx == 0)
+            {
+                mIdx = mFileList.Count;
+            }
+            mIdx--;
+
+            Update();
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void ListNext()
+        {
+            var dn = mFileList[mIdx].DirectoryName;
+            var dn2 = mFileList[mIdx + 1].DirectoryName;
+
+            if (dn == dn2)
+            {
+                mIdx++;
+                Update();
+            }
+            else
+            {
+                PrevDirImage();
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void ListUp()
+        {
+            PrevDirImage();
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void ListDown()
+        {
+            NextDirImage();
         }
 
         //---------------------------------------------------------------------
@@ -777,12 +862,13 @@ namespace PictureManagerApp.src.Model
             string txt;
             if (pxv.PxvID != 0)
             {
-                 txt = String.Format("【DB情報】{0}|{1}|{2}<{3}({4})>",
+                 txt = String.Format("DB情報:【{0}】{1}|{2}<{3}({4})>{5}",
                      pxv.Rating,
                      pxv.R18,
                      pxv.Status,
                      pxv.PxvName,
-                     pxv.PxvID
+                     pxv.PxvID,
+                     pxv.Warnings
                   );
                 //pxv.PxvName, pxv.PxvID, pxv.Rating, pxv.Status, pxv.R18);
             }
@@ -800,6 +886,40 @@ namespace PictureManagerApp.src.Model
             if (idx >= 0)
             {
                 idx = idx % mFileList.Count;
+            }
+
+            return idx;
+        }
+
+        public int GetAbsIdxList(int y, int x)
+        {
+            var fi = mFileList[mIdx];
+            var dn = fi.DirectoryName;
+
+            int idx = mIdx;
+            for (int i = 0; i <= y;)
+            {
+                for (int j = 0; j <= x;)
+                {
+                    if (i == y && j == x)
+                    {
+                        //idx;
+                        return idx;
+                    }
+                    else
+                    {
+                        idx++;
+                        if (idx == mFileList.Count)
+                        {
+                            idx = 0;
+                        }
+                        var dn2 = mFileList[idx].DirectoryName;
+                        if (dn == dn2)
+                        {
+                            j++;
+                        }
+                    }
+                }
             }
 
             return idx;
@@ -844,6 +964,58 @@ namespace PictureManagerApp.src.Model
             }
         }
 
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void AddDelList()
+        {
+            mFileList[mIdx].Del = !mFileList[mIdx].Del;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void AddFavList()
+        {
+            mFileList[mIdx].Fav = !mFileList[mIdx].Fav;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void UpdateListFile()
+        {
+            var filename = DEL_LIST_TXT_FILENAME;
+
+            /*
+            string readText;
+            if (!File.Exists(filename))
+                readText = File.ReadAllText(filename);
+            else
+                readText = "new";
+
+            File.WriteAllText(filename, readText);
+            File.AppendAllText(filename, "Bad !" + Environment.NewLine);
+            */
+
+            var append = true;
+            using (var writer = new StreamWriter(filename, append))
+            {
+                for (int cnt = 0; cnt < mFileList.Count; cnt++)
+                {
+                    var item = mFileList[cnt];
+                    if (item.Del)
+                    {
+                        var txt = item.GetTxtPath();
+                        writer.WriteLine(txt);
+                    }
+                }
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public void RemoveCurrentFile()
         {
             string path = mFileList[mIdx].FilePath;
@@ -866,6 +1038,11 @@ namespace PictureManagerApp.src.Model
         public int PictureTotalNumber
         {
             get { return mFileList.Count; }
+        }
+
+        public void Sort(SORT_TYPE sort_type)
+        {
+            mFileList.Sort(sort_type);
         }
 
         //=====================================================================

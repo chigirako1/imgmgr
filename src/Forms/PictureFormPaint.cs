@@ -7,6 +7,12 @@ namespace PictureManagerApp
 {
     public partial class PictureForm : Form
     {
+        private const string FONT_NAME = "MS ゴシック";
+        private const int FONT_SIZE = 20;
+        private const int FONT_SPACE = 3;
+        private const int OPA_VAL = 128;
+        private static readonly Brush FONT_COLOR = Brushes.Aqua;
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -19,6 +25,10 @@ namespace PictureManagerApp
             if (fitem.Mark)
             {
                 bgbrush = BRUSH_MARK;
+            }
+            else if (mSlideshow)
+            {
+                bgbrush = BRUSH_SLIDESHOW;
             }
             else
             {
@@ -50,19 +60,19 @@ namespace PictureManagerApp
                 magType);
 
             {
-                PictureBox_PaintTxt(g, d);
+                PictureBox_PaintTxt(g, d, fitem);
             }
         }
 
-        private void PictureBox_PaintTxt(Graphics g, DrawDimension d)
+        private void PictureBox_PaintTxt(Graphics g, DrawDimension d, FileItem fitem)
         {
             // テキストの描画
-            int fsize = 20;
-            var inc = 3;
+            int fsize = FONT_SIZE;
+            var inc = FONT_SPACE;
             int x = 0;
             int y = 0;
-            Brush txtbrush = Brushes.Aqua;
-            Font fnt = new("MS ゴシック", fsize);
+            Brush txtbrush = FONT_COLOR;
+            Font fnt = new(FONT_NAME, fsize);
 
             //
             var txt = mModel.GetPictureInfoText();
@@ -92,9 +102,23 @@ namespace PictureManagerApp
             }
             else
             { 
+                //
                 y += fsize + inc;
                 txt = mModel.GetZipEntryname();
                 g.DrawString(txt, fnt, txtbrush, x, y);
+            }
+
+            if (fitem.Fav)
+            {
+                txt = "❤";
+                y = pictureBox.Height - fsize;
+                g.DrawString(txt, fnt, txtbrush, 0, y);
+            }
+            if (fitem.Del)
+            {
+                txt = "❌️";
+                y = pictureBox.Height - fsize - fsize;
+                g.DrawString(txt, fnt, txtbrush, 0, y);
             }
 
             fnt.Dispose();
@@ -112,15 +136,20 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         private void rightPicBox_Paint(object sender, PaintEventArgs e)
         {
-            if (NextPic)
+            //if (NextPic)
+            switch (mModel.ThumbViewType)
             {
-                rightPicBox_Paint_next(e);
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
+                    rightPicBox_Paint_next(e);
+                    break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST:
+                    rightPicBox_Paint_list(e);
+                    break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR:
+                default:
+                    rightPicBox_Paint_thumbnail(e);
+                    break;
             }
-            else
-            { 
-                rightPicBox_Paint_thumbnail(e);
-            }
-            
         }
 
         private void rightPicBox_Paint_thumbnail(PaintEventArgs e)
@@ -181,7 +210,7 @@ namespace PictureManagerApp
                         //g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
 
                         Brush txtbrush = Brushes.Red;
-                        Font fnt = new("MS ゴシック", fsize);
+                        Font fnt = new(FONT_NAME, fsize);
                         string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", imgsize.Width, imgsize.Height, thumWidth, thumHeight);
                         g.DrawString(txt, fnt, txtbrush, x, y);
                     }
@@ -189,7 +218,7 @@ namespace PictureManagerApp
 
                 if (fitem.Mark)
                 {
-                    var opaqueBrush = new SolidBrush(Color.FromArgb(128, COLOR_MARK));
+                    var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
                     g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
                 }
 
@@ -202,13 +231,13 @@ namespace PictureManagerApp
                 }
             }
         }
+
         private void rightPicBox_Paint_next(PaintEventArgs e)
         {
             Graphics g = e.Graphics;
 
             var idx = mModel.GetAbsIdx(1);
             FileItem fitem = mModel.GetFileItem(idx);
-            Size imgsize = fitem.GetImageSize();
             Image img = fitem.GetImage();
 
             Brush bgbrush;
@@ -223,15 +252,78 @@ namespace PictureManagerApp
 
             g.FillRectangle(bgbrush, 0, 0, pictureBox.Width, pictureBox.Height);
 
+            int x = 0;
+            int y = 0;
             if (img != null)
             {
                 ImageModule.DrawImage(
                                         g,
-                                        0,
-                                        0,
+                                        x,
+                                        y,
                                         img.Width,
                                         img.Height,
                                         img);
+            }
+        }
+
+        private void rightPicBox_Paint_list(PaintEventArgs e)
+        {
+            Graphics g = e.Graphics;
+
+            int col = Col;
+            int row = Row;
+
+            var tsize = GetThumbnailSize();
+            int thumWidth = tsize.Width;
+            int thumHeight = tsize.Height;
+
+            int x = 0;
+            int y = 0;
+            for (int i = 0; i < col; i++)
+            {
+                for (int j = 0; j < row; j++)
+                {
+                    var idx = mModel.GetAbsIdxList(i, j);
+                    FileItem fitem = mModel.GetFileItem(idx);
+                    Image thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight);
+
+                    Brush bgbrush;
+                    if (fitem.Mark)
+                    {
+                        bgbrush = BRUSH_MARK;
+                    }
+                    else
+                    {
+                        bgbrush = BG_BRUSH;
+                    }
+
+                    g.FillRectangle(bgbrush, x, y, thumWidth, thumHeight);
+
+                    if (thumbImg != null)
+                    {
+                        ImageModule.DrawImage(
+                                              g,
+                                              x,
+                                              y,
+                                              thumWidth,
+                                              thumHeight,
+                                              thumbImg);
+                    }
+
+                    if (fitem.Mark)
+                    {
+                        var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
+                        g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
+                    }
+
+                    x += thumWidth;
+
+                    if ((i + 1) % col == 0)
+                    {
+                        x = 0;
+                        y += thumHeight;
+                    }
+                }
             }
         }
     }

@@ -6,9 +6,11 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+//using System.Windows.Threading;
 using PictureManagerApp.src.Forms;
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
+using static PictureManagerApp.src.Model.FileList;
 
 namespace PictureManagerApp
 {
@@ -17,14 +19,20 @@ namespace PictureManagerApp
         //=====================================================================
         // const
         //=====================================================================
-        private const int TRANSITION_FPS = 60;
+        private const int TRANSITION_FPS = 30;
         private const int TRANSITION_TIMER_PERIOD = 1000 / TRANSITION_FPS;
-        private const int TRANSITION_DUE_TIME = 500;
-        //private const int THUMBNAIL_TIMER_PERIOD = 250;
-        //private const int THUMBNAIL_TIMER_PERIOD = 133;//100だと重くなる.200=OK
-        private const int THUMBNAIL_TIMER_PERIOD = 140;
+        private const int TRANSITION_DUE_TIME = 100;
+
+        //private const int THUMBNAIL_TIMER_PERIOD = 250;//200=OK
+        //private const int THUMBNAIL_TIMER_PERIOD = 140;
+        private const int THUMBNAIL_TIMER_PERIOD = 133;
+        //private const int THUMBNAIL_TIMER_PERIOD = 100;//100だと重くなる.
+
+        private const int SLIDESHOW_TIMER_PERIOD = 1000;
+
         private static readonly Brush BRUSH_0 = Brushes.Blue;
         private static readonly Brush BRUSH_MARK = Brushes.DarkRed;
+        private static readonly Brush BRUSH_SLIDESHOW = Brushes.Gray;
         private static readonly Brush BG_BRUSH = Brushes.Black;
         private static readonly Color COLOR_MARK = Color.Red;
 
@@ -42,17 +50,28 @@ namespace PictureManagerApp
         private PictureModel mModel;
         private Boolean mFullscreen = false;
         private Boolean DisplayTxt = true;
-        private Boolean NextPic = false;
+        //private Boolean NextPic = false;
         private Image mCurrentImg, mPrevImg;
         private IMAGE_DISPLAY_MAGNIFICATION_TYPE mMagType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND;
-        private int mThumbMs = THUMBNAIL_TIMER_PERIOD;
-        private int mAlphaPercent = 0;
-        private int startTickCnt;
+        private readonly Dictionary<Keys, KeyDownFunc> KeyFuncTbl = [];
+
+        // transition
         private Boolean mTransitionEffect = false;
+        private int mAlphaPercent = 0;
+        private int mTransStartTickCnt;
         private System.Threading.Timer mTransitionTimer;
+
+        // thumbnail
+        private int mThumbMs = THUMBNAIL_TIMER_PERIOD;
+        private int mThumbStartTickCnt;
         private System.Threading.Timer mThumbnailTimer;
 
-        private readonly Dictionary<Keys, KeyDownFunc> KeyFuncTbl = [];
+        // slideshow
+        private Boolean mSlideshow = false;
+        private int mSlideMs = SLIDESHOW_TIMER_PERIOD;
+        private int mSlideStartTickCnt;
+        private System.Threading.Timer mSlideshowTimer;
+
 
         //=====================================================================
         // public
@@ -62,7 +81,6 @@ namespace PictureManagerApp
             Log.trc($"[S]");
             InitializeComponent();
 
-            InitKeys();
 
             Log.trc($"[E]");
         }
@@ -72,6 +90,8 @@ namespace PictureManagerApp
             mModel = model;
             mModel.UpDownCount = Col;
             mModel.PageCount = this.Col * this.Row;
+
+            InitKeys();
         }
 
         //=====================================================================
@@ -120,6 +140,10 @@ namespace PictureManagerApp
                 this.Height = h - 50;
 
                 pictureBox.Width = this.Width / 2;
+                if (pictureBox.Width > 1200)
+                {
+                    pictureBox.Width = 1200;
+                }
             }
             else
             {
@@ -139,12 +163,18 @@ namespace PictureManagerApp
             this.Left = 0;
 
 
+            // timer
             mTransitionTimer = new System.Threading.Timer(TimerTickTransition, null, 0, TRANSITION_TIMER_PERIOD);
             mTransitionTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
             mThumbnailTimer = new System.Threading.Timer(TimerTickThumbnail, null, 0, mThumbMs);
-            mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            //mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
             mThumbnailTimer.Change(0, mThumbMs);
+
+
+            mSlideshowTimer = new System.Threading.Timer(TimerTickSlideshow, null, 0, SLIDESHOW_TIMER_PERIOD);
+            //mSlideshowTimer.Change(0, mSlideMs);
+            mSlideshowTimer.Change(Timeout.Infinite, Timeout.Infinite);
 
             UpdatePicture();
 
@@ -166,6 +196,12 @@ namespace PictureManagerApp
             if (mThumbnailTimer != null)
             {
                 mThumbnailTimer.Dispose();
+                Log.trc("timer dispose");
+            }
+
+            if (this.mSlideshowTimer != null)
+            {
+                mSlideshowTimer.Dispose();
                 Log.trc("timer dispose");
             }
         }
@@ -195,7 +231,7 @@ namespace PictureManagerApp
                 {
                     pictureBox.Size = this.ClientSize;
                 }
-                
+
             }
             PicBoxUpdate();
             Log.trc($"[E]");
@@ -204,7 +240,37 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        private void DoAction(ACTION_TYPE act)
+        {
+            switch (act)
+            {
+                case ACTION_TYPE.ACTION_MOV_NEXT:
+                    mModel.Next();
+                    UpdatePicture();
+                    break;
+                case ACTION_TYPE.ACTION_MOV_PREV:
+                    mModel.Prev();
+                    UpdatePicture();
+                    break;
+                case ACTION_TYPE.ACTION_ADD_DEL_LIST:
+                    mModel.AddDelList();
+                    PicBoxUpdate();
+                    break;
+                case ACTION_TYPE.ACTION_ADD_FAV_LIST:
+                    mModel.AddFavList();
+                    mModel.toggleMark();
+                    PicBoxUpdate();
+                    break;
+                case ACTION_TYPE.ACTION_DO_NOTHING:
+                default:
+                    break;
+            }
 
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         private void InitKeys()
         {
             KeyFuncTbl[Keys.Left] = KeyDownFunc_Left;
@@ -226,8 +292,46 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.F3] = KeyDownFunc_F3;
             //KeyFuncTbl[Keys.F5] = ;
             //KeyFuncTbl[Keys.F9] = ;
+
+            switch (mModel.ThumbViewType)
+            {
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST:
+                    KeyFuncTbl[Keys.Left] = KeyDownFunc_List_Left;
+                    KeyFuncTbl[Keys.Right] = KeyDownFunc_List_Right;
+                    KeyFuncTbl[Keys.Up] = KeyDownFunc_List_Up;
+                    KeyFuncTbl[Keys.Down] = KeyDownFunc_List_Down;
+                    break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR:
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
+                default:
+                    break;
+            }
+
         }
 
+        private bool KeyDownFunc_List_Left(object sender, KeyEventArgs e)
+        {
+            mModel.ListPrev();
+            return true;
+        }
+
+        private bool KeyDownFunc_List_Right(object sender, KeyEventArgs e)
+        {
+            mModel.ListNext();
+            return true;
+        }
+
+        private bool KeyDownFunc_List_Up(object sender, KeyEventArgs e)
+        {
+            mModel.ListUp();
+            return true;
+        }
+
+        private bool KeyDownFunc_List_Down(object sender, KeyEventArgs e)
+        {
+            mModel.ListDown();
+            return true;
+        }
 
         private bool KeyDownFunc_Left(object sender, KeyEventArgs e)
         {
@@ -333,7 +437,10 @@ namespace PictureManagerApp
 
         private bool KeyDownFunc_F3(object sender, KeyEventArgs e)
         {
-            NextPic = !NextPic;
+            //NextPic = !NextPic;
+            mModel.ToggleThumbView();
+            InitKeys();
+
             return true;
         }
 
@@ -357,13 +464,21 @@ namespace PictureManagerApp
 
         private bool WindowQuitOp()
         {
+            if (mSlideshow)
+            {
+                ToggleSlideshow();
+                return false;
+            }
+
             if (mFullscreen)
             {
                 ToggleFulscreen();
                 return false;
             }
 
-            if (mModel.mMarkCount == 0)
+            mModel.UpdateListFile();
+
+            if (mModel.mMarkCount == 0 || mModel.IsZip())
             {
                 Close();
                 return false;
@@ -425,6 +540,44 @@ namespace PictureManagerApp
             //Log.trc("[E]");
         }
 
+        private void pictureBox_MouseClick(object sender, MouseEventArgs e)
+        {
+            //MessageBox.Show(e.Location.ToString());
+
+            if (mSlideshow)
+            {
+                ToggleSlideshow();
+                PicBoxUpdate();
+                return;
+            }
+
+            var loc = e.Location;
+            ACTION_TYPE act = ACTION_TYPE.ACTION_DO_NOTHING;
+
+            var pos = this.Width / 3;
+
+            if (loc.Y < 100)
+            {
+                act = ACTION_TYPE.ACTION_ADD_FAV_LIST;
+            }
+            else if (loc.Y > this.Height - 200)
+            {
+                act = ACTION_TYPE.ACTION_ADD_DEL_LIST;
+            }
+            else if (loc.X > this.Width - pos)
+            {
+                // 右側
+                act = ACTION_TYPE.ACTION_MOV_PREV;
+            }
+            else if (loc.X < pos)
+            {
+                // 左側
+                act = ACTION_TYPE.ACTION_MOV_NEXT;
+            }
+
+            DoAction(act);
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -456,17 +609,20 @@ namespace PictureManagerApp
         private void SetPic()
         {
             //Log.trc("[S]");
-            startTickCnt = 0;
-            mAlphaPercent = 0;
 
-            int period = TRANSITION_TIMER_PERIOD;
+            this.mTransStartTickCnt = 0;
+            this.mAlphaPercent = 0;
 
-            //picTimer.Interval = interval;//10;
-            //picTimer.Start();
             if (mTransitionEffect)
             {
+                int period = TRANSITION_TIMER_PERIOD;
+
+                //picTimer.Interval = interval;//10;
+                //picTimer.Start();
+
                 mTransitionTimer.Change(0, period);
             }
+
             //Log.trc("[E]");
         }
 
@@ -583,17 +739,17 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         private void TimerTickTransition(object state)
         {
-            Log.trc("[S]");
+            //Log.trc("[S]");
 
             int tickCnt = Environment.TickCount & Int32.MaxValue;
-            if (startTickCnt == 0)
+            if (mTransStartTickCnt == 0)
             {
                 mAlphaPercent += 10;
-                startTickCnt = tickCnt;
+                mTransStartTickCnt = tickCnt;
             }
             else
             {
-                int delta = tickCnt - startTickCnt;
+                int delta = tickCnt - mTransStartTickCnt;
                 Log.log($"delta={delta}");
 
                 int incVal = (delta * 100) / TRANSITION_DUE_TIME;
@@ -607,7 +763,7 @@ namespace PictureManagerApp
             }
 
             UI_change();
-            Log.trc("[E]");
+            //Log.trc("[E]");
         }
 
         //---------------------------------------------------------------------
@@ -618,9 +774,9 @@ namespace PictureManagerApp
             //Log.trc("[S]");
 
             int tickCnt = Environment.TickCount & Int32.MaxValue;
-            if (startTickCnt == 0)
+            if (mThumbStartTickCnt == 0)
             {
-                startTickCnt = tickCnt;
+                mThumbStartTickCnt = tickCnt;
             }
             else
             {
@@ -647,14 +803,77 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        private void TimerTickSlideshow(object state)
+        {
+            Log.trc("[S]");
+
+            int tickCnt = Environment.TickCount & Int32.MaxValue;
+            if (mSlideStartTickCnt == 0)
+            {
+                mSlideStartTickCnt = tickCnt;
+            }
+            else
+            {
+                if (!this.mSlideshow)
+                {
+                    return;
+                }
+
+                mModel.Next();
+                //UpdatePicture();
+
+            }
+            if (this != null)
+            {
+                UI_change2();
+            }
+
+            Log.trc("[E]");
+        }
+
+        private void ToggleSlideshow()
+        {
+            mSlideshow = !mSlideshow;
+
+            if (mSlideshow)
+            {
+                mSlideshowTimer.Change(0, mSlideMs);
+            }
+            else
+            {
+                mSlideshowTimer.Change(Timeout.Infinite, Timeout.Infinite);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         private void UI_change()
         {
             if (this.InvokeRequired)
             {
-                Invoke(new Action(UI_change));
+                try
+                {
+                    Invoke(new Action(UI_change));
+                }
+                catch (System.Exception e)
+                {
+                    Log.fatal(e.Message);
+                }
                 return;
             }
+
             PicBoxUpdate();
+        }
+
+        private void UI_change2()
+        {
+            if (this.InvokeRequired)
+            {
+                Invoke(new Action(UI_change2));
+                return;
+            }
+            UpdatePicture();
         }
 
         //---------------------------------------------------------------------
@@ -810,26 +1029,6 @@ namespace PictureManagerApp
                 opt);
         }
 
-        private void pictureBox_MouseClick(object sender, MouseEventArgs e)
-        {
-            //MessageBox.Show(e.Location.ToString());
-
-            var loc = e.Location;
-
-            var pos = this.Width / 3;
-            if (loc.X > this.Width - pos)
-            {
-
-                mModel.Next();
-                UpdatePicture();
-            }
-            else if (loc.X < pos)
-            {
-                mModel.Prev();
-                UpdatePicture();
-            }
-        }
-
         private void MenuItem_MagSub_FitNoMag_Click(object sender, EventArgs e)
         {
 
@@ -837,7 +1036,7 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_SlideShow_Click(object sender, EventArgs e)
         {
-
+            ToggleSlideshow();
         }
 
         private void ToolStripMenuItem_Quit_Click(object sender, EventArgs e)
@@ -848,6 +1047,55 @@ namespace PictureManagerApp
         private void ToolStripMenuItem_Close_Click(object sender, EventArgs e)
         {
             WindowQuitOp();
+        }
+
+        private void toolStripMenuItem_Sort_FilePath_Click(object sender, EventArgs e)
+        {
+            //グループのToolStripMenuItemを配列にしておく
+            ToolStripMenuItem[] groupMenuItems = new ToolStripMenuItem[]
+            {
+                this.toolStripMenuItem_Sort_FilePath,
+                this.toolStripMenuItem_Sort_FileSize,
+                this.ToolStripMenuItem_Sort_NumPixel,
+            };
+
+            //グループのToolStripMenuItemを列挙する
+            foreach (ToolStripMenuItem item in groupMenuItems)
+            {
+                if (object.ReferenceEquals(item, sender))
+                {
+                    //ClickされたToolStripMenuItemならば、Indeterminateにする
+                    item.CheckState = CheckState.Indeterminate;
+
+                    SORT_TYPE sort_type;
+
+                    if (item == this.toolStripMenuItem_Sort_FileSize)
+                    {
+                        sort_type = SORT_TYPE.SORT_FILESIZE;
+                    }
+                    else if (item == this.ToolStripMenuItem_Sort_NumPixel)
+                    {
+                        sort_type = SORT_TYPE.SORT_NUM_PIXEL;
+                    }
+                    else
+                    {
+                        sort_type = SORT_TYPE.SORT_PATH;
+                    }
+                    mModel.Sort(sort_type);
+                }
+                else
+                {
+                    //ClickされたToolStripMenuItemでなければ、Uncheckedにする
+                    item.CheckState = CheckState.Unchecked;
+                }
+            }
+            mModel.MovePos(POS_MOVE_TYPE.MOVE_HOME);
+            UpdatePicture();
+        }
+
+        private void ToolStripMenuItem_Slides_Click(object sender, EventArgs e)
+        {
+            ToggleSlideshow();
         }
     }
 }

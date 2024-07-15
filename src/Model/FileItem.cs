@@ -24,8 +24,10 @@ namespace PictureManagerApp.src.Model
         public bool Removed { set; get; }
         public bool IsZipEntry { private set; get; }
 
-        public int FileSize { set; get; }
+        public long FileSize { set; get; }
 
+        public bool Fav {  set; get; }
+        public bool Del { set; get; }
 
         //=====================================================================
         // 
@@ -41,12 +43,19 @@ namespace PictureManagerApp.src.Model
             {
                 IsZipEntry = true;
             }
+            else
+            {
+                FileInfo fi = new(path);
+                FileSize = fi.Length;
+            }
         }
 
         public FileItem(FileItem org)
         {
             this.mPath = org.mPath;
-            this.mZipPath = "";
+            //this.mZipPath = "";
+            this.mZipPath = org.mZipPath;
+            this.IsZipEntry = org.IsZipEntry;
             this.Mark = org.Mark;
             this.mThumbnail = org.mThumbnail;
             this.ImageSize = org.ImageSize;
@@ -69,6 +78,11 @@ namespace PictureManagerApp.src.Model
                 return this.FilePath;
             }
             return null;
+        }
+
+        public string GetTxtPath()
+        {
+            return mZipPath + "\t" + mPath;
         }
 
         public string GetRelativePath(string basePath, bool filename_p = false)
