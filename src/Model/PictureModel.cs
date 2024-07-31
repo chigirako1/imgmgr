@@ -58,7 +58,13 @@ namespace PictureManagerApp.src.Model
         ACTION_DO_NOTHING,
 
         ACTION_MOV_NEXT,
+        ACTION_MOV_NEXT_CONT_START,
+        ACTION_MOV_NEXT_CONT_STOP,
+        ACTION_MOV_SLIDESHOW,
         ACTION_MOV_PREV,
+
+        ACTION_MOV_NEXT_DIR,
+        ACTION_MOV_PREV_DIR,
 
         ACTION_ADD_DEL_LIST,
         ACTION_ADD_FAV_LIST,
@@ -69,10 +75,16 @@ namespace PictureManagerApp.src.Model
     public enum THUMBNAIL_VIEW_TYPE
     {
         THUMBNAIL_VIEW_LINEAR,
-        THUMBNAIL_VIEW_NEXT,
         THUMBNAIL_VIEW_LIST,
 
-        THUMBNAIL_VIEW_MAX
+        THUMBNAIL_VIEW_MAX,
+
+        THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_LINEAR,
+
+        THUMBNAIL_VIEW_NO_MAIN_SPLIT,
+
+        //以下は除外
+        THUMBNAIL_VIEW_NEXT,
     }
 
     public class PictureModel
@@ -90,13 +102,11 @@ namespace PictureManagerApp.src.Model
         private int mMaxFileSize = 0;
         private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
 
-        
-        public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
-
         private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
         private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
         private string mSeachWord = "";
 
+        public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
         public int mMarkCount { private set; get; }//都度集計したほうが良いのでは？漏れ
         public int UpDownCount { set; get; }
         public int PageCount { set; get; }
@@ -110,7 +120,7 @@ namespace PictureManagerApp.src.Model
             mFileList = [];
             mMarkCount = 0;
             mIdx = 0;
-            ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR;
+            ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DEFAULT;
             Log.trc("[E]");
         }
 
@@ -181,8 +191,9 @@ namespace PictureManagerApp.src.Model
             ThumbViewType++;
             if (ThumbViewType == THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MAX)
             {
-                ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR;
+                ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DEFAULT;
             }
+            Log.trc($"ThumbViewType={ThumbViewType}");
         }
 
 
@@ -473,7 +484,7 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                Log.log($"making thumbnail #{idx}.");
+                //Log.log($"making thumbnail #{idx}.");
                 Image thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight, true);
             }
 
@@ -482,48 +493,47 @@ namespace PictureManagerApp.src.Model
         }
 
         //---------------------------------------------------------------------
-        // 
+        // 同一ディレクトリ内のファイルで前後に移動
         //---------------------------------------------------------------------
         public void ListPrev()
         {
-            if (mIdx == 0)
+            //if (false)
             {
-                mIdx = mFileList.Count;
+                //Prev();//zantei
             }
-            mIdx--;
-
-            Update();
-        }
-
-        //---------------------------------------------------------------------
-        // 
-        //---------------------------------------------------------------------
-        public void ListNext()
-        {
-            var dn = mFileList[mIdx].DirectoryName;
-            var dn2 = mFileList[mIdx + 1].DirectoryName;
-
-            if (dn == dn2)
+            //else
             {
-                mIdx++;
+                mIdx = GetIdxOfPrevFileInSameDir();
                 Update();
             }
-            else
+
+        }
+
+        public void ListNext()
+        {
+            //if (false)
             {
-                PrevDirImage();
+                ///Next();//zantei
+            }
+            //else
+            {
+                //次のファイルに移動（ディレクトリ内をループ）
+                mIdx = GetIdxOfNextFileInSameDir();
+                Update();
             }
         }
 
         //---------------------------------------------------------------------
-        // 
+        // 前のディレクトリの先頭ファイルに移動
         //---------------------------------------------------------------------
         public void ListUp()
         {
+
             PrevDirImage();
         }
 
         //---------------------------------------------------------------------
-        // 
+        // 次のディレクトリの先頭ファイルに移動
         //---------------------------------------------------------------------
         public void ListDown()
         {
@@ -547,6 +557,18 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        public bool HasNext()
+        {
+            if (mIdx == mFileList.Count - 1)
+            {
+                return false;
+            }
+            return true;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public void Next()
         {
             mIdx++;
@@ -555,6 +577,14 @@ namespace PictureManagerApp.src.Model
                 mIdx = 0;
             }
             Update();
+        }
+
+        public void NextIfHasNext()
+        {
+            if (HasNext())
+            {
+                Next();
+            }
         }
 
         //---------------------------------------------------------------------
@@ -688,7 +718,7 @@ namespace PictureManagerApp.src.Model
             /*if (mFileList.Count == 1)
             {
                 return;
-            }*/
+            }
 
             string dirname = mFileList[mIdx].DirectoryName;
 
@@ -710,6 +740,108 @@ namespace PictureManagerApp.src.Model
                     break;
                 }
             } while (bak != idx);
+            */
+            mIdx = GetNextDiffDirFileIdx();
+
+            Update();
+        }
+
+        private int GetNextDiffDirFileIdx()
+        {
+            var targetIdx = mIdx;
+            string dirname = mFileList[mIdx].DirectoryName;
+
+            var bak = mIdx;
+            var idx = mIdx;
+            do
+            {
+                idx++;
+                if (idx == mFileList.Count)
+                {
+                    idx = 0;
+                }
+
+                var dirname2 = mFileList[idx].DirectoryName;
+                if (dirname2 != dirname)
+                {
+                    Log.trc($"[{mIdx}]:{dirname}:[{idx}]{dirname2}");
+                    targetIdx = idx;
+                    break;
+                }
+            } while (bak != idx);
+
+            return targetIdx;
+        }
+
+        private int GetIdxOfNextFileInSameDir()
+        {
+            var targetIdx = mIdx;
+            string dirname = mFileList[mIdx].DirectoryName;
+
+            var bak = mIdx;
+            var idx = mIdx;
+            do
+            {
+                idx++;
+                if (idx == mFileList.Count)
+                {
+                    idx = 0;
+                }
+
+                var dirname2 = mFileList[idx].DirectoryName;
+                if (dirname2 == dirname)
+                {
+                    Log.trc($"[{mIdx}]:{dirname}:[{idx}]{dirname2}");
+                    targetIdx = idx;
+                    break;
+                }
+                else
+                {
+                    //TODO: 先頭のファイルに移動
+                }
+            } while (bak != idx);
+
+            return targetIdx;
+        }
+
+        private int GetIdxOfPrevFileInSameDir()
+        {
+            var targetIdx = mIdx;
+            string dirname = mFileList[mIdx].DirectoryName;
+
+            var bak = mIdx;
+            var idx = mIdx;
+            do
+            {
+                if (idx == 0)
+                {
+                    idx = mFileList.Count;
+                }
+                idx--;
+
+                var dirname2 = mFileList[idx].DirectoryName;
+                if (dirname2 == dirname)
+                {
+                    Log.trc($"[{mIdx}]:{dirname}:[{idx}]{dirname2}");
+                    targetIdx = idx;
+                    break;
+                }
+                else
+                {
+                    //TODO: 末尾のファイルに移動
+                }
+            } while (bak != idx);
+
+
+            return targetIdx;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public void MoveToDirTopImage()
+        {
+            // TODO:
 
             Update();
         }
@@ -891,40 +1023,6 @@ namespace PictureManagerApp.src.Model
             return idx;
         }
 
-        public int GetAbsIdxList(int y, int x)
-        {
-            var fi = mFileList[mIdx];
-            var dn = fi.DirectoryName;
-
-            int idx = mIdx;
-            for (int i = 0; i <= y;)
-            {
-                for (int j = 0; j <= x;)
-                {
-                    if (i == y && j == x)
-                    {
-                        //idx;
-                        return idx;
-                    }
-                    else
-                    {
-                        idx++;
-                        if (idx == mFileList.Count)
-                        {
-                            idx = 0;
-                        }
-                        var dn2 = mFileList[idx].DirectoryName;
-                        if (dn == dn2)
-                        {
-                            j++;
-                        }
-                    }
-                }
-            }
-
-            return idx;
-        }
-
         public FileItem GetCurrentFileItemByRelativeIndex(int relativeIndex)
         {
             var i = GetAbsIdx(relativeIndex);
@@ -938,6 +1036,94 @@ namespace PictureManagerApp.src.Model
             var fitem = GetCurrentFileItemByRelativeIndex(relativeNo);
             return fitem.GetImage();
         }*/
+
+        public bool IsDiffDirNext(FileItem fitem, int relativeIndex)
+        {
+            var i = GetAbsIdx(relativeIndex);
+            var fitem2 = mFileList[i];
+            if (fitem.DirectoryName != fitem2.DirectoryName)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        //毎回これやるのはいくらなんでも馬鹿すぎる
+        public List<FileItem> GetSameDirFileItemList(int idx, ref int offsetoffset, out int currpos)
+        {
+            var fi = GetFileItem(idx);
+
+            Log.trc($"idx={idx}");
+            var startIdx = idx - 1;
+            if (startIdx < 0)
+            {
+                startIdx = 0;
+            }
+            else
+            {
+                int i = idx - 1;
+                for (; i >= 0; i--)
+                {
+                    var fi2 = GetFileItem(i);
+                    if (fi.DirectoryName == fi2.DirectoryName)
+                    {
+                        startIdx = i;
+                    }
+                    else
+                    {
+                        startIdx = i + 1;
+                        break;
+                    }
+                }
+            }
+            Log.trc($"startIdx={startIdx}");
+
+            var endIdx = idx;
+            for (int i = idx + 1; i < mFileList.Count; i++)
+            {
+                offsetoffset++;
+                var fi2 = GetFileItem(i);
+                if (fi.DirectoryName != fi2.DirectoryName)
+                {
+                    endIdx = i;
+                    break;
+                }
+                else
+                {
+                    endIdx = i;
+                }
+            }
+            Log.trc($"endIdx={endIdx}");
+
+            List<FileItem> filelist = new List<FileItem>();
+            for (int i = startIdx; i >= 0 && i < endIdx; i++)
+            {
+                filelist.Add(GetFileItem(i));
+            }
+            Log.trc($"size={filelist.Count}");
+
+            currpos = idx - startIdx;
+
+            return filelist;
+        }
+
+        public List<FileItem> GetSameDirFileItemList2(int idx)
+        {
+            List<FileItem> filelist = new List<FileItem>();
+
+            var fi = GetFileItem(idx);
+
+            for (int i = idx; i < mFileList.Count; i++)
+            {
+                var fi2 = GetFileItem(i);
+                if (fi.DirectoryName != fi2.DirectoryName)
+                {
+                    break;
+                }
+                filelist.Add(GetFileItem(i));
+            }
+            return filelist;
+        }
 
         //---------------------------------------------------------------------
         // 
@@ -962,6 +1148,37 @@ namespace PictureManagerApp.src.Model
             {
                 mMarkCount--;
             }
+        }
+
+        public void MarkAllSameDirFiles()
+        {
+            var fi = mFileList[mIdx];
+            fi.Mark = true;
+            mMarkCount++;
+
+            var dirname = mFileList[mIdx].DirectoryName;
+
+            var bak = mIdx;
+            var idx = mIdx;
+            do
+            {
+                idx++;
+                if (idx == mFileList.Count)
+                {
+                    idx = 0;
+                }
+
+                fi = mFileList[idx];
+                var dirname2 = fi.DirectoryName;
+                if (dirname2 != dirname)
+                {
+                    Log.trc($"[{mIdx}]:{dirname}:[{idx}]{dirname2}");
+                    break;
+                }
+                fi.Mark = true;
+                mMarkCount++;
+            } while (bak != idx);
+
         }
 
         //---------------------------------------------------------------------
@@ -1007,7 +1224,7 @@ namespace PictureManagerApp.src.Model
                     if (item.Del)
                     {
                         var txt = item.GetTxtPath();
-                        writer.WriteLine(txt);
+                        writer.WriteLine(txt + "\t" + "DEL");
                     }
                 }
             }
@@ -1023,6 +1240,7 @@ namespace PictureManagerApp.src.Model
             MyFiles.moveToTrashDir(path, mPath);
 
             mFileList.RemoveAt(mIdx);
+            //mMarkCount--;
         }
 
         public string WorkingRootPath

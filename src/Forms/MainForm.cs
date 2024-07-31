@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Data.SQLite;
+using System.Data;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
@@ -18,8 +20,9 @@ namespace PictureManagerApp
         private const int MAX_PIC_HEIGHT = 1920 / 2;
         private const int MAX_FILE_SIZE = 140;
 
-        private static readonly string[] PATH = [
+        private static readonly string[] CMBBOX_DIR_PATHS = [
             @"D:\download\PxDl",
+            @"D:\download\PxDl-",
             @"D:\download\PxDl-0trash",
             @"D:\dl\AnkPixiv\Twitter",
             @"D:\dl\AnkPixiv\Twitter-0trash",
@@ -37,6 +40,15 @@ namespace PictureManagerApp
 
         private FileList mFavFileList = new();
 
+        private DirList mDirList = new();
+
+        private DataTable datatable { get; set; }
+
+
+
+        //--------------
+        //
+        //--------------
         public MainForm()
         {
             Log.trc($"[S]");
@@ -66,19 +78,16 @@ namespace PictureManagerApp
             string[] args = Environment.GetCommandLineArgs();
 
             //パス
+            string path;
             if (args.Length > 1)
             {
-                cmbBoxPath.Text = args[1];
+                path = args[1];
             }
             else
             {
-                cmbBoxPath.Text = PATH[0];
+                path = CMBBOX_DIR_PATHS[0];
             }
-
-            foreach (string arg in PATH)
-            {
-                cmbBoxPath.Items.Add(arg);
-            }
+            InitPathCmbBox(path);
 
             //指定文字
             cmbBox_FilenameFilter.Text = "";
@@ -87,20 +96,55 @@ namespace PictureManagerApp
                 cmbBox_FilenameFilter.Items.Add(word);
             }
 
+            InitWindow();
+
+            InitAnimation();
+
+            Log.trc($"[E]");
+        }
+
+        private void InitPathCmbBox(string path1)
+        {
+            cmbBoxPath.Text = path1;
+
+            foreach (string path in CMBBOX_DIR_PATHS)
+            {
+                cmbBoxPath.Items.Add(path);
+            }
+
+
+            var dir = System.Environment.CurrentDirectory;
+            dir = Directory.GetParent(dir).ToString();
+            dir = Directory.GetParent(dir).ToString();
+            cmbBoxPath.Items.Add(dir);
+        }
+
+        private void InitWindow()
+        {
             //高さ
             var w = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
             var h = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
             Log.trc($"{w}x{h}");
-            if (w > h)
+            bool landscape = w > h;
+            //landscape = false;
+            if (landscape)
             {
+                //横長画面の場合
                 this.StartPosition = FormStartPosition.CenterScreen;
+                this.Location = new Point(this.Location.X, this.Location.Y - 100);
             }
             else
             {
+                //縦長画面の場合
+                this.Width = w - 200;
                 this.Height = h - 300;
-
+                this.StartPosition = FormStartPosition.Manual;
+                this.Location = new Point(100, 100);
             }
+        }
 
+        private void InitAnimation()
+        {
             int duration = 100;
             Animator.Animate(duration, (frame, frequency) =>
             {
@@ -116,7 +160,6 @@ namespace PictureManagerApp
                 if (frame == frequency) Region = null;
                 return true;
             });
-            Log.trc($"[E]");
         }
 
         private void Start(FileList filelist = null)
@@ -148,12 +191,18 @@ namespace PictureManagerApp
                 picForm.SetModel(model);
                 picForm.ShowDialog();
                 Log.trc($"picForm.ShowDialog() end");
+
+
+
                 var pics = model.GetSelectedPic();
                 foreach (var pic in pics)
                 {
                     var fitem = (FileItem)pic;
                     mFavFileList.Add(fitem);
                 }
+
+                //mDirListの更新
+                //...ページ数、サムネイル
             }
             catch (Exception ex)
             {
@@ -313,9 +362,11 @@ namespace PictureManagerApp
             {
                 {
                     cmbBoxPath.Items.Add(f);
+
+                    DirItem diritem = new(f);
+                    mDirList.Add(diritem);
                 }
             }
-
 
             Log.trc("[E]");
         }
@@ -363,16 +414,6 @@ namespace PictureManagerApp
             Start();
         }
 
-        private void groupBox1_Enter(object sender, EventArgs e)
-        {
-
-        }
-
-        private void chkListBox_Ext_SelectedIndexChanged(object sender, EventArgs e)
-        {
-
-        }
-
         private void btnPicSizeToggle_Click(object sender, EventArgs e)
         {
             var width = (int)numUD_Width.Value;
@@ -403,10 +444,17 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_AddPath_Click(object sender, EventArgs e)
         {
+            if (sender == this.ToolStripMenuItem_AddPath)
+            {
+
+            }
+
             var where = Sqlite.SQL_STATEMENT_WHERE_AI;
-            //var where = Sqlite.SQL_STATEMENT_WHERE_AI_SUSPEND;
+            where = Sqlite.SQL_STATEMENT_WHERE_AI_SUSPEND;
             where = Sqlite.SQL_STATEMENT_WHERE_3D;
             where = Sqlite.SQL_STATEMENT_WHERE_AI_NO_UPDATE;
+            where = Sqlite.SQL_STATEMENT_WHERE_AI;
+
             var dirpaths = Pxv.GetDirPaths(where);
             foreach (var dirpath in dirpaths)
             {
@@ -418,6 +466,42 @@ namespace PictureManagerApp
         private void ToolStripMenuItem_SelPicShow_Click(object sender, EventArgs e)
         {
             Start(mFavFileList);
+        }
+
+        private void tabControl_Selected(object sender, TabControlEventArgs e)
+        {
+
+        }
+
+        private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
+        {
+            var tabc = (TabControl)sender;
+            var txt = tabc.SelectedTab.Text;
+            if (txt == "DGM")
+            {
+                //string dbPath = Application.StartupPath + @"\Data.db";
+                string DATA_SRC_FILENAME = "development.sqlite3";
+                string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\" + DATA_SRC_FILENAME;
+                var dbPath = DATA_SRC_PATH;
+
+                using (SQLiteConnection con = new SQLiteConnection("Data Source=" + dbPath))
+                {
+                    con.Open();
+
+                    //空のテーブルを作ります。
+                    //この時点では、DataGridViewと紐づいていません。
+                    this.datatable = new DataTable();
+
+                    //DataTableに読み込むデータをSQLで指定します。
+                    //今回はDataTableを指定していないので、SELECTで表示する列名が
+                    //のちのち紐づけを行った際のDataGridViewの列名になります。
+                    SQLiteDataAdapter adapter = new SQLiteDataAdapter("SELECT twtid, twtname FROM twitters;", con);
+                    adapter.Fill(this.datatable);
+
+                    //データテーブルをDataGridViewに紐づけます。
+                    this.dataGridView1.DataSource = this.datatable;
+                }
+            }
         }
     }
 }

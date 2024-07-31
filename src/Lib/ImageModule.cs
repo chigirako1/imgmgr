@@ -107,6 +107,30 @@ namespace PictureManagerApp.src.Lib
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        public static float GetAspectRatio(int width, int height)
+        {
+            return (float)height / (float)width;
+        }
+
+        public static string GetAspectRatio16_9(int width, int height)
+        {
+            if (width > height)
+            {
+                var ratio = GetAspectRatio(width, height);
+                var r16 = (int)(ratio * 16);
+                return $"16:{r16}";
+            }
+            else
+            {
+                var ratio = GetAspectRatio(height, width);
+                var r16 = (int)(ratio * 16);
+                return $"{r16}:16";
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public static Image CreateCompositedImage(
             int w,
             int h,

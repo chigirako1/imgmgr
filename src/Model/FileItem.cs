@@ -20,7 +20,9 @@ namespace PictureManagerApp.src.Model
         //private Image mImage;
         private Image mThumbnail;
 
-        public bool Mark { set; get; }
+        public bool Mark {
+            set; get;
+        }
         public bool Removed { set; get; }
         public bool IsZipEntry { private set; get; }
 
@@ -320,6 +322,12 @@ namespace PictureManagerApp.src.Model
         {
             return ImageSize;
         }
+                
+        public float GetAspectRatio()
+        {
+            //return (float)ImageSize.Height / (float)ImageSize.Width;
+            return ImageModule.GetAspectRatio(ImageSize.Width, ImageSize.Height);
+        }
 
         //---------------------------------------------------------------------
         // 
@@ -337,11 +345,11 @@ namespace PictureManagerApp.src.Model
                     mThumbnail = ImageModule.GetThumbnailImage(img, thumbWidth, thumbHeight);
                 }else
                 {
-                    Log.trc($"GetImage null");
+                    //Log.trc($"GetImage null");
                     mThumbnailFail = true;
                     mThumbnail = null;
                 }
-                Log.trc(path);
+                //Log.trc(path);
             }
             return mThumbnail;
         }

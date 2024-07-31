@@ -45,7 +45,7 @@
             dtPicker_from = new System.Windows.Forms.DateTimePicker();
             chkBox_to = new System.Windows.Forms.CheckBox();
             chkBox_from = new System.Windows.Forms.CheckBox();
-            tabPage2 = new System.Windows.Forms.TabPage();
+            tabPage_Pic = new System.Windows.Forms.TabPage();
             btnPicSizeToggle = new System.Windows.Forms.Button();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
@@ -54,9 +54,11 @@
             radioBtn_PicOrinet_All = new System.Windows.Forms.RadioButton();
             numUD_Height = new System.Windows.Forms.NumericUpDown();
             numUD_Width = new System.Windows.Forms.NumericUpDown();
-            tabPage1 = new System.Windows.Forms.TabPage();
+            tabPage_FileList = new System.Windows.Forms.TabPage();
             txtBox_FileList = new System.Windows.Forms.TextBox();
             tabPage_zipList = new System.Windows.Forms.TabPage();
+            tabPage_DGM = new System.Windows.Forms.TabPage();
+            dataGridView1 = new System.Windows.Forms.DataGridView();
             btnPaste = new System.Windows.Forms.Button();
             EndBtn = new System.Windows.Forms.Button();
             cmbBoxPath = new System.Windows.Forms.ComboBox();
@@ -74,11 +76,13 @@
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numUD_MaxFilesize).BeginInit();
             gpBox_Date.SuspendLayout();
-            tabPage2.SuspendLayout();
+            tabPage_Pic.SuspendLayout();
             grpBox_PicOrient.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_Height).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numUD_Width).BeginInit();
-            tabPage1.SuspendLayout();
+            tabPage_FileList.SuspendLayout();
+            tabPage_DGM.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
             menuStrip1.SuspendLayout();
             SuspendLayout();
             // 
@@ -89,17 +93,17 @@
             label1.Margin = new System.Windows.Forms.Padding(7, 0, 7, 0);
             label1.Name = "label1";
             label1.Size = new System.Drawing.Size(55, 30);
-            label1.TabIndex = 1;
+            label1.TabIndex = 0;
             label1.Text = "&Path";
             // 
             // startBtn
             // 
-            startBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
-            startBtn.Location = new System.Drawing.Point(20, 839);
+            startBtn.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            startBtn.Location = new System.Drawing.Point(922, 237);
             startBtn.Margin = new System.Windows.Forms.Padding(7, 8, 7, 8);
             startBtn.Name = "startBtn";
-            startBtn.Size = new System.Drawing.Size(151, 46);
-            startBtn.TabIndex = 4;
+            startBtn.Size = new System.Drawing.Size(175, 70);
+            startBtn.TabIndex = 5;
             startBtn.Text = "開始(&S)";
             startBtn.UseVisualStyleBackColor = true;
             startBtn.Click += btnStart_Click;
@@ -108,16 +112,19 @@
             // 
             tabControl.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left | System.Windows.Forms.AnchorStyles.Right;
             tabControl.Controls.Add(tabPageAttr);
-            tabControl.Controls.Add(tabPage2);
-            tabControl.Controls.Add(tabPage1);
+            tabControl.Controls.Add(tabPage_Pic);
+            tabControl.Controls.Add(tabPage_FileList);
             tabControl.Controls.Add(tabPage_zipList);
+            tabControl.Controls.Add(tabPage_DGM);
             tabControl.Location = new System.Drawing.Point(20, 93);
             tabControl.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             tabControl.Multiline = true;
             tabControl.Name = "tabControl";
             tabControl.SelectedIndex = 0;
             tabControl.Size = new System.Drawing.Size(894, 721);
-            tabControl.TabIndex = 3;
+            tabControl.TabIndex = 2;
+            tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
+            tabControl.Selected += tabControl_Selected;
             // 
             // tabPageAttr
             // 
@@ -267,21 +274,21 @@
             chkBox_from.Text = "from";
             chkBox_from.UseVisualStyleBackColor = true;
             // 
-            // tabPage2
+            // tabPage_Pic
             // 
-            tabPage2.Controls.Add(btnPicSizeToggle);
-            tabPage2.Controls.Add(label2);
-            tabPage2.Controls.Add(grpBox_PicOrient);
-            tabPage2.Controls.Add(numUD_Height);
-            tabPage2.Controls.Add(numUD_Width);
-            tabPage2.Location = new System.Drawing.Point(4, 39);
-            tabPage2.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
-            tabPage2.Name = "tabPage2";
-            tabPage2.Padding = new System.Windows.Forms.Padding(5, 7, 5, 7);
-            tabPage2.Size = new System.Drawing.Size(886, 678);
-            tabPage2.TabIndex = 1;
-            tabPage2.Text = "pic";
-            tabPage2.UseVisualStyleBackColor = true;
+            tabPage_Pic.Controls.Add(btnPicSizeToggle);
+            tabPage_Pic.Controls.Add(label2);
+            tabPage_Pic.Controls.Add(grpBox_PicOrient);
+            tabPage_Pic.Controls.Add(numUD_Height);
+            tabPage_Pic.Controls.Add(numUD_Width);
+            tabPage_Pic.Location = new System.Drawing.Point(4, 39);
+            tabPage_Pic.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            tabPage_Pic.Name = "tabPage_Pic";
+            tabPage_Pic.Padding = new System.Windows.Forms.Padding(5, 7, 5, 7);
+            tabPage_Pic.Size = new System.Drawing.Size(886, 678);
+            tabPage_Pic.TabIndex = 1;
+            tabPage_Pic.Text = "pic";
+            tabPage_Pic.UseVisualStyleBackColor = true;
             // 
             // btnPicSizeToggle
             // 
@@ -313,7 +320,6 @@
             grpBox_PicOrient.TabIndex = 2;
             grpBox_PicOrient.TabStop = false;
             grpBox_PicOrient.Text = "画像の向き";
-            grpBox_PicOrient.Enter += groupBox1_Enter;
             // 
             // radioBtn_PicOrinet_LS
             // 
@@ -363,16 +369,16 @@
             numUD_Width.Size = new System.Drawing.Size(150, 35);
             numUD_Width.TabIndex = 0;
             // 
-            // tabPage1
+            // tabPage_FileList
             // 
-            tabPage1.Controls.Add(txtBox_FileList);
-            tabPage1.Location = new System.Drawing.Point(4, 39);
-            tabPage1.Name = "tabPage1";
-            tabPage1.Padding = new System.Windows.Forms.Padding(3);
-            tabPage1.Size = new System.Drawing.Size(886, 678);
-            tabPage1.TabIndex = 2;
-            tabPage1.Text = "filelist";
-            tabPage1.UseVisualStyleBackColor = true;
+            tabPage_FileList.Controls.Add(txtBox_FileList);
+            tabPage_FileList.Location = new System.Drawing.Point(4, 39);
+            tabPage_FileList.Name = "tabPage_FileList";
+            tabPage_FileList.Padding = new System.Windows.Forms.Padding(3);
+            tabPage_FileList.Size = new System.Drawing.Size(886, 678);
+            tabPage_FileList.TabIndex = 2;
+            tabPage_FileList.Text = "filelist";
+            tabPage_FileList.UseVisualStyleBackColor = true;
             // 
             // txtBox_FileList
             // 
@@ -394,28 +400,50 @@
             tabPage_zipList.Text = "zip list";
             tabPage_zipList.UseVisualStyleBackColor = true;
             // 
+            // tabPage_DGM
+            // 
+            tabPage_DGM.Controls.Add(dataGridView1);
+            tabPage_DGM.Location = new System.Drawing.Point(4, 39);
+            tabPage_DGM.Name = "tabPage_DGM";
+            tabPage_DGM.Padding = new System.Windows.Forms.Padding(3);
+            tabPage_DGM.Size = new System.Drawing.Size(886, 678);
+            tabPage_DGM.TabIndex = 4;
+            tabPage_DGM.Text = "DGM";
+            tabPage_DGM.UseVisualStyleBackColor = true;
+            // 
+            // dataGridView1
+            // 
+            dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
+            dataGridView1.Location = new System.Drawing.Point(3, 3);
+            dataGridView1.Name = "dataGridView1";
+            dataGridView1.RowHeadersWidth = 51;
+            dataGridView1.Size = new System.Drawing.Size(880, 672);
+            dataGridView1.TabIndex = 0;
+            // 
             // btnPaste
             // 
             btnPaste.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnPaste.Location = new System.Drawing.Point(922, 45);
             btnPaste.Margin = new System.Windows.Forms.Padding(5, 7, 5, 7);
             btnPaste.Name = "btnPaste";
-            btnPaste.Size = new System.Drawing.Size(119, 38);
-            btnPaste.TabIndex = 1;
+            btnPaste.Size = new System.Drawing.Size(140, 52);
+            btnPaste.TabIndex = 3;
             btnPaste.Text = "貼り付け(&V)";
             btnPaste.UseVisualStyleBackColor = true;
             btnPaste.Click += btnPaste_Click;
             // 
             // EndBtn
             // 
-            EndBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right;
-            EndBtn.Location = new System.Drawing.Point(759, 839);
+            EndBtn.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
+            EndBtn.BackColor = System.Drawing.SystemColors.ControlLight;
+            EndBtn.Location = new System.Drawing.Point(24, 843);
             EndBtn.Margin = new System.Windows.Forms.Padding(4);
             EndBtn.Name = "EndBtn";
             EndBtn.Size = new System.Drawing.Size(151, 46);
-            EndBtn.TabIndex = 6;
+            EndBtn.TabIndex = 8;
             EndBtn.Text = "終了";
-            EndBtn.UseVisualStyleBackColor = true;
+            EndBtn.UseVisualStyleBackColor = false;
             EndBtn.Click += EndBtn_Click;
             // 
             // cmbBoxPath
@@ -426,39 +454,39 @@
             cmbBoxPath.Location = new System.Drawing.Point(88, 41);
             cmbBoxPath.Name = "cmbBoxPath";
             cmbBoxPath.Size = new System.Drawing.Size(822, 38);
-            cmbBoxPath.TabIndex = 0;
+            cmbBoxPath.TabIndex = 1;
             cmbBoxPath.DragDrop += cmbBoxPath_DragDrop;
             cmbBoxPath.DragEnter += cmbBoxPath_DragEnter;
             // 
             // btnAppendSubDir
             // 
             btnAppendSubDir.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
-            btnAppendSubDir.Location = new System.Drawing.Point(922, 93);
+            btnAppendSubDir.Location = new System.Drawing.Point(922, 145);
             btnAppendSubDir.Name = "btnAppendSubDir";
-            btnAppendSubDir.Size = new System.Drawing.Size(227, 38);
-            btnAppendSubDir.TabIndex = 2;
+            btnAppendSubDir.Size = new System.Drawing.Size(231, 50);
+            btnAppendSubDir.TabIndex = 4;
             btnAppendSubDir.Text = "サブディレクトリを追加";
             btnAppendSubDir.UseVisualStyleBackColor = true;
             btnAppendSubDir.Click += btnAppendSubDir_Click;
             // 
             // btnNext
             // 
-            btnNext.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
-            btnNext.Location = new System.Drawing.Point(193, 841);
+            btnNext.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnNext.Location = new System.Drawing.Point(922, 633);
             btnNext.Name = "btnNext";
             btnNext.Size = new System.Drawing.Size(175, 44);
-            btnNext.TabIndex = 5;
+            btnNext.TabIndex = 6;
             btnNext.Text = "次のパスで開始";
             btnNext.UseVisualStyleBackColor = true;
             btnNext.Click += btnNext_Click;
             // 
             // btnNextDay
             // 
-            btnNextDay.Anchor = System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left;
-            btnNextDay.Location = new System.Drawing.Point(386, 841);
+            btnNextDay.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnNextDay.Location = new System.Drawing.Point(922, 690);
             btnNextDay.Name = "btnNextDay";
             btnNextDay.Size = new System.Drawing.Size(175, 44);
-            btnNextDay.TabIndex = 5;
+            btnNextDay.TabIndex = 7;
             btnNextDay.Text = "次の日付で開始";
             btnNextDay.UseVisualStyleBackColor = true;
             btnNextDay.Click += btnNextDay_Click;
@@ -513,6 +541,7 @@
             AutoScaleDimensions = new System.Drawing.SizeF(12F, 30F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             ClientSize = new System.Drawing.Size(1161, 902);
+            Controls.Add(startBtn);
             Controls.Add(btnNextDay);
             Controls.Add(btnNext);
             Controls.Add(btnAppendSubDir);
@@ -520,14 +549,13 @@
             Controls.Add(EndBtn);
             Controls.Add(btnPaste);
             Controls.Add(tabControl);
-            Controls.Add(startBtn);
             Controls.Add(label1);
             Controls.Add(menuStrip1);
             Location = new System.Drawing.Point(20, 20);
             MainMenuStrip = menuStrip1;
             Margin = new System.Windows.Forms.Padding(7, 8, 7, 8);
             Name = "MainForm";
-            StartPosition = System.Windows.Forms.FormStartPosition.Manual;
+            StartPosition = System.Windows.Forms.FormStartPosition.CenterScreen;
             Text = "MainForm";
             Load += MainForm_Load;
             tabControl.ResumeLayout(false);
@@ -537,14 +565,16 @@
             ((System.ComponentModel.ISupportInitialize)numUD_MaxFilesize).EndInit();
             gpBox_Date.ResumeLayout(false);
             gpBox_Date.PerformLayout();
-            tabPage2.ResumeLayout(false);
-            tabPage2.PerformLayout();
+            tabPage_Pic.ResumeLayout(false);
+            tabPage_Pic.PerformLayout();
             grpBox_PicOrient.ResumeLayout(false);
             grpBox_PicOrient.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_Height).EndInit();
             ((System.ComponentModel.ISupportInitialize)numUD_Width).EndInit();
-            tabPage1.ResumeLayout(false);
-            tabPage1.PerformLayout();
+            tabPage_FileList.ResumeLayout(false);
+            tabPage_FileList.PerformLayout();
+            tabPage_DGM.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
             ResumeLayout(false);
@@ -556,7 +586,7 @@
         private System.Windows.Forms.Button startBtn;
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage tabPageAttr;
-        private System.Windows.Forms.TabPage tabPage2;
+        private System.Windows.Forms.TabPage tabPage_Pic;
         private System.Windows.Forms.GroupBox gpBox_Date;
         private System.Windows.Forms.DateTimePicker dtPicker_to;
         private System.Windows.Forms.DateTimePicker dtPicker_from;
@@ -574,7 +604,7 @@
         private System.Windows.Forms.CheckedListBox chkListBox_Ext;
         private System.Windows.Forms.Label label2;
         private System.Windows.Forms.ComboBox cmbBox_FilenameFilter;
-        private System.Windows.Forms.TabPage tabPage1;
+        private System.Windows.Forms.TabPage tabPage_FileList;
         private System.Windows.Forms.TextBox txtBox_FileList;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Label label4;
@@ -593,6 +623,8 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_AddPath;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelPicShow;
         private System.Windows.Forms.TabPage tabPage_zipList;
+        private System.Windows.Forms.TabPage tabPage_DGM;
+        private System.Windows.Forms.DataGridView dataGridView1;
     }
 }
 

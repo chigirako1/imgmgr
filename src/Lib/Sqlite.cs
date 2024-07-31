@@ -9,6 +9,7 @@ using System.Text.RegularExpressions;
 using static System.Windows.Forms.LinkLabel;
 using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.IO;
 
 namespace PictureManagerApp.src.Lib
 {
@@ -71,18 +72,21 @@ namespace PictureManagerApp.src.Lib
             }
 
             string[] lines = System.IO.File.ReadAllLines(PXV_ARCHIVE_DIR_TXT_FILEPATH);
-            var dirPaths = new List<(string, long)>();
+            var dirPaths = new List<(string, long, long)>();
             foreach (var line in lines)
             {
                 var pxvid = GetPxvID(line);
                 if (dic.ContainsKey(pxvid))
                 {
                     var d = dic[pxvid];
-                    dirPaths.Add((line, d.Filenum));
+                    dirPaths.Add((line, d.Rating, d.Filenum));
                 }
             }
 
-            var a = dirPaths.OrderBy(x => -(x.Item2)).ToList();
+            var a = dirPaths
+                .OrderBy(x => -(x.Item2))
+                .ThenBy(x => -(x.Item3))
+                .ToList();
             List<string> stringList = a.ConvertAll(t => t.Item1);
             return stringList;
         }
@@ -109,9 +113,35 @@ namespace PictureManagerApp.src.Lib
 
     public class Sqlite
     {
+        private static string sqlite_db_file_path;
+
+        static Sqlite()
+        {
+            var data_src_path = DATA_SRC_PATH;
+            if (File.Exists(data_src_path))
+            {
+
+            }
+            else
+            {
+                var basePath = System.Environment.CurrentDirectory;
+                var filePath = DATA_SRC_FILENAME;
+                data_src_path = Path.Combine(basePath, filePath);
+            }
+
+            sqlite_db_file_path = data_src_path;
+        }
+
+        private static SQLiteConnection GetSQLiteConnection()
+        {
+            var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = sqlite_db_file_path };
+            return new SQLiteConnection(sqlConnectionSb.ToString());
+        }
+
         //private const string DATA_SRC = @"D:\data\src\vs_cs\development.sqlite3";
         //private const string DATA_SRC = @"D:\data\src\ror\myapp\db\development - bak240324.sqlite3";
-        private const string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\development.sqlite3";
+        private const string DATA_SRC_FILENAME = "development.sqlite3";
+        private const string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\" + DATA_SRC_FILENAME;
 
         public static void GetPxvArtistInfo(int pxvid, PxvArtist pxvartist)
         {
@@ -129,6 +159,24 @@ namespace PictureManagerApp.src.Lib
                         SetPxvArtistInfo(reader, pxvartist);
                     }
                 }
+            }
+        }
+
+        public static void UpdatePxvArtistRating(long pxvid, long rating)
+        {
+            using (var cn = GetSQLiteConnection())
+            {
+                cn.Open();
+                using (var cmd = new SQLiteCommand(cn))
+                {
+                    // データを更新する
+                    //cmd.CommandText = "UPDATE sample set title = 'SQLite データ更新' WHERE no = 1";
+                    //cmd.ExecuteNonQuery();
+                    cmd.CommandText = $"UPDATE artists set rating = {rating} WHERE pxvid = {pxvid}";
+                    var changedline = cmd.ExecuteNonQuery();
+                    Log.trc($"変更した行の数:{changedline}");
+                }
+                cn.Close();
             }
         }
 
@@ -177,12 +225,6 @@ namespace PictureManagerApp.src.Lib
             }
 
             return pxv_artists;
-        }
-
-        private static SQLiteConnection GetSQLiteConnection()
-        {
-            var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = DATA_SRC_PATH };
-            return new SQLiteConnection(sqlConnectionSb.ToString());
         }
 
         private static void SetPxvArtistInfo(SQLiteDataReader reader, PxvArtist pxvartist)

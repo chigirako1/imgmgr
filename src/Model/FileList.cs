@@ -10,7 +10,6 @@ namespace PictureManagerApp.src.Model
 {
     public class FileList : IEnumerable, IEnumerator
     {
-
         public enum SORT_TYPE
         {
             SORT_PATH,
@@ -18,6 +17,7 @@ namespace PictureManagerApp.src.Model
             SORT_IMAGESIZE,
             SORT_LAST_WRITE_TIME,
             SORT_NUM_PIXEL,
+            SORT_ASPECT_RATIO,
 
             SORT_MAX
         }
@@ -78,6 +78,9 @@ namespace PictureManagerApp.src.Model
                     break;
                 case SORT_TYPE.SORT_NUM_PIXEL:
                     comp = new FileItemNumPixelComparer();
+                    break;
+                case SORT_TYPE.SORT_ASPECT_RATIO:
+                    comp = new FileItemAspectRatioComparer();
                     break;
                 case SORT_TYPE.SORT_PATH:
                 default:
@@ -193,6 +196,28 @@ namespace PictureManagerApp.src.Model
                 return 1;
             }
             else if (apixel < bpixel)
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+    }
+
+    
+    public sealed class FileItemAspectRatioComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var ratio_a = a.GetAspectRatio();
+            var ratio_b = b.GetAspectRatio();
+            if (ratio_a > ratio_b)
+            {
+                return 1;
+            }
+            else if (ratio_a < ratio_b)
             {
                 return -1;
             }
