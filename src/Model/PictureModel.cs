@@ -1203,31 +1203,54 @@ namespace PictureManagerApp.src.Model
         public void UpdateListFile()
         {
             var filename = DEL_LIST_TXT_FILENAME;
-
-            /*
-            string readText;
-            if (!File.Exists(filename))
-                readText = File.ReadAllText(filename);
-            else
-                readText = "new";
-
-            File.WriteAllText(filename, readText);
-            File.AppendAllText(filename, "Bad !" + Environment.NewLine);
-            */
-
             var append = true;
             using (var writer = new StreamWriter(filename, append))
             {
+                var sDate = GetTodayString();
                 for (int cnt = 0; cnt < mFileList.Count; cnt++)
                 {
                     var item = mFileList[cnt];
                     if (item.Del)
                     {
                         var txt = item.GetTxtPath();
-                        writer.WriteLine(txt + "\t" + "DEL");
+                        WriteFile(writer, txt, "DEL", sDate);
                     }
                 }
             }
+        }
+
+        public void WriteRatingInfo()
+        {
+            var filename = DEL_LIST_TXT_FILENAME;
+            var append = true;
+            using (var writer = new StreamWriter(filename, append))
+            {
+                string txt = "";
+                WriteFile(writer, txt, "UP");
+            }
+        }
+
+        private void WriteFile(StreamWriter writer, string txt, string kwd, string date_str=null)
+        {
+            string sDate;
+            if (date_str == null)
+            {
+                
+                sDate = GetTodayString();
+            }
+            else
+            {
+                sDate = date_str;
+            }
+
+            writer.WriteLine(txt + "\t" + kwd + "\t" + sDate);
+        }
+
+        private string GetTodayString()
+        {
+            DateTime dt = DateTime.Now;
+            var sDate = dt.ToString("yyyy/MM/dd HH:mm:ss");
+            return sDate;
         }
 
         //---------------------------------------------------------------------
@@ -1237,7 +1260,7 @@ namespace PictureManagerApp.src.Model
         {
             string path = mFileList[mIdx].FilePath;
 
-            MyFiles.moveToTrashDir(path, mPath);
+            //MyFiles.moveToTrashDir(path, mPath);
 
             mFileList.RemoveAt(mIdx);
             //mMarkCount--;

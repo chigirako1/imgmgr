@@ -27,6 +27,8 @@ namespace PictureManagerApp.src.Model
         public bool IsZipEntry { private set; get; }
 
         public long FileSize { set; get; }
+        public long CompressedLength { set; get; }
+        public DateTime LastWriteTime { set; get; }
 
         public bool Fav {  set; get; }
         public bool Del { set; get; }
@@ -44,11 +46,19 @@ namespace PictureManagerApp.src.Model
             if (mZipPath != "")
             {
                 IsZipEntry = true;
+                using (var archive = ZipFile.OpenRead(mZipPath))
+                {
+                    var ent = archive.GetEntry(FilePath);
+                    FileSize = ent.Length;//非圧縮のサイズ
+                    CompressedLength = ent.CompressedLength;
+                    LastWriteTime = ent.LastWriteTime.LocalDateTime; ;
+                }
             }
             else
             {
                 FileInfo fi = new(path);
                 FileSize = fi.Length;
+                LastWriteTime = fi.LastWriteTime;
             }
         }
 

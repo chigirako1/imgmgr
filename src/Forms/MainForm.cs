@@ -26,6 +26,7 @@ namespace PictureManagerApp
             @"D:\download\PxDl-0trash",
             @"D:\dl\AnkPixiv\Twitter",
             @"D:\dl\AnkPixiv\Twitter-0trash",
+            @"D:\work\bin\r18",
         ];
 
         private static readonly string[] SP_WORDS = [
@@ -109,7 +110,10 @@ namespace PictureManagerApp
 
             foreach (string path in CMBBOX_DIR_PATHS)
             {
-                cmbBoxPath.Items.Add(path);
+                if (Directory.Exists(path))
+                {
+                    cmbBoxPath.Items.Add(path);
+                }
             }
 
 
@@ -131,15 +135,20 @@ namespace PictureManagerApp
             {
                 //横長画面の場合
                 this.StartPosition = FormStartPosition.CenterScreen;
-                this.Location = new Point(this.Location.X, this.Location.Y - 100);
+                int loc_y = this.Location.Y;
+                if (h > 1200)
+                {
+                    loc_y -= 100;
+                }
+                this.Location = new Point(this.Location.X, loc_y);
             }
             else
             {
                 //縦長画面の場合
-                this.Width = w - 200;
-                this.Height = h - 300;
+                //this.Width = w - 10;
+                //this.Height = h - 50;
                 this.StartPosition = FormStartPosition.Manual;
-                this.Location = new Point(100, 100);
+                this.Location = new Point(10, 10);
             }
         }
 
@@ -201,7 +210,7 @@ namespace PictureManagerApp
                     mFavFileList.Add(fitem);
                 }
 
-                //mDirListの更新
+                //mDirList.Update(model);
                 //...ページ数、サムネイル
             }
             catch (Exception ex)
@@ -324,6 +333,10 @@ namespace PictureManagerApp
         private void EndBtn_Click(object sender, EventArgs e)
         {
             Log.trc("[S]");
+            /*MessageBox.Show($"{this.Width}x{this.Height}",
+                    "title",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);*/
             this.Close();
             Log.trc("[E]");
         }
@@ -345,8 +358,16 @@ namespace PictureManagerApp
             Log.trc("[S]");
 
             string path = cmbBoxPath.Text;
-            var dirs = Directory.EnumerateDirectories(path);
+            if (!Directory.Exists(path))
+            {
+                MessageBox.Show("存在しないディレクトリです",
+                    "エラー",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
 
+            var dirs = Directory.EnumerateDirectories(path);
             foreach (var dir in dirs.OrderBy(x => x))
             {
                 cmbBoxPath.Items.Add(dir);
@@ -458,7 +479,7 @@ namespace PictureManagerApp
             var dirpaths = Pxv.GetDirPaths(where);
             foreach (var dirpath in dirpaths)
             {
-                cmbBoxPath.Text = dirpath;
+                //cmbBoxPath.Text = dirpath;
                 cmbBoxPath.Items.Add(dirpath);
             }
         }
@@ -483,6 +504,16 @@ namespace PictureManagerApp
                 string DATA_SRC_FILENAME = "development.sqlite3";
                 string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\" + DATA_SRC_FILENAME;
                 var dbPath = DATA_SRC_PATH;
+                if (File.Exists(dbPath))
+                {
+
+                }
+                else
+                {
+                    var basePath = System.Environment.CurrentDirectory;
+                    var filePath = DATA_SRC_FILENAME;
+                    dbPath = Path.Combine(basePath, filePath);
+                }
 
                 using (SQLiteConnection con = new SQLiteConnection("Data Source=" + dbPath))
                 {
@@ -495,13 +526,61 @@ namespace PictureManagerApp
                     //DataTableに読み込むデータをSQLで指定します。
                     //今回はDataTableを指定していないので、SELECTで表示する列名が
                     //のちのち紐づけを行った際のDataGridViewの列名になります。
-                    SQLiteDataAdapter adapter = new SQLiteDataAdapter("SELECT twtid, twtname FROM twitters;", con);
+                    var colname = "id, twtid, twtname, filenum, status";
+                    SQLiteDataAdapter adapter = new SQLiteDataAdapter($"SELECT {colname} FROM twitters;", con);
                     adapter.Fill(this.datatable);
 
                     //データテーブルをDataGridViewに紐づけます。
                     this.dataGridView1.DataSource = this.datatable;
                 }
             }
+        }
+
+        private void dataGridView1_RowEnter(object sender, DataGridViewCellEventArgs e)
+        {
+            /*MessageBox.Show("test h",
+                "test t",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);*/
+            //foreach (DataGridViewRow r in dataGridView1.SelectedRows)
+            {
+                //Console.Error.WriteLine(r.Index);
+            }
+        }
+
+        private void dataGridView1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            /*System.Text.StringBuilder messageBoxCS = new System.Text.StringBuilder();
+            messageBoxCS.AppendFormat("{0} = {1}", "ColumnIndex", e.ColumnIndex);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "RowIndex", e.RowIndex);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "Button", e.Button);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "Clicks", e.Clicks);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "X", e.X);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "Y", e.Y);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "Delta", e.Delta);
+            messageBoxCS.AppendLine();
+            messageBoxCS.AppendFormat("{0} = {1}", "Location", e.Location);
+            messageBoxCS.AppendLine();
+            MessageBox.Show(messageBoxCS.ToString(), "CellMouseDoubleClick Event");*/
+            dataGridView1.Rows[e.RowIndex].Selected = true;
+
+            var row = dataGridView1.Rows[e.RowIndex];
+            var screen_name = (string)row.Cells[1].Value;
+
+            var path = Twt.GetArchiveDirPath(screen_name);
+            Log.trc($"'{screen_name}' => '{path}'");
+            cmbBoxPath.Text = path;
+            cmbBoxPath.Items.Add(path);
+
+            path = Twt.GetCurrentDirPath(screen_name);
+            Log.trc($"'{screen_name}' => '{path}'");
+            cmbBoxPath.Items.Add(path);
         }
     }
 }

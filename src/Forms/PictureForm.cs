@@ -29,14 +29,13 @@ namespace PictureManagerApp
         private const int TRANSITION_TIMER_PERIOD = 1000 / TRANSITION_FPS;
         private const int TRANSITION_DUE_TIME = 100;
 
-        //private const int THUMBNAIL_TIMER_PERIOD = 250;//200=OK
         //private const int THUMBNAIL_TIMER_PERIOD = 140;
         //private const int THUMBNAIL_TIMER_PERIOD = 133;
         private const int THUMBNAIL_TIMER_PERIOD = 122;
         //private const int THUMBNAIL_TIMER_PERIOD = 111;//111もだめ？
         //private const int THUMBNAIL_TIMER_PERIOD = 100;//100だと重くなる.
 
-        private const int SLIDESHOW_TIMER_PERIOD = 1000;
+        private const int SLIDESHOW_TIMER_PERIOD = 750;
         private const int PAGE_CHG_TIMER_PERIOD = 250;
 
         private static readonly Brush BRUSH_0 = Brushes.Blue;
@@ -352,7 +351,7 @@ namespace PictureManagerApp
                     StopContinuousNext();
                     break;
                 case ACTION_TYPE.ACTION_MOV_SLIDESHOW:
-                    ToggleSlideshow(PAGE_CHG_TIMER_PERIOD);
+                    ToggleSlideshow(mSlideMs);
                     break;
                 case ACTION_TYPE.ACTION_DO_NOTHING:
                 default:
@@ -606,18 +605,21 @@ namespace PictureManagerApp
             return true;
         }
 
-        private bool WindowQuitOp()
+        private bool WindowQuitOp(bool forceClose = false)
         {
-            if (mSlideshow)
+            if (!forceClose)
             {
-                ToggleSlideshow(mSlideMs);
-                return false;
-            }
+                if (mSlideshow)
+                {
+                    ToggleSlideshow(mSlideMs);
+                    return false;
+                }
 
-            if (mFullscreen)
-            {
-                ToggleFulscreen();
-                return false;
+                if (mFullscreen)
+                {
+                    ToggleFulscreen();
+                    return false;
+                }
             }
 
             mModel.UpdateListFile();
@@ -774,16 +776,17 @@ namespace PictureManagerApp
             StatusLbl_Dirname.Text = fitem.GetRelativePath(mModel.WorkingRootPath);
             statusLbl_Filename.Text = Path.GetFileName(fitem.FilePath);
 
+            string filesize;
             if (fitem.IsZipEntry)
             {
-
+                filesize = String.Format("{0:#,0} Bytes ({1:#,0})", fitem.FileSize, fitem.CompressedLength);
             }
             else
             {
-                FileInfo fi = new(fitem.FilePath);
-                statusLbl_FileSize.Text = String.Format("{0:#,0} Bytes", fi.Length);
-                StatusLbl_LWTime.Text = fi.LastWriteTime.ToShortDateString();
+                filesize = String.Format("{0:#,0} Bytes", fitem.FileSize);
             }
+            statusLbl_FileSize.Text = filesize;
+            StatusLbl_LWTime.Text = fitem.LastWriteTime.ToShortDateString();
         }
 
         private void SetStatusBar_ImageSize(Image img)
@@ -960,6 +963,19 @@ namespace PictureManagerApp
                 }
 
                 mModel.NextIfHasNext();
+
+
+                if ((Control.MouseButtons & MouseButtons.Left) == MouseButtons.Left)
+                {
+                    //Log.trc("マウスの左ボタンが押されています。");
+                }
+                else
+                {
+                    //タイマーを停止させたい
+                    //Log.trc("マウスの左ボタンが押されてない。");
+                    StopContinuousNext();
+                }
+
             }
             if (this != null)
             {
@@ -1217,12 +1233,12 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_Quit_Click(object sender, EventArgs e)
         {
-            WindowQuitOp();
+            WindowQuitOp(true);
         }
 
         private void ToolStripMenuItem_Close_Click(object sender, EventArgs e)
         {
-            WindowQuitOp();
+            WindowQuitOp(true);
         }
 
         private void toolStripMenuItem_Sort_FilePath_Click(object sender, EventArgs e)
@@ -1312,7 +1328,8 @@ namespace PictureManagerApp
         {
             Log.trc("[S]}");
 
-            if (e.Location.X < this.Width / 3 && e.Location.Y < this.Height / 3)
+            //if (e.Location.X < this.Width / 3 && e.Location.Y < this.Height / 3)
+            if (mCont)
             {
                 ACTION_TYPE act = ACTION_TYPE.ACTION_MOV_NEXT_CONT_STOP;
                 DoAction(act);
@@ -1322,7 +1339,6 @@ namespace PictureManagerApp
             Log.trc("[E]");
         }
 
-        //TODO:長押しで次前が連続で動作するようにする（タイマー？
         private void pictureBox_MouseClick(object sender, MouseEventArgs e)
         {
             Log.trc("[S]}");
@@ -1346,37 +1362,64 @@ namespace PictureManagerApp
         {
             ACTION_TYPE act = ACTION_TYPE.ACTION_DO_NOTHING;
 
-            var pos = this.Width / 3;
+            var scrn_unit_w = this.Width / 3;
+            var scrn_unit_h = this.Height / 3;
 
-            if (loc.Y < 100)
+            if (loc.X < scrn_unit_w)
             {
-                act = ACTION_TYPE.ACTION_ADD_FAV_LIST;
-            }
-            else if (loc.Y > this.Height - 200)
-            {
-                act = ACTION_TYPE.ACTION_ADD_DEL_LIST;
-            }
-            else if (loc.X > this.Width - pos)
-            {
-                // 右側
-                act = ACTION_TYPE.ACTION_MOV_PREV;
-            }
-            else if (loc.X < pos)
-            {
-                // 左側(次に進む)
-                //act = ACTION_TYPE.ACTION_MOV_NEXT;
-                if (loc.Y < this.Height / 2)
+                // 左
+
+                if (loc.Y < scrn_unit_h)
                 {
                     //連続で次へ
-                    //act = ACTION_TYPE.ACTION_MOV_SLIDESHOW;
-                    //act = ACTION_TYPE.ACTION_MOV_NEXT_CONT;
+                    //down/upで処理
+                }
+                else if (loc.Y < scrn_unit_h * 2)
+                {
+                    //中
+                    act = ACTION_TYPE.ACTION_MOV_NEXT;
                 }
                 else
                 {
+                    //下
                     //戻る
                     act = ACTION_TYPE.ACTION_MOV_PREV;
                 }
             }
+            else if (loc.X < scrn_unit_w * 2)
+            {
+                //中
+                if (loc.Y < scrn_unit_h)
+                {//上
+                    act = ACTION_TYPE.ACTION_ADD_FAV_LIST;
+                }
+                else if (loc.Y < scrn_unit_h * 2)
+                {//中
+                    act = ACTION_TYPE.ACTION_MOV_SLIDESHOW;
+                }
+                else
+                {//下
+                    act = ACTION_TYPE.ACTION_ADD_DEL_LIST;
+                }
+            }
+            else
+            {
+                //右
+                if (loc.Y < scrn_unit_h)
+                {//上
+                    act = ACTION_TYPE.ACTION_MOV_PREV;
+                }
+                else if (loc.Y < scrn_unit_h * 2)
+                {//中
+                    act = ACTION_TYPE.ACTION_MOV_PREV;
+                }
+                else
+                {//下
+                    act = ACTION_TYPE.ACTION_MOV_PREV;
+                }
+            }
+
+
 
             return act;
         }
@@ -1384,6 +1427,7 @@ namespace PictureManagerApp
         //MouseDoubleClickイベントの前にはMouseClickが発生するらしい。めんどくさい。。。
         private void pictureBox_MouseDoubleClick(object sender, MouseEventArgs e)
         {
+#if false
             Log.trc("[S]");
             var loc = e.Location;
             ACTION_TYPE act = ACTION_TYPE.ACTION_DO_NOTHING;
@@ -1399,7 +1443,13 @@ namespace PictureManagerApp
 
             DoAction(act);
             Log.trc("[E]");
+#endif
         }
 
+        private void ToolStripMenuItem_hide_Click(object sender, EventArgs e)
+        {
+            mModel.RemoveCurrentFile();
+            UpdatePicture();
+        }
     }
 }
