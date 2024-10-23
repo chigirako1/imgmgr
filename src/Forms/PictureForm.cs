@@ -8,6 +8,8 @@ using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading;
 using System.Windows.Forms;
+using Microsoft.VisualBasic.ApplicationServices;
+
 //using Microsoft.VisualBasic.Logging;
 
 //using System.Windows.Threading;
@@ -44,8 +46,8 @@ namespace PictureManagerApp
         private static readonly Brush BG_BRUSH = Brushes.Black;
         private static readonly Color COLOR_MARK = Color.Red;
 
-        private int Col = 4;
-        private int Row = 3;
+        private int ThumbnailCols = 4;
+        private int ThumbnailRows = 3;
 
         //=====================================================================
         // delegate
@@ -107,8 +109,8 @@ namespace PictureManagerApp
         public void SetModel(PictureModel model)
         {
             mModel = model;
-            mModel.UpDownCount = Col;
-            mModel.PageCount = this.Col * this.Row;
+
+            SetMoveNum();
 
             InitKeys();
         }
@@ -116,6 +118,12 @@ namespace PictureManagerApp
         //=====================================================================
         // private
         //=====================================================================
+        private void SetMoveNum()
+        {
+            mModel.UpDownCount = ThumbnailCols;
+            mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -161,34 +169,62 @@ namespace PictureManagerApp
             var h = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
             Log.trc($"{w}x{h}");
             bool landscape = h < w;
+
             if (mModel.IsZip())
             {
-                //デバッグ用。zipのときは強制フルスクリーン
-                landscape = false;
-            }
-
-            if (landscape)
-            {
-                this.Width = w - 100;
-                this.Height = h - 50;
-
-                pictureBox.Width = this.Width / 2;
-                if (pictureBox.Width > 1200)
-                {
-                    pictureBox.Width = 1200;
-                }
-            }
-            else
-            {
-                //縦長フルスクリーン表示設定
                 this.Width = w - 0;
                 this.Height = h - 0;
 
-                ToolStripMenuItem_ThumbnailOn.Checked = false;
-                ThumbnailAreaView(false);
+                if (false)
+                {
+                }
+
+                if (landscape)
+                {
+                    SetPicboxSize();
+
+                    this.ThumbnailCols = 1;
+                    this.ThumbnailRows = RightPicBox.Height / RightPicBox.Width;
+                    SetMoveNum();
+                }
+                else
+                {
+                    ToolStripMenuItem_ThumbnailOn.Checked = false;
+                    ThumbnailAreaView(false);
+                }
+
                 ToggleFulscreen();
                 mMagType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN;
                 DisplayTxt = false;
+            }
+            else
+            {
+                if (landscape)
+                {
+                    this.Width = w - 100;
+                    this.Height = h - 50;
+
+                    pictureBox.Width = this.Width / 2;
+                    if (pictureBox.Width > 1200)
+                    {
+                        pictureBox.Width = 1200;
+                    }
+                }
+                else
+                {
+                    //縦長フルスクリーン表示設定
+                    this.Width = w - 0;
+                    this.Height = h - 0;
+
+                    if (false)
+                    {
+                        ToolStripMenuItem_ThumbnailOn.Checked = false;
+                        ThumbnailAreaView(false);
+                    }
+                    ToggleFulscreen();
+                    mMagType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN;
+                    DisplayTxt = false;
+                }
             }
 
             //this.StartPosition = FormStartPosition.CenterScreen;
@@ -278,6 +314,51 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        private void SetPicboxSize()
+        {
+            if (RightPicBox.Visible)
+            {
+                if (mModel.IsZip())
+                {
+                    if (this.Width > this.Height)
+                    {
+                        var w = (int)(this.Width * 0.1);
+                        if (w < 128)
+                        {
+                            w = 128;
+                        }
+                        pictureBox.Width = this.Width - w;
+                    }
+                    else
+                    {
+                        pictureBox.Width = this.Width;
+                        pictureBox.Height = (int)(this.Height * 0.8);
+
+                        RightPicBox.Anchor = AnchorStyles.Left;// | AnchorStyles.Bottom;
+                        RightPicBox.Location = new Point(pictureBox.Left, pictureBox.Top + pictureBox.Height);
+                        RightPicBox.Width = this.Width;
+
+                        Log.trc($"PicBox={pictureBox.Width}x{pictureBox.Height}/({pictureBox.Left},{pictureBox.Top})");
+                        Log.trc($"RightPicBox={RightPicBox.Width}x{RightPicBox.Height}/({RightPicBox.Left},{RightPicBox.Top})");
+                    }
+                }
+                else
+                {
+                    pictureBox.Width = this.Width / 2;
+                    if (pictureBox.Width > 1200)
+                    {
+                        pictureBox.Width = 1200;
+                    }
+                }
+
+                Log.trc($"picbox w={pictureBox.Width}, this w={this.Width}");
+            }
+            else
+            {
+                pictureBox.Size = this.ClientSize;
+            }
+        }
+
         private void PictureForm_Resize(object sender, EventArgs e)
         {
             Log.trc($"[S]");
@@ -289,24 +370,7 @@ namespace PictureManagerApp
             }
             else
             {
-                if (RightPicBox.Visible) //this.Width < 1000)
-                {
-                    //pictureBox.Width = (int)(this.Width * 0.6);
-
-                    pictureBox.Width = this.Width / 2;
-                    if (pictureBox.Width > 1200)
-                    {
-                        pictureBox.Width = 1200;
-                    }
-
-                    //RightPicBox.Width = (int)(this.Width * 0.4);
-                    Log.trc($"picbox w={pictureBox.Width}, this w={this.Width}");
-                }
-                else
-                {
-                    pictureBox.Size = this.ClientSize;
-                }
-
+                SetPicboxSize();
             }
             PicBoxUpdate();
             Log.trc($"[E]");
@@ -353,6 +417,9 @@ namespace PictureManagerApp
                 case ACTION_TYPE.ACTION_MOV_SLIDESHOW:
                     ToggleSlideshow(mSlideMs);
                     break;
+                case ACTION_TYPE.ACTION_QUIT_CONF:
+                    WindowQuitOp();
+                    break;
                 case ACTION_TYPE.ACTION_DO_NOTHING:
                 default:
                     break;
@@ -372,11 +439,17 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.NumPad0] = KeyDownFunc_SelectToggle;
             KeyFuncTbl[Keys.Space] = KeyDownFunc_SelectToggle;
             KeyFuncTbl[Keys.Escape] = KeyDownFunc_Escape;
-            //KeyFuncTbl[Keys.F1] = ;
-            //KeyFuncTbl[Keys.F2] = ;
-            KeyFuncTbl[Keys.F3] = KeyDownFunc_F3;
-            //KeyFuncTbl[Keys.F5] = ;
-            //KeyFuncTbl[Keys.F9] = ;
+            //KeyFuncTbl[Keys.F1] = ;used
+            //KeyFuncTbl[Keys.F2] = ;used
+            //KeyFuncTbl[Keys.F3] = ;used
+            //KeyFuncTbl[Keys.F4] = ;used
+            //KeyFuncTbl[Keys.F5] = ;used
+            KeyFuncTbl[Keys.F6] = KeyDownFunc_ThumbnailChg;
+            //KeyFuncTbl[Keys.F9] = ;used
+            KeyFuncTbl[Keys.A] = KeyDownFunc_Left;
+            KeyFuncTbl[Keys.S] = KeyDownFunc_Right;
+            KeyFuncTbl[Keys.Q] = KeyDownFunc_Home;
+            KeyFuncTbl[Keys.Z] = KeyDownFunc_End;
 
             switch (mModel.ThumbViewType)
             {
@@ -578,7 +651,7 @@ namespace PictureManagerApp
             return WindowQuitOp();
         }
 
-        private bool KeyDownFunc_F3(object sender, KeyEventArgs e)
+        private bool KeyDownFunc_ThumbnailChg(object sender, KeyEventArgs e)
         {
             //NextPic = !NextPic;
             mModel.ToggleThumbView();
@@ -712,6 +785,7 @@ namespace PictureManagerApp
                 pictureBox.Width = this.Width;
                 //pictureBox.Height = this.Height;
             }
+            PicBoxUpdate();
             Log.trc("[E]");
         }
 
@@ -1000,6 +1074,7 @@ namespace PictureManagerApp
                 Log.trc("slideshow end");
                 mSlideshowTimer.Change(Timeout.Infinite, Timeout.Infinite);
             }
+            UpdatePicture();
         }
 
         private void StartContinuousNext()
@@ -1080,33 +1155,33 @@ namespace PictureManagerApp
 
         private void X2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.Col = 2;
-            this.Row = 2;
-            mModel.UpDownCount = this.Col;
-            mModel.PageCount = this.Col * this.Row;
+            this.ThumbnailCols = 2;
+            this.ThumbnailRows = 2;
+            mModel.UpDownCount = this.ThumbnailCols;
+            mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
             Refresh();
         }
 
         private void X4ToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            this.Col = 4;
-            this.Row = 3;
-            mModel.UpDownCount = this.Col;
-            mModel.PageCount = this.Col * this.Row;
+            this.ThumbnailCols = 4;
+            this.ThumbnailRows = 3;
+            mModel.UpDownCount = this.ThumbnailCols;
+            mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
             Refresh();
         }
 
         private void TToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ColRowForm crForm = new(this.Col, this.Row);
+            ColRowForm crForm = new(this.ThumbnailCols, this.ThumbnailRows);
             DialogResult result = crForm.ShowDialog();
             if (result == DialogResult.OK)
             {
                 (int col, int row) = crForm.GetColRow();
-                this.Col = col;
-                this.Row = row;
-                mModel.UpDownCount = this.Col;
-                mModel.PageCount = this.Col * this.Row;
+                this.ThumbnailCols = col;
+                this.ThumbnailRows = row;
+                mModel.UpDownCount = this.ThumbnailCols;
+                mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
 
                 mMagType = crForm.GetMagType();
 
@@ -1250,6 +1325,7 @@ namespace PictureManagerApp
                 this.toolStripMenuItem_Sort_FileSize,
                 this.ToolStripMenuItem_Sort_NumPixel,
                 this.ToolStripMenuItem_AspectRatio,
+                this.ToolStripMenuItem_Sort_FileHash,
             };
 
             //グループのToolStripMenuItemを列挙する
@@ -1273,6 +1349,10 @@ namespace PictureManagerApp
                     else if (item == this.ToolStripMenuItem_AspectRatio)
                     {
                         sort_type = SORT_TYPE.SORT_ASPECT_RATIO;
+                    }
+                    else if (item == this.ToolStripMenuItem_Sort_FileHash)
+                    {
+                        sort_type = SORT_TYPE.SORT_FILE_HASH;
                     }
                     else
                     {
@@ -1304,9 +1384,12 @@ namespace PictureManagerApp
         {
             //スライドショーの更新間隔(ms)を設定
             string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "ms", mSlideMs.ToString(), -1, -1);
-            var numVal = Int32.Parse(str);
+            if (str != "")
+            {
+                var numVal = Int32.Parse(str);
 
-            mSlideMs = numVal;
+                mSlideMs = numVal;
+            }
         }
 
 
@@ -1366,8 +1449,7 @@ namespace PictureManagerApp
             var scrn_unit_h = this.Height / 3;
 
             if (loc.X < scrn_unit_w)
-            {
-                // 左
+            {   // 左
 
                 if (loc.Y < scrn_unit_h)
                 {
@@ -1382,13 +1464,12 @@ namespace PictureManagerApp
                 else
                 {
                     //下
-                    //戻る
                     act = ACTION_TYPE.ACTION_MOV_PREV;
                 }
             }
             else if (loc.X < scrn_unit_w * 2)
-            {
-                //中
+            {   //中
+
                 if (loc.Y < scrn_unit_h)
                 {//上
                     act = ACTION_TYPE.ACTION_ADD_FAV_LIST;
@@ -1403,8 +1484,8 @@ namespace PictureManagerApp
                 }
             }
             else
-            {
-                //右
+            {   //右
+
                 if (loc.Y < scrn_unit_h)
                 {//上
                     act = ACTION_TYPE.ACTION_MOV_PREV;
@@ -1415,11 +1496,9 @@ namespace PictureManagerApp
                 }
                 else
                 {//下
-                    act = ACTION_TYPE.ACTION_MOV_PREV;
+                    act = ACTION_TYPE.ACTION_QUIT_CONF;
                 }
             }
-
-
 
             return act;
         }

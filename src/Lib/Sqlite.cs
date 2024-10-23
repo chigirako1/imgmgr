@@ -10,6 +10,7 @@ using static System.Windows.Forms.LinkLabel;
 using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.IO;
+using System.Xml.Linq;
 
 namespace PictureManagerApp.src.Lib
 {
@@ -31,10 +32,10 @@ namespace PictureManagerApp.src.Lib
 
         static Sqlite()
         {
-            var data_src_path = DATA_SRC_PATH;
-            if (File.Exists(data_src_path))
+            string data_src_path;
+            if (File.Exists(DATA_SRC_PATH))
             {
-
+                data_src_path = DATA_SRC_PATH;
             }
             else
             {
@@ -44,6 +45,17 @@ namespace PictureManagerApp.src.Lib
             }
 
             sqlite_db_file_path = data_src_path;
+        }
+
+        public static string GetSqliteFilePath()
+        {
+            return sqlite_db_file_path;
+        }
+
+        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string tblname, string colname)
+        {
+            var adapter = new SQLiteDataAdapter($"SELECT {colname} FROM {tblname};", con);
+            return adapter;
         }
 
         private static SQLiteConnection GetSQLiteConnection()
@@ -93,7 +105,6 @@ namespace PictureManagerApp.src.Lib
         public static List<PxvArtist> GetPxvArtists(string where_phrase)
         {
             var pxv_artists = new List<PxvArtist>();
-
             
             using (var cn = GetSQLiteConnection())
             {
@@ -150,5 +161,22 @@ namespace PictureManagerApp.src.Lib
             }
         }
 
-    }
-}
+        public static void UpdateTweetsTable()
+        {
+            using (var cn = GetSQLiteConnection())
+            {
+                cn.Open();
+                using (var cmd = new SQLiteCommand(cn))
+                {
+                    // 更新
+                    //insert into test_table(id, name) values(001, 'example')
+
+                    cmd.CommandText = $"INSERT into tweets() values({0})";
+                    var changedline = cmd.ExecuteNonQuery();
+                    Log.trc($"変更した行の数:{changedline}");
+                }
+                cn.Close();
+            }
+        }
+    }//class
+}//namespace 

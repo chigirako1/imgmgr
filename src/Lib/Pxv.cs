@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -8,12 +9,41 @@ namespace PictureManagerApp.src.Lib
 {
     public class Pxv
     {
+        private const string PXV_CURRENT_DIR_PXV_DIR_PATH = @"D:\download\PxDl";
         private const string PXV_ARCHIVE_DIR_PATH = @"D:\r18\dlPic\pxv";
         private const string PXV_ARCHIVE_DIR_TXT_FILEPATH = @"D:\r18\dlPic\pxv\dirlist.txt";
+
+        private static Dictionary<long, string> PxvArchivePathDic = new();
+        private static Dictionary<long, string> PxvCurrentPathDic = new();
 
         public static string[] GetPxvDirList()
         {
             return System.IO.File.ReadAllLines(PXV_ARCHIVE_DIR_TXT_FILEPATH);
+        }
+
+        static Pxv()
+        {
+            var lines = GetPxvDirList();
+            foreach (var line in lines)
+            {
+                var pxv_usr_id = GetPxvID(line);
+                if (pxv_usr_id != 0)
+                {
+                    PxvArchivePathDic[pxv_usr_id] = line;
+                }
+            }
+
+
+            var dirs = Directory.EnumerateDirectories(PXV_CURRENT_DIR_PXV_DIR_PATH);
+            foreach (var dir in dirs)
+            {
+                var pxv_usr_id = GetPxvID(dir);
+                if (pxv_usr_id != 0)
+                {
+                    PxvCurrentPathDic[pxv_usr_id] = dir;
+                }
+                
+            }
         }
 
         public static List<(string, long, long)> GetDirPaths(Dictionary<long, PxvArtist> dic)
@@ -54,6 +84,26 @@ namespace PictureManagerApp.src.Lib
         public static string Conv((string, long) x)
         {
             return x.Item1;
+        }
+
+        public static string GetArchiveDirPath(long pxv_user_id)
+        {
+            return GetPathFromDic(PxvArchivePathDic, pxv_user_id);
+        }
+
+        public static string GetCurrentDirPath(long pxv_user_id)
+        {
+            return GetPathFromDic(PxvCurrentPathDic, pxv_user_id);
+        }
+
+        public static string GetPathFromDic(Dictionary<long, string> dic, long pxv_user_id)
+        {
+            if (dic.ContainsKey(pxv_user_id))
+            {
+                return dic[pxv_user_id];
+            }
+
+            return "";
         }
 
         private static long GetPxvID(string path)

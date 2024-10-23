@@ -47,7 +47,10 @@ namespace PictureManagerApp.src.Lib
             Feature = (string)reader["feature"];
             Filenum = (long)reader["filenum"];
             Status = (string)reader["status"];
-            Warnings = (string)reader["warnings"];
+            if (reader["warnings"] != DBNull.Value)
+            {
+                Warnings = (string)reader["warnings"];
+            }
         }
     }
 }

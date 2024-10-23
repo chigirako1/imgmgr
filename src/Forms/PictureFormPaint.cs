@@ -82,16 +82,17 @@ namespace PictureManagerApp
             Brush txtbrush = FONT_COLOR;
             Font fnt = new(FONT_NAME, fsize);
 
+            string txt;
             //
-            var txt = mModel.GetPictureInfoText();
-            if (mSlideshow)
-            {
-                txt = "▶️" + txt;
-            }
-            g.DrawString(txt, fnt, txtbrush, x, y);
-
             if (DisplayTxt)
             {
+                txt = mModel.GetPictureInfoText();
+                if (mSlideshow)
+                {
+                    txt = "▶️" + txt;
+                }
+                g.DrawString(txt, fnt, txtbrush, x, y);
+
                 //
                 y += fsize + inc;
                 txt = mModel.GetArtistInfoFromDB();
@@ -115,7 +116,14 @@ namespace PictureManagerApp
                 g.DrawString(txt, fnt, txtbrush, x, y);
             }
             else
-            { 
+            {
+                txt = mModel.GetPictureInfoText(true);
+                if (mSlideshow)
+                {
+                    txt = "▶️" + txt;
+                }
+                g.DrawString(txt, fnt, txtbrush, x, y);
+
                 //
                 y += fsize + inc;
                 txt = mModel.GetZipEntryname();
@@ -141,7 +149,7 @@ namespace PictureManagerApp
         private Size GetThumbnailSize()
         {
             PictureBox p = RightPicBox;
-            return new Size(p.Width / Col, p.Height / Row);
+            return new Size(p.Width / ThumbnailCols, p.Height / ThumbnailRows);
         }
 
         //---------------------------------------------------------------------
@@ -149,7 +157,6 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         private void rightPicBox_Paint(object sender, PaintEventArgs e)
         {
-            //if (NextPic)
             switch (mModel.ThumbViewType)
             {
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
@@ -169,8 +176,8 @@ namespace PictureManagerApp
         { 
             var g = e.Graphics;
 
-            int col = Col;
-            int row = Row;
+            int col = ThumbnailCols;
+            int row = ThumbnailRows;
 
             var tsize = GetThumbnailSize();
             int thumWidth = tsize.Width;
@@ -259,7 +266,7 @@ namespace PictureManagerApp
             int currpos = 0;
 
             int r = 0;
-            while (r < Row)
+            while (r < ThumbnailRows)
             {
                 //TODO:わかりにくので枠線を動かすようにする
                 //端に来たら画像をスクロールする
@@ -272,7 +279,7 @@ namespace PictureManagerApp
                 if (offset == 0)
                 {
                     filelist = mModel.GetSameDirFileItemList(absIdx, ref offsetoffset, out currpos);
-                    if (currpos >= Col)
+                    if (currpos >= ThumbnailCols)
                     {
                         start_i = filelist.Count - currpos;
                     }
@@ -334,7 +341,7 @@ namespace PictureManagerApp
                     }
 
                     cnt++;
-                    if (cnt > Col)
+                    if (cnt > ThumbnailCols)
                     {
                         break;
                     }
@@ -349,7 +356,7 @@ namespace PictureManagerApp
                     //DrawString(g, dirtxt, 0, y);
                     //DrawString(g, txt, 0, pixel_y + fsize * 2);
 
-                    if (filelist.Count > Col)
+                    if (filelist.Count > ThumbnailCols)
                     {
                         DrawString(g, "◀", 0, pixel_y + (thumHeight / 2));
                         DrawString(g, "▶", RightPicBox.Size.Width - fsize, pixel_y + (thumHeight / 2));
@@ -372,7 +379,7 @@ namespace PictureManagerApp
             var idx = mModel.GetAbsIdx(1);
             var fitem = mModel.GetCurrentFileItemByRelativeIndex(1);
 
-            FillRectangle(g, fitem, 0, 0, pictureBox.Width, pictureBox.Height);
+            FillRectangle(g, fitem, 0, 0, RightPicBox.Width, RightPicBox.Height);
 
             if (idx == 0)
             {
@@ -380,18 +387,23 @@ namespace PictureManagerApp
             }
 
             //TODO: センタリング？
-            int x = 0;
-            int y = 0;
+            //int x = 0;
+            //int y = 0;
             var img = fitem.GetImage();
             if (img != null)
             {
-                ImageModule.DrawImage(
+                /*ImageModule.DrawImage(
                                         g,
                                         x,
                                         y,
                                         img.Width,
                                         img.Height,
-                                        img);
+                                        img);*/
+                DrawDimension d = ImageModule.DrawCompositedImage(
+                    g,
+                    RightPicBox.Width,
+                    RightPicBox.Height,
+                    img);
             }
         }
 

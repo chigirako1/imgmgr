@@ -54,6 +54,13 @@ namespace PictureManagerApp.src.Lib
             return img;
         }
 
+        public static byte[] ConvImageToByteArray(System.Drawing.Image imageIn)
+        {
+            var ms = new MemoryStream();
+            imageIn.Save(ms, System.Drawing.Imaging.ImageFormat.Gif);
+            return ms.ToArray();
+        }
+
         public static Image GetThumbnailImage(Image orgImg, int thumbWidth, int thumbHeight)
         {
             var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);

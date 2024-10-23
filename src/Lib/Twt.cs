@@ -3,10 +3,19 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PictureManagerApp.src.Lib
 {
+    struct TweetInfo
+    {
+        public long TweetID;
+        public int ImageNo;
+        public string ScreenName;
+        public DateTime dlDate;
+    }
+
     class Twt
     {
         private const string TWT_CURRENT_DIR_TWT_DIR_PATH = @"D:\dl\AnkPixiv\Twitter";
@@ -21,7 +30,7 @@ namespace PictureManagerApp.src.Lib
 
         static Twt()
         {
-            TwtArchivePathDic = new Dictionary<string, string>();
+            //TwtArchivePathDic = new Dictionary<string, string>();
 
             var lines = GetTwtDirList();
             foreach (var line in lines)
@@ -81,6 +90,27 @@ namespace PictureManagerApp.src.Lib
             }
             //Log.trc($"'{path}':'{screen_name}'");
             return screen_name;
+        }
+
+        public static TweetInfo GetTweetIdFromPath(string path)
+        {
+            var filename = Path.GetFileName(path);
+            var dirname = Path.GetDirectoryName(path);
+            var screenname = Path.GetFileName(dirname);
+
+            TweetInfo tweetinfo = new();
+            var pattern = @"(\d+)\s+(\d+)\s+(\d+-\d+\d+)";
+            System.Text.RegularExpressions.MatchCollection mc = System.Text.RegularExpressions.Regex.Matches(filename, pattern);
+            foreach (System.Text.RegularExpressions.Match m in mc)
+            {
+                tweetinfo.TweetID = long.Parse(m.Groups[1].Value);
+                tweetinfo.ImageNo = int.Parse(m.Groups[2].Value);
+                tweetinfo.ScreenName = screenname;
+                tweetinfo.dlDate = DateTime.Parse(m.Groups[3].Value);
+                break;
+            }
+            //Log.trc($"'{path}':'{tweetinfo.ToString()}'");
+            return tweetinfo;
         }
     }
 }

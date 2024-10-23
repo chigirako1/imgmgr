@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
+using System.Linq;
 using PictureManagerApp.src.Lib;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
@@ -18,6 +19,7 @@ namespace PictureManagerApp.src.Model
             SORT_LAST_WRITE_TIME,
             SORT_NUM_PIXEL,
             SORT_ASPECT_RATIO,
+            SORT_FILE_HASH,
 
             SORT_MAX
         }
@@ -27,6 +29,7 @@ namespace PictureManagerApp.src.Model
         //=====================================================================
         private List<FileItem> mFileList;
         public bool ZipList { set; get; }
+        private readonly Dictionary<string, int> FileHashCnt = [];
 
         //=====================================================================
         // 
@@ -47,9 +50,28 @@ namespace PictureManagerApp.src.Model
             get { return mFileList.Count; }
         }
 
-        public void Add(FileItem fitem)
+        public int MarkCount()
+        {
+            return mFileList.Count(x => x.Mark);
+        }
+
+        public void Add(FileItem fitem, bool computeHash = false)
         {
             mFileList.Add(fitem);
+
+            if (computeHash)
+            {
+                string hash = fitem.GetFileHash();
+                if (FileHashCnt.ContainsKey(hash))
+                {
+                    FileHashCnt[hash]++;
+                    Log.log($"重複ファイル{fitem.FilePath}");
+                }
+                else
+                {
+                    FileHashCnt.Add(hash, 1);
+                }
+            }
         }
 
         public void Remove(FileItem fitem)
@@ -82,6 +104,9 @@ namespace PictureManagerApp.src.Model
                 case SORT_TYPE.SORT_ASPECT_RATIO:
                     comp = new FileItemAspectRatioComparer();
                     break;
+                case SORT_TYPE.SORT_FILE_HASH:
+                    comp = new FileItemHashComparer();
+                    break;
                 case SORT_TYPE.SORT_PATH:
                 default:
                     comp = new FileItemFilePathComparer();
@@ -112,6 +137,9 @@ namespace PictureManagerApp.src.Model
             {
                 if (fitem.Mark)
                 {
+                    var tweetinfo = Twt.GetTweetIdFromPath(fitem.FilePath);
+                    Log.log($"@{tweetinfo.ScreenName}/{tweetinfo.TweetID}-{tweetinfo.ImageNo}");
+
                     MyFiles.moveToTrashDir(fitem.FilePath, rootpath);
                     fitem.Removed = true;
                     cnt++;
@@ -126,6 +154,47 @@ namespace PictureManagerApp.src.Model
             (mFileList[idx1], mFileList[idx2]) = (mFileList[idx2], mFileList[idx1]);
         }
 
+        public void multipleFileOnly()
+        {
+            mFileList.RemoveAll(chkHash);
+
+            Sort(SORT_TYPE.SORT_FILE_HASH);
+
+            string hash_save = "";
+            foreach (var fitem in mFileList)
+            {
+                var hash = fitem.GetFileHash();
+                if (hash == hash_save)
+                {
+                    fitem.Mark = true;
+                }
+                hash_save = hash;
+            }
+        }
+
+        private  bool chkHash(FileItem fitem)
+        {
+            var hashv = fitem.GetFileHash();
+            var cnt = FileHashCnt[hashv];
+            if (cnt < 2)
+            {
+                return true;
+            }
+            return false;
+        }
+
+        public void RegisterTweetDB()
+        {
+            foreach (var fitem in mFileList)
+            {
+                if (fitem.Mark)
+                {
+                    //not implemented Sqlite.UpdateTweetsTable();
+                    
+                    //Log.log($"重複ファイル{fitem.FilePath}");
+                }
+            }
+        }
 
         //---------------------------------------------------------------------
         // 
@@ -206,7 +275,6 @@ namespace PictureManagerApp.src.Model
         }
     }
 
-    
     public sealed class FileItemAspectRatioComparer : IComparer<FileItem>
     {
         public int Compare(FileItem a, FileItem b)
@@ -225,6 +293,17 @@ namespace PictureManagerApp.src.Model
             {
                 return 0;
             }
+        }
+    }
+
+    public sealed class FileItemHashComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var x_a = a.GetFileHash() + a.FilePath;
+            var x_b = b.GetFileHash() + b.FilePath;
+
+            return x_a.CompareTo(x_b);
         }
     }
 }

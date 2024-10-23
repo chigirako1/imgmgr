@@ -28,10 +28,12 @@
         /// </summary>
         private void InitializeComponent()
         {
+            components = new System.ComponentModel.Container();
             label1 = new System.Windows.Forms.Label();
             startBtn = new System.Windows.Forms.Button();
             tabControl = new System.Windows.Forms.TabControl();
             tabPageAttr = new System.Windows.Forms.TabPage();
+            btnPicSizeToggle = new System.Windows.Forms.Button();
             label5 = new System.Windows.Forms.Label();
             numUD_MinFilesize = new System.Windows.Forms.NumericUpDown();
             label4 = new System.Windows.Forms.Label();
@@ -46,7 +48,6 @@
             chkBox_to = new System.Windows.Forms.CheckBox();
             chkBox_from = new System.Windows.Forms.CheckBox();
             tabPage_Pic = new System.Windows.Forms.TabPage();
-            btnPicSizeToggle = new System.Windows.Forms.Button();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
             radioBtn_PicOrinet_LS = new System.Windows.Forms.RadioButton();
@@ -57,8 +58,11 @@
             tabPage_FileList = new System.Windows.Forms.TabPage();
             txtBox_FileList = new System.Windows.Forms.TextBox();
             tabPage_zipList = new System.Windows.Forms.TabPage();
+            DirListDGV = new System.Windows.Forms.DataGridView();
             tabPage_DGM = new System.Windows.Forms.TabPage();
-            dataGridView1 = new System.Windows.Forms.DataGridView();
+            TwtDataGridView = new System.Windows.Forms.DataGridView();
+            tabPagePxv = new System.Windows.Forms.TabPage();
+            DgvPxv = new System.Windows.Forms.DataGridView();
             btnPaste = new System.Windows.Forms.Button();
             EndBtn = new System.Windows.Forms.Button();
             cmbBoxPath = new System.Windows.Forms.ComboBox();
@@ -70,7 +74,11 @@
             ツールTToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_AddPath = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelPicShow = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SameHashFile = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem_TsvRead = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプHToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
+            ToolStripMenuItem_test = new System.Windows.Forms.ToolStripMenuItem();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -81,9 +89,14 @@
             ((System.ComponentModel.ISupportInitialize)numUD_Height).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numUD_Width).BeginInit();
             tabPage_FileList.SuspendLayout();
+            tabPage_zipList.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)DirListDGV).BeginInit();
             tabPage_DGM.SuspendLayout();
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)TwtDataGridView).BeginInit();
+            tabPagePxv.SuspendLayout();
+            ((System.ComponentModel.ISupportInitialize)DgvPxv).BeginInit();
             menuStrip1.SuspendLayout();
+            contextMenuStrip1.SuspendLayout();
             SuspendLayout();
             // 
             // label1
@@ -115,6 +128,7 @@
             tabControl.Controls.Add(tabPage_FileList);
             tabControl.Controls.Add(tabPage_zipList);
             tabControl.Controls.Add(tabPage_DGM);
+            tabControl.Controls.Add(tabPagePxv);
             tabControl.Location = new System.Drawing.Point(16, 179);
             tabControl.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             tabControl.Multiline = true;
@@ -123,10 +137,10 @@
             tabControl.Size = new System.Drawing.Size(767, 574);
             tabControl.TabIndex = 2;
             tabControl.SelectedIndexChanged += tabControl_SelectedIndexChanged;
-            tabControl.Selected += tabControl_Selected;
             // 
             // tabPageAttr
             // 
+            tabPageAttr.Controls.Add(btnPicSizeToggle);
             tabPageAttr.Controls.Add(label5);
             tabPageAttr.Controls.Add(numUD_MinFilesize);
             tabPageAttr.Controls.Add(label4);
@@ -143,6 +157,17 @@
             tabPageAttr.TabIndex = 0;
             tabPageAttr.Text = "file";
             tabPageAttr.UseVisualStyleBackColor = true;
+            // 
+            // btnPicSizeToggle
+            // 
+            btnPicSizeToggle.Location = new System.Drawing.Point(362, 450);
+            btnPicSizeToggle.Margin = new System.Windows.Forms.Padding(2);
+            btnPicSizeToggle.Name = "btnPicSizeToggle";
+            btnPicSizeToggle.Size = new System.Drawing.Size(163, 33);
+            btnPicSizeToggle.TabIndex = 11;
+            btnPicSizeToggle.Text = "小画像設定に変更";
+            btnPicSizeToggle.UseVisualStyleBackColor = true;
+            btnPicSizeToggle.Click += btnPicSizeToggle_Click;
             // 
             // label5
             // 
@@ -283,7 +308,6 @@
             // 
             // tabPage_Pic
             // 
-            tabPage_Pic.Controls.Add(btnPicSizeToggle);
             tabPage_Pic.Controls.Add(label2);
             tabPage_Pic.Controls.Add(grpBox_PicOrient);
             tabPage_Pic.Controls.Add(numUD_Height);
@@ -296,17 +320,6 @@
             tabPage_Pic.TabIndex = 1;
             tabPage_Pic.Text = "pic";
             tabPage_Pic.UseVisualStyleBackColor = true;
-            // 
-            // btnPicSizeToggle
-            // 
-            btnPicSizeToggle.Location = new System.Drawing.Point(389, 84);
-            btnPicSizeToggle.Margin = new System.Windows.Forms.Padding(2);
-            btnPicSizeToggle.Name = "btnPicSizeToggle";
-            btnPicSizeToggle.Size = new System.Drawing.Size(90, 28);
-            btnPicSizeToggle.TabIndex = 5;
-            btnPicSizeToggle.Text = "変更";
-            btnPicSizeToggle.UseVisualStyleBackColor = true;
-            btnPicSizeToggle.Click += btnPicSizeToggle_Click;
             // 
             // label2
             // 
@@ -410,6 +423,7 @@
             // 
             // tabPage_zipList
             // 
+            tabPage_zipList.Controls.Add(DirListDGV);
             tabPage_zipList.Location = new System.Drawing.Point(4, 32);
             tabPage_zipList.Margin = new System.Windows.Forms.Padding(2);
             tabPage_zipList.Name = "tabPage_zipList";
@@ -419,9 +433,21 @@
             tabPage_zipList.Text = "zip list";
             tabPage_zipList.UseVisualStyleBackColor = true;
             // 
+            // DirListDGV
+            // 
+            DirListDGV.AllowUserToOrderColumns = true;
+            DirListDGV.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            DirListDGV.Dock = System.Windows.Forms.DockStyle.Fill;
+            DirListDGV.Location = new System.Drawing.Point(2, 2);
+            DirListDGV.Name = "DirListDGV";
+            DirListDGV.ReadOnly = true;
+            DirListDGV.Size = new System.Drawing.Size(755, 534);
+            DirListDGV.TabIndex = 0;
+            DirListDGV.CellMouseDoubleClick += DirListDGV_CellMouseDoubleClick;
+            // 
             // tabPage_DGM
             // 
-            tabPage_DGM.Controls.Add(dataGridView1);
+            tabPage_DGM.Controls.Add(TwtDataGridView);
             tabPage_DGM.Location = new System.Drawing.Point(4, 32);
             tabPage_DGM.Margin = new System.Windows.Forms.Padding(2);
             tabPage_DGM.Name = "tabPage_DGM";
@@ -431,21 +457,43 @@
             tabPage_DGM.Text = "DGM";
             tabPage_DGM.UseVisualStyleBackColor = true;
             // 
-            // dataGridView1
+            // TwtDataGridView
             // 
-            dataGridView1.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
-            dataGridView1.Dock = System.Windows.Forms.DockStyle.Fill;
-            dataGridView1.Location = new System.Drawing.Point(2, 2);
-            dataGridView1.Margin = new System.Windows.Forms.Padding(2);
-            dataGridView1.Name = "dataGridView1";
-            dataGridView1.RowHeadersWidth = 51;
-            dataGridView1.Size = new System.Drawing.Size(755, 534);
-            dataGridView1.TabIndex = 0;
-            dataGridView1.CellMouseDoubleClick += dataGridView1_CellMouseDoubleClick;
-            dataGridView1.RowEnter += dataGridView1_RowEnter;
+            TwtDataGridView.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            TwtDataGridView.Dock = System.Windows.Forms.DockStyle.Fill;
+            TwtDataGridView.Location = new System.Drawing.Point(2, 2);
+            TwtDataGridView.Margin = new System.Windows.Forms.Padding(2);
+            TwtDataGridView.Name = "TwtDataGridView";
+            TwtDataGridView.RowHeadersWidth = 51;
+            TwtDataGridView.Size = new System.Drawing.Size(755, 534);
+            TwtDataGridView.TabIndex = 0;
+            TwtDataGridView.CellMouseDoubleClick += TwtDataGridView_CellMouseDoubleClick;
+            TwtDataGridView.RowEnter += dataGridView1_RowEnter;
+            // 
+            // tabPagePxv
+            // 
+            tabPagePxv.Controls.Add(DgvPxv);
+            tabPagePxv.Location = new System.Drawing.Point(4, 32);
+            tabPagePxv.Name = "tabPagePxv";
+            tabPagePxv.Padding = new System.Windows.Forms.Padding(3);
+            tabPagePxv.Size = new System.Drawing.Size(759, 538);
+            tabPagePxv.TabIndex = 5;
+            tabPagePxv.Text = "DGV(Pxv)";
+            tabPagePxv.UseVisualStyleBackColor = true;
+            // 
+            // DgvPxv
+            // 
+            DgvPxv.ColumnHeadersHeightSizeMode = System.Windows.Forms.DataGridViewColumnHeadersHeightSizeMode.AutoSize;
+            DgvPxv.Dock = System.Windows.Forms.DockStyle.Fill;
+            DgvPxv.Location = new System.Drawing.Point(3, 3);
+            DgvPxv.Name = "DgvPxv";
+            DgvPxv.Size = new System.Drawing.Size(753, 532);
+            DgvPxv.TabIndex = 0;
+            DgvPxv.CellMouseDoubleClick += DgvPxv_CellMouseDoubleClick;
             // 
             // btnPaste
             // 
+            btnPaste.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
             btnPaste.Location = new System.Drawing.Point(558, 37);
             btnPaste.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
             btnPaste.Name = "btnPaste";
@@ -482,7 +530,7 @@
             // 
             // btnAppendSubDir
             // 
-            btnAppendSubDir.Location = new System.Drawing.Point(20, 73);
+            btnAppendSubDir.Location = new System.Drawing.Point(155, 74);
             btnAppendSubDir.Margin = new System.Windows.Forms.Padding(2);
             btnAppendSubDir.Name = "btnAppendSubDir";
             btnAppendSubDir.Size = new System.Drawing.Size(120, 72);
@@ -532,7 +580,7 @@
             // 
             // ツールTToolStripMenuItem
             // 
-            ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_AddPath, ToolStripMenuItem_SelPicShow });
+            ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_AddPath, ToolStripMenuItem_SelPicShow, ToolStripMenuItem_SameHashFile, toolStripMenuItem_TsvRead });
             ツールTToolStripMenuItem.Name = "ツールTToolStripMenuItem";
             ツールTToolStripMenuItem.Size = new System.Drawing.Size(79, 27);
             ツールTToolStripMenuItem.Text = "ツール(&T)";
@@ -540,7 +588,7 @@
             // ToolStripMenuItem_AddPath
             // 
             ToolStripMenuItem_AddPath.Name = "ToolStripMenuItem_AddPath";
-            ToolStripMenuItem_AddPath.Size = new System.Drawing.Size(234, 28);
+            ToolStripMenuItem_AddPath.Size = new System.Drawing.Size(257, 28);
             ToolStripMenuItem_AddPath.Text = "パス追加";
             ToolStripMenuItem_AddPath.Click += ToolStripMenuItem_AddPath_Click;
             // 
@@ -548,15 +596,43 @@
             // 
             ToolStripMenuItem_SelPicShow.Name = "ToolStripMenuItem_SelPicShow";
             ToolStripMenuItem_SelPicShow.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            ToolStripMenuItem_SelPicShow.Size = new System.Drawing.Size(234, 28);
+            ToolStripMenuItem_SelPicShow.Size = new System.Drawing.Size(257, 28);
             ToolStripMenuItem_SelPicShow.Text = "選択した画像表示";
             ToolStripMenuItem_SelPicShow.Click += ToolStripMenuItem_SelPicShow_Click;
+            // 
+            // ToolStripMenuItem_SameHashFile
+            // 
+            ToolStripMenuItem_SameHashFile.Name = "ToolStripMenuItem_SameHashFile";
+            ToolStripMenuItem_SameHashFile.Size = new System.Drawing.Size(257, 28);
+            ToolStripMenuItem_SameHashFile.Text = "同一ハッシュ値ファイルのみ";
+            ToolStripMenuItem_SameHashFile.Click += ToolStripMenuItem_SameHashFile_Click;
+            // 
+            // toolStripMenuItem_TsvRead
+            // 
+            toolStripMenuItem_TsvRead.Name = "toolStripMenuItem_TsvRead";
+            toolStripMenuItem_TsvRead.Size = new System.Drawing.Size(257, 28);
+            toolStripMenuItem_TsvRead.Text = "TSV読み込み";
+            toolStripMenuItem_TsvRead.Click += toolStripMenuItem_TsvRead_Click;
             // 
             // ヘルプHToolStripMenuItem
             // 
             ヘルプHToolStripMenuItem.Name = "ヘルプHToolStripMenuItem";
             ヘルプHToolStripMenuItem.Size = new System.Drawing.Size(85, 27);
             ヘルプHToolStripMenuItem.Text = "ヘルプ(&H)";
+            // 
+            // contextMenuStrip1
+            // 
+            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_test });
+            contextMenuStrip1.Name = "contextMenuStrip1";
+            contextMenuStrip1.Size = new System.Drawing.Size(109, 32);
+            contextMenuStrip1.Opening += contextMenuStrip1_Opening;
+            // 
+            // ToolStripMenuItem_test
+            // 
+            ToolStripMenuItem_test.Name = "ToolStripMenuItem_test";
+            ToolStripMenuItem_test.Size = new System.Drawing.Size(108, 28);
+            ToolStripMenuItem_test.Text = "test";
+            ToolStripMenuItem_test.Click += ToolStripMenuItem_test_Click;
             // 
             // MainForm
             // 
@@ -596,10 +672,15 @@
             ((System.ComponentModel.ISupportInitialize)numUD_Width).EndInit();
             tabPage_FileList.ResumeLayout(false);
             tabPage_FileList.PerformLayout();
+            tabPage_zipList.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)DirListDGV).EndInit();
             tabPage_DGM.ResumeLayout(false);
-            ((System.ComponentModel.ISupportInitialize)dataGridView1).EndInit();
+            ((System.ComponentModel.ISupportInitialize)TwtDataGridView).EndInit();
+            tabPagePxv.ResumeLayout(false);
+            ((System.ComponentModel.ISupportInitialize)DgvPxv).EndInit();
             menuStrip1.ResumeLayout(false);
             menuStrip1.PerformLayout();
+            contextMenuStrip1.ResumeLayout(false);
             ResumeLayout(false);
             PerformLayout();
         }
@@ -637,7 +718,6 @@
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_PR;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_All;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_LS;
-        private System.Windows.Forms.Button btnPicSizeToggle;
         private System.Windows.Forms.Button btnNextDay;
         private System.Windows.Forms.MenuStrip menuStrip1;
         private System.Windows.Forms.ToolStripMenuItem ファイルFToolStripMenuItem;
@@ -647,7 +727,15 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelPicShow;
         private System.Windows.Forms.TabPage tabPage_zipList;
         private System.Windows.Forms.TabPage tabPage_DGM;
-        private System.Windows.Forms.DataGridView dataGridView1;
+        private System.Windows.Forms.DataGridView TwtDataGridView;
+        private System.Windows.Forms.DataGridView DirListDGV;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip1;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_test;
+        private System.Windows.Forms.Button btnPicSizeToggle;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SameHashFile;
+        private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_TsvRead;
+        private System.Windows.Forms.TabPage tabPagePxv;
+        private System.Windows.Forms.DataGridView DgvPxv;
     }
 }
 

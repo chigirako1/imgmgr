@@ -20,6 +20,9 @@ namespace PictureManagerApp.src.Model
         //private Image mImage;
         private Image mThumbnail;
 
+        private string FileHash;
+
+
         public bool Mark {
             set; get;
         }
@@ -32,6 +35,7 @@ namespace PictureManagerApp.src.Model
 
         public bool Fav {  set; get; }
         public bool Del { set; get; }
+
 
         //=====================================================================
         // 
@@ -60,6 +64,7 @@ namespace PictureManagerApp.src.Model
                 FileSize = fi.Length;
                 LastWriteTime = fi.LastWriteTime;
             }
+            //FileHash = "";
         }
 
         public FileItem(FileItem org)
@@ -95,6 +100,18 @@ namespace PictureManagerApp.src.Model
         public string GetTxtPath()
         {
             return mZipPath + "\t" + mPath;
+        }
+
+        public string GetFilename()
+        {
+            if (mZipPath != "")
+            {
+                return Path.GetFileName(mZipPath);
+            }
+            else
+            {
+                return Path.GetFileName(mPath);
+            }
         }
 
         public string GetRelativePath(string basePath, bool filename_p = false)
@@ -138,6 +155,11 @@ namespace PictureManagerApp.src.Model
                 Uri relUri = basepath.MakeRelativeUri(dirUri);
                 return relUri.ToString();
             }
+        }
+
+        public bool IsFileSizeBigger()
+        {
+            return FileSize > 1024 * 1024;
         }
 
         //---------------------------------------------------------------------
@@ -210,7 +232,8 @@ namespace PictureManagerApp.src.Model
                 return true;
             }
 
-            using var img = GetImageFromFile();
+            //using var img = GetImageFromFile();
+            using var img = GetImage();
             switch (orient)
             {
                 case PIC_ORIENT_TYPE.PIC_ORINET_PORTRAIT:
@@ -318,6 +341,7 @@ namespace PictureManagerApp.src.Model
 
         private Image GetImageFromZipFile()
         {
+            /*
             using (var archive = ZipFile.OpenRead(mZipPath))
             {
                 var ent = archive.GetEntry(FilePath);
@@ -326,6 +350,13 @@ namespace PictureManagerApp.src.Model
                 ImageSize.Height = img.Height;
                 return img;
             }
+            */
+            //return MyFiles.GetImageFromZipFile(mZipPath, FilePath);
+
+            var img = MyFiles.GetImageFromZipFile(mZipPath, FilePath);
+            ImageSize.Width = img.Width;
+            ImageSize.Height = img.Height;
+            return img;
         }
 
         public Size GetImageSize()
@@ -376,6 +407,21 @@ namespace PictureManagerApp.src.Model
             {
                 return true;
             }
+        }
+
+        public string GetFileHash()
+        {
+            if (FileHash != null)
+            {
+                return FileHash;
+            }
+
+            if (mZipPath == "")
+            {
+                return MyFiles.ComputeFileHash(mPath);
+            }
+
+            return null;
         }
     }
 }

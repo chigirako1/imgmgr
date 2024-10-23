@@ -6,6 +6,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Security.Policy;
+using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
 
 using PictureManagerApp.src.Lib;
@@ -57,6 +58,8 @@ namespace PictureManagerApp.src.Model
     {
         ACTION_DO_NOTHING,
 
+        ACTION_QUIT_CONF,
+
         ACTION_MOV_NEXT,
         ACTION_MOV_NEXT_CONT_START,
         ACTION_MOV_NEXT_CONT_STOP,
@@ -76,6 +79,7 @@ namespace PictureManagerApp.src.Model
     {
         THUMBNAIL_VIEW_LINEAR,
         THUMBNAIL_VIEW_LIST,
+        THUMBNAIL_VIEW_NEXT,
 
         THUMBNAIL_VIEW_MAX,
 
@@ -84,7 +88,14 @@ namespace PictureManagerApp.src.Model
         THUMBNAIL_VIEW_NO_MAIN_SPLIT,
 
         //以下は除外
-        THUMBNAIL_VIEW_NEXT,
+    }
+
+    public enum FILTER_TYPE
+    {
+        FILTER_NONE,
+        FILTER_HASH,
+
+        FILTER_MAX,
     }
 
     public class PictureModel
@@ -96,6 +107,7 @@ namespace PictureManagerApp.src.Model
         private int mIdx = -1;
         private DateTime? mDtFrom;
         private DateTime? mDtTo;
+        private FILTER_TYPE FilterType = FILTER_TYPE.FILTER_NONE;
 
         private Size? mMaxPicSize = null;
         private int mMinFileSize = 0;
@@ -106,10 +118,15 @@ namespace PictureManagerApp.src.Model
         private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
         private string mSeachWord = "";
 
+        private static readonly string STR_METHOD_DEL = "DEL";
+        private static readonly string STR_METHOD_FAV = "FAV";
+
         public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
         public int mMarkCount { private set; get; }//都度集計したほうが良いのでは？漏れ
         public int UpDownCount { set; get; }
         public int PageCount { set; get; }
+
+        private TsvRowList mRowList;
 
         //---------------------------------------------------------------------
         // 
@@ -142,6 +159,12 @@ namespace PictureManagerApp.src.Model
             Log.log($"date to={dtTo}");
             mDtFrom = dtFrom;
             mDtTo = dtTo;
+        }
+
+        public void SetFilter(FILTER_TYPE filter)
+        {
+            Log.log($"filter={filter}");
+            FilterType = filter;
         }
 
         //---------------------------------------------------------------------
@@ -261,6 +284,12 @@ namespace PictureManagerApp.src.Model
             if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
             {
                 BuildFileList_Dir();
+
+                if (FilterType == FILTER_TYPE.FILTER_HASH)
+                {
+                    mFileList.multipleFileOnly();
+                    mMarkCount = mFileList.MarkCount();
+                }
             }
             else
             {
@@ -312,7 +341,16 @@ namespace PictureManagerApp.src.Model
                     if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrient))
                     {
                         //Log.log($"対象ファイル={f}");
-                        mFileList.Add(fi);
+                        bool computeHash;
+                        if (FilterType == FILTER_TYPE.FILTER_HASH)
+                        {
+                            computeHash = true;
+                        }
+                        else
+                        {
+                            computeHash = false;
+                        }
+                        mFileList.Add(fi, computeHash);
 
                         if (mSeachWord != "")
                         {
@@ -386,45 +424,17 @@ namespace PictureManagerApp.src.Model
 
         private void BuildFileList_Zip()
         {
-            var encode = "utf-8";
-            //encode = "sjis";
-            //encode = "shift_jis";
-            //using (var archive = ZipFile.OpenRead(path))
-            using (ZipArchive archive = ZipFile.Open(mPath,
-                ZipArchiveMode.Read,
-                System.Text.Encoding.GetEncoding(encode)))
+            var filelist = MyFiles.GetZipEntryList(mPath);
+
+            mFileList.ZipList = true;
+            foreach (var f in filelist)//.OrderBy(x => x))
             {
-                foreach (var e in archive.Entries)
+                //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
+                //var fi = new FileItem(f);
+                var fi = new FileItem(f, mPath);
+                if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrient))
                 {
-                    //filelist.Add(e.FullName);
-                    //Console.WriteLine("名前       : {0}", e.Name);
-                    Console.WriteLine("フルパス   : {0}", e.FullName);
-                    //Console.WriteLine("サイズ     : {0}", e.Length);
-                    //Console.WriteLine("圧縮サイズ : {0}", e.CompressedLength);
-                    //Console.WriteLine("更新日時   : {0}", e.LastWriteTime);
-                }
-
-                var files = archive.Entries.//OrderBy(e => e.FullName).
-                    Where(e =>
-                        e.FullName.EndsWith(".jpg", StringComparison.OrdinalIgnoreCase) ||
-                        e.FullName.EndsWith(".jpeg", StringComparison.OrdinalIgnoreCase) ||
-                        e.FullName.EndsWith(".png", StringComparison.OrdinalIgnoreCase) ||
-                        e.FullName.EndsWith(".gif", StringComparison.OrdinalIgnoreCase)
-                );
-
-
-                List<string> filelist = [];
-                files.ToList().ForEach(f => filelist.Add(f.FullName));
-                filelist.Sort(new NaturalStringComparer());
-
-                mFileList.ZipList = true;
-                foreach (var f in filelist)//.OrderBy(x => x))
-                {
-                    //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
-                    {
-                        FileItem fi = new(f, mPath);
-                        mFileList.Add(fi);
-                    }
+                    mFileList.Add(fi);
                 }
             }
         }
@@ -968,12 +978,19 @@ namespace PictureManagerApp.src.Model
 
         public string GetCurrentFilePath() => mFileList[mIdx].FilePath;
 
-        public string GetPictureInfoText()
+        public string GetPictureInfoText(bool simple = false)
         {
             string txt;
-
             FileItem fi = mFileList[mIdx];
-            var fpath = fi.GetRelativePath(WorkingRootPath, true);
+            string fpath;
+            if (simple)
+            {
+                fpath = fi.GetFilename();
+            }
+            else
+            {
+                fpath = fi.GetRelativePath(WorkingRootPath, true);
+            }
             txt = String.Format("[{0,3}/{1}] {2}", mIdx + 1, mFileList.Count, fpath);
 
             return txt;
@@ -1130,6 +1147,11 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void Batch()
         {
+            if (FilterType == FILTER_TYPE.FILTER_HASH)
+            {
+                mFileList.RegisterTweetDB();
+            }
+
             mFileList.Batch(mPath);
             mMarkCount = 0;
         }
@@ -1197,6 +1219,11 @@ namespace PictureManagerApp.src.Model
             mFileList[mIdx].Fav = !mFileList[mIdx].Fav;
         }
 
+        public void LoadTsvFile()
+        {
+
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -1209,11 +1236,21 @@ namespace PictureManagerApp.src.Model
                 var sDate = GetTodayString();
                 for (int cnt = 0; cnt < mFileList.Count; cnt++)
                 {
+                    var markStr = "";
                     var item = mFileList[cnt];
                     if (item.Del)
                     {
+                        markStr = STR_METHOD_DEL;
+                    }
+                    else if (item.Fav)
+                    {
+                        markStr = STR_METHOD_FAV;
+                    }
+
+                    if (markStr != "")
+                    {
                         var txt = item.GetTxtPath();
-                        WriteFile(writer, txt, "DEL", sDate);
+                        WriteFile(writer, txt, markStr, sDate);
                     }
                 }
             }

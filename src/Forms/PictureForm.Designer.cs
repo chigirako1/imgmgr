@@ -38,6 +38,9 @@
             ToolStripMenuItem_hide = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelSameDir = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            ToolStripMenuItem_DB_op = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_rating_down = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_rating_up = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_sql = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_Slides = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator3 = new System.Windows.Forms.ToolStripSeparator();
@@ -67,6 +70,7 @@
             toolStripMenuItem_Sort_FileSize = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_Sort_NumPixel = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_AspectRatio = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_Sort_FileHash = new System.Windows.Forms.ToolStripMenuItem();
             ツールToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelImg = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
@@ -81,9 +85,6 @@
             ウィンドウToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             RightPicBox = new System.Windows.Forms.PictureBox();
-            ToolStripMenuItem_DB_op = new System.Windows.Forms.ToolStripMenuItem();
-            ToolStripMenuItem_rating_down = new System.Windows.Forms.ToolStripMenuItem();
-            ToolStripMenuItem_rating_up = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             contextMenuStrip_pic.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -112,7 +113,7 @@
             contextMenuStrip_pic.ImageScalingSize = new System.Drawing.Size(20, 20);
             contextMenuStrip_pic.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_PathCopy, ToolStripMenuItem_CopyParentDirPath, ToolStripMenuItem_OpenFiler, toolStripSeparator2, ToolStripMenuItem_hide, ToolStripMenuItem_SelSameDir, toolStripSeparator1, ToolStripMenuItem_DB_op, ToolStripMenuItem_sql, ToolStripMenuItem_Slides, toolStripSeparator3, ToolStripMenuItem_Quit });
             contextMenuStrip_pic.Name = "contextMenuStrip_pic";
-            contextMenuStrip_pic.Size = new System.Drawing.Size(399, 296);
+            contextMenuStrip_pic.Size = new System.Drawing.Size(399, 274);
             // 
             // ToolStripMenuItem_PathCopy
             // 
@@ -158,6 +159,25 @@
             // 
             toolStripSeparator1.Name = "toolStripSeparator1";
             toolStripSeparator1.Size = new System.Drawing.Size(395, 6);
+            // 
+            // ToolStripMenuItem_DB_op
+            // 
+            ToolStripMenuItem_DB_op.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_rating_down, ToolStripMenuItem_rating_up });
+            ToolStripMenuItem_DB_op.Name = "ToolStripMenuItem_DB_op";
+            ToolStripMenuItem_DB_op.Size = new System.Drawing.Size(398, 28);
+            ToolStripMenuItem_DB_op.Text = "DB操作";
+            // 
+            // ToolStripMenuItem_rating_down
+            // 
+            ToolStripMenuItem_rating_down.Name = "ToolStripMenuItem_rating_down";
+            ToolStripMenuItem_rating_down.Size = new System.Drawing.Size(237, 28);
+            ToolStripMenuItem_rating_down.Text = "評価ダウンリストに記録";
+            // 
+            // ToolStripMenuItem_rating_up
+            // 
+            ToolStripMenuItem_rating_up.Name = "ToolStripMenuItem_rating_up";
+            ToolStripMenuItem_rating_up.Size = new System.Drawing.Size(237, 28);
+            ToolStripMenuItem_rating_up.Text = "評価アップリストに記録";
             // 
             // ToolStripMenuItem_sql
             // 
@@ -279,7 +299,7 @@
             // 
             // 表示ToolStripMenuItem
             // 
-            表示ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItem_FullScreen, MenuItem_MagSub, ToolStripMenuItem_fwd_one, ToolStripMenuItem_ThumbnailOn, ToolStripMenuItem_SlideShow, toolStripMenuItem1 });
+            表示ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItem_FullScreen, ToolStripMenuItem_SlideShow, ToolStripMenuItem_ThumbnailOn, MenuItem_MagSub, toolStripMenuItem1, ToolStripMenuItem_fwd_one });
             表示ToolStripMenuItem.Name = "表示ToolStripMenuItem";
             表示ToolStripMenuItem.Size = new System.Drawing.Size(77, 27);
             表示ToolStripMenuItem.Text = "表示(&V)";
@@ -322,21 +342,22 @@
             ToolStripMenuItem_ThumbnailOn.CheckOnClick = true;
             ToolStripMenuItem_ThumbnailOn.CheckState = System.Windows.Forms.CheckState.Checked;
             ToolStripMenuItem_ThumbnailOn.Name = "ToolStripMenuItem_ThumbnailOn";
+            ToolStripMenuItem_ThumbnailOn.ShortcutKeys = System.Windows.Forms.Keys.F4;
             ToolStripMenuItem_ThumbnailOn.Size = new System.Drawing.Size(378, 28);
-            ToolStripMenuItem_ThumbnailOn.Text = "サムネイル表示";
+            ToolStripMenuItem_ThumbnailOn.Text = "サムネイル表示/非表示切替";
             ToolStripMenuItem_ThumbnailOn.Click += ToolStripMenuItem_ThumbnailOn_Click;
             // 
             // ToolStripMenuItem_SlideShow
             // 
             ToolStripMenuItem_SlideShow.Name = "ToolStripMenuItem_SlideShow";
-            ToolStripMenuItem_SlideShow.ShortcutKeys = System.Windows.Forms.Keys.F2;
+            ToolStripMenuItem_SlideShow.ShortcutKeys = System.Windows.Forms.Keys.F3;
             ToolStripMenuItem_SlideShow.Size = new System.Drawing.Size(378, 28);
             ToolStripMenuItem_SlideShow.Text = "スライドショー";
             ToolStripMenuItem_SlideShow.Click += ToolStripMenuItem_SlideShow_Click;
             // 
             // toolStripMenuItem1
             // 
-            toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem_Sort_FilePath, toolStripMenuItem_Sort_FileSize, ToolStripMenuItem_Sort_NumPixel, ToolStripMenuItem_AspectRatio });
+            toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem_Sort_FilePath, toolStripMenuItem_Sort_FileSize, ToolStripMenuItem_Sort_NumPixel, ToolStripMenuItem_AspectRatio, ToolStripMenuItem_Sort_FileHash });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
             toolStripMenuItem1.Size = new System.Drawing.Size(378, 28);
             toolStripMenuItem1.Text = "表示順";
@@ -344,30 +365,37 @@
             // toolStripMenuItem_Sort_FilePath
             // 
             toolStripMenuItem_Sort_FilePath.Name = "toolStripMenuItem_Sort_FilePath";
-            toolStripMenuItem_Sort_FilePath.Size = new System.Drawing.Size(167, 28);
+            toolStripMenuItem_Sort_FilePath.Size = new System.Drawing.Size(194, 28);
             toolStripMenuItem_Sort_FilePath.Text = "ファイルパス";
             toolStripMenuItem_Sort_FilePath.Click += toolStripMenuItem_Sort_FilePath_Click;
             // 
             // toolStripMenuItem_Sort_FileSize
             // 
             toolStripMenuItem_Sort_FileSize.Name = "toolStripMenuItem_Sort_FileSize";
-            toolStripMenuItem_Sort_FileSize.Size = new System.Drawing.Size(167, 28);
+            toolStripMenuItem_Sort_FileSize.Size = new System.Drawing.Size(194, 28);
             toolStripMenuItem_Sort_FileSize.Text = "ファイルサイズ";
             toolStripMenuItem_Sort_FileSize.Click += toolStripMenuItem_Sort_FilePath_Click;
             // 
             // ToolStripMenuItem_Sort_NumPixel
             // 
             ToolStripMenuItem_Sort_NumPixel.Name = "ToolStripMenuItem_Sort_NumPixel";
-            ToolStripMenuItem_Sort_NumPixel.Size = new System.Drawing.Size(167, 28);
+            ToolStripMenuItem_Sort_NumPixel.Size = new System.Drawing.Size(194, 28);
             ToolStripMenuItem_Sort_NumPixel.Text = "ピクセル数";
             ToolStripMenuItem_Sort_NumPixel.Click += toolStripMenuItem_Sort_FilePath_Click;
             // 
             // ToolStripMenuItem_AspectRatio
             // 
             ToolStripMenuItem_AspectRatio.Name = "ToolStripMenuItem_AspectRatio";
-            ToolStripMenuItem_AspectRatio.Size = new System.Drawing.Size(167, 28);
+            ToolStripMenuItem_AspectRatio.Size = new System.Drawing.Size(194, 28);
             ToolStripMenuItem_AspectRatio.Text = "アスペクト比";
             ToolStripMenuItem_AspectRatio.Click += toolStripMenuItem_Sort_FilePath_Click;
+            // 
+            // ToolStripMenuItem_Sort_FileHash
+            // 
+            ToolStripMenuItem_Sort_FileHash.Name = "ToolStripMenuItem_Sort_FileHash";
+            ToolStripMenuItem_Sort_FileHash.Size = new System.Drawing.Size(194, 28);
+            ToolStripMenuItem_Sort_FileHash.Text = "ファイルハッシュ値";
+            ToolStripMenuItem_Sort_FileHash.Click += toolStripMenuItem_Sort_FilePath_Click;
             // 
             // ツールToolStripMenuItem
             // 
@@ -469,25 +497,6 @@
             RightPicBox.TabStop = false;
             RightPicBox.Paint += rightPicBox_Paint;
             // 
-            // ToolStripMenuItem_DB_op
-            // 
-            ToolStripMenuItem_DB_op.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_rating_down, ToolStripMenuItem_rating_up });
-            ToolStripMenuItem_DB_op.Name = "ToolStripMenuItem_DB_op";
-            ToolStripMenuItem_DB_op.Size = new System.Drawing.Size(398, 28);
-            ToolStripMenuItem_DB_op.Text = "DB操作";
-            // 
-            // ToolStripMenuItem_rating_down
-            // 
-            ToolStripMenuItem_rating_down.Name = "ToolStripMenuItem_rating_down";
-            ToolStripMenuItem_rating_down.Size = new System.Drawing.Size(237, 28);
-            ToolStripMenuItem_rating_down.Text = "評価ダウンリストに記録";
-            // 
-            // ToolStripMenuItem_rating_up
-            // 
-            ToolStripMenuItem_rating_up.Name = "ToolStripMenuItem_rating_up";
-            ToolStripMenuItem_rating_up.Size = new System.Drawing.Size(237, 28);
-            ToolStripMenuItem_rating_up.Text = "評価アップリストに記録";
-            // 
             // PictureForm
             // 
             AutoScaleDimensions = new System.Drawing.SizeF(9F, 23F);
@@ -573,5 +582,6 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_DB_op;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_rating_down;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_rating_up;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_Sort_FileHash;
     }
 }

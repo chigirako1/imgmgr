@@ -11,6 +11,7 @@ using System.Windows.Forms;
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
+using System.Data.Common;
 
 namespace PictureManagerApp
 {
@@ -26,10 +27,15 @@ namespace PictureManagerApp
             @"D:\download\PxDl-0trash",
             @"D:\dl\AnkPixiv\Twitter",
             @"D:\dl\AnkPixiv\Twitter-0trash",
+            @"D:\dl\AnkPixiv\Nijie",
+            @"D:\dl\AnkPixiv\Nijie-0trash",
             @"D:\work\bin\r18",
+            @"D:\r18\dlPic\twitter",
+            @"D:\r18\dlPic\Nijie\nje",
         ];
 
         private static readonly string[] SP_WORDS = [
+            "-iv",
             "-w2x",
             "-cnv",
             "",
@@ -43,8 +49,10 @@ namespace PictureManagerApp
 
         private DirList mDirList = new();
 
-        private DataTable datatable { get; set; }
+        private TsvRowList mTsvRowList;
 
+        private DataTable mTwtDatatable { get; set; }
+        private DataTable mPxvDatatable { get; set; }
 
 
         //--------------
@@ -106,7 +114,8 @@ namespace PictureManagerApp
 
         private void InitPathCmbBox(string path1)
         {
-            cmbBoxPath.Text = path1;
+            //if (Directory.Exists(path1))
+            //  cmbBoxPath.Text = path1;
 
             foreach (string path in CMBBOX_DIR_PATHS)
             {
@@ -116,6 +125,7 @@ namespace PictureManagerApp
                 }
             }
 
+            cmbBoxPath.Text = (string)cmbBoxPath.Items[0];
 
             var dir = System.Environment.CurrentDirectory;
             dir = Directory.GetParent(dir).ToString();
@@ -171,18 +181,24 @@ namespace PictureManagerApp
             });
         }
 
-        private void Start(FileList filelist = null)
+        private void Start(FileList filelist = null, FILTER_TYPE filterType = FILTER_TYPE.FILTER_NONE)
         {
             Log.trc($"[S]");
-            var pathStr = cmbBoxPath.Text;
 
             var model = new PictureModel();
             setModelParam(model);
+
+            if (filterType != FILTER_TYPE.FILTER_NONE)
+            {
+                model.SetFilter(filterType);
+            }
+
             try
             {
                 // TODO: progress bar
                 //...
 
+                var pathStr = cmbBoxPath.Text;
                 if (filelist != null)
                 {
                     model.SetFileList(filelist);
@@ -201,8 +217,7 @@ namespace PictureManagerApp
                 picForm.ShowDialog();
                 Log.trc($"picForm.ShowDialog() end");
 
-
-
+                //選択されたファイルを記録する
                 var pics = model.GetSelectedPic();
                 foreach (var pic in pics)
                 {
@@ -210,8 +225,7 @@ namespace PictureManagerApp
                     mFavFileList.Add(fitem);
                 }
 
-                //mDirList.Update(model);
-                //...ページ数、サムネイル
+                mDirList.Update(model);
             }
             catch (Exception ex)
             {
@@ -224,6 +238,7 @@ namespace PictureManagerApp
             finally
             {
             }
+
             Log.trc($"[E]");
         }
 
@@ -384,8 +399,8 @@ namespace PictureManagerApp
                 {
                     cmbBoxPath.Items.Add(f);
 
-                    DirItem diritem = new(f);
-                    mDirList.Add(diritem);
+                    //DirItem diritem = new(f);
+                    //mDirList.Add(diritem);
                 }
             }
 
@@ -489,51 +504,133 @@ namespace PictureManagerApp
             Start(mFavFileList);
         }
 
-        private void tabControl_Selected(object sender, TabControlEventArgs e)
-        {
-
-        }
-
         private void tabControl_SelectedIndexChanged(object sender, EventArgs e)
         {
             var tabc = (TabControl)sender;
             var txt = tabc.SelectedTab.Text;
             if (txt == "DGM")
             {
-                //string dbPath = Application.StartupPath + @"\Data.db";
-                string DATA_SRC_FILENAME = "development.sqlite3";
-                string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\" + DATA_SRC_FILENAME;
-                var dbPath = DATA_SRC_PATH;
-                if (File.Exists(dbPath))
+                if (this.TwtDataGridView.DataSource == null)
                 {
-
-                }
-                else
-                {
-                    var basePath = System.Environment.CurrentDirectory;
-                    var filePath = DATA_SRC_FILENAME;
-                    dbPath = Path.Combine(basePath, filePath);
-                }
-
-                using (SQLiteConnection con = new SQLiteConnection("Data Source=" + dbPath))
-                {
-                    con.Open();
-
-                    //空のテーブルを作ります。
-                    //この時点では、DataGridViewと紐づいていません。
-                    this.datatable = new DataTable();
-
-                    //DataTableに読み込むデータをSQLで指定します。
-                    //今回はDataTableを指定していないので、SELECTで表示する列名が
-                    //のちのち紐づけを行った際のDataGridViewの列名になります。
-                    var colname = "id, twtid, twtname, filenum, status";
-                    SQLiteDataAdapter adapter = new SQLiteDataAdapter($"SELECT {colname} FROM twitters;", con);
-                    adapter.Fill(this.datatable);
-
-                    //データテーブルをDataGridViewに紐づけます。
-                    this.dataGridView1.DataSource = this.datatable;
+                    InitTwtDGV();
                 }
             }
+            else if (txt == "DGV(Pxv)")
+            {
+                if (this.DgvPxv.DataSource == null)
+                {
+                    InitPxvDGV();
+                }
+            }
+            else if (txt == "zip list")
+            {
+                InitZipListDGV();
+            }
+            else
+            {
+            }
+        }
+
+        private void InitTwtDGV()
+        {
+            var dbPath = Sqlite.GetSqliteFilePath();
+
+            using (var con = new SQLiteConnection("Data Source=" + dbPath))
+            {
+                con.Open();
+
+                this.mTwtDatatable = new DataTable();
+
+                var tblname = "twitters";
+                var colname = "id, twtid, twtname, filenum, status";
+                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname);
+                adapter.Fill(this.mTwtDatatable);
+
+                this.TwtDataGridView.DataSource = this.mTwtDatatable;
+            }
+        }
+
+        private void InitPxvDGV()
+        {
+            var dbPath = Sqlite.GetSqliteFilePath();
+
+            using (var con = new SQLiteConnection("Data Source=" + dbPath))
+            {
+                con.Open();
+
+                this.mPxvDatatable = new DataTable();
+
+                var tblname = "artists";
+                var colname = "id, pxvid, pxvname, feature, rating, filenum, status";
+                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname);
+                adapter.Fill(this.mPxvDatatable);
+
+                this.DgvPxv.DataSource = this.mPxvDatatable;
+            }
+        }
+
+        private void InitZipListDGV()
+        {
+            this.DirListDGV.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            this.DirListDGV.AllowUserToAddRows = false;
+            this.DirListDGV.RowTemplate.MinimumHeight = 256;
+
+            this.DirListDGV.ContextMenuStrip = this.contextMenuStrip1;
+
+            this.DirListDGV.DataSource = GetDataTable();
+        }
+
+        private DataTable GetDataTable()
+        {
+            var path = @"D:\export-done\pdf-zip-lnv";
+            //path = @"D:\export-done\pdf-zip-lnv\[[out20240802mz-tw-new-lnv[32]023";
+            path = @"D:\export\[[out20240819mz-tw-new-lnv[193]036";
+            path = cmbBoxPath.Text;
+
+            var fileArray = Directory.GetFiles(
+                            path,
+                            "*.*",
+                            SearchOption.AllDirectories);
+            var files = fileArray.Where(
+                f => String.Compare(Path.GetExtension(f), ".zip", true) == 0
+            );
+
+            var dt = new DataTable();
+
+            var id = dt.Columns.Add("ID");
+            var col_thumbnail = dt.Columns.Add("サムネイル");
+            col_thumbnail.DataType = System.Type.GetType("System.Byte[]"); //Type byte[] to store image bytes.
+            col_thumbnail.AllowDBNull = true;
+            var col_filename = dt.Columns.Add("ファイル名");
+            var col_path = dt.Columns.Add("パス");
+            var col_star = dt.Columns.Add("★");
+
+            /*
+            var col_pic = new DataGridViewImageColumn();
+            col_pic.Image = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
+            col_pic.ImageLayout = DataGridViewImageCellLayout.Zoom;
+            col_pic.Description = "イメージ";
+            DirListDGV.Columns.Add(col_pic);
+            */
+
+            int i = 0;
+            foreach (var f in files.OrderBy(x => x))
+            {
+                i++;
+                var newRow = dt.NewRow();
+                newRow.SetField(id, i);
+                newRow.SetField(col_filename, System.IO.Path.GetFileName(f));
+                newRow.SetField(col_path, f);
+
+                //var img = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
+                //var ba = ImageModule.ConvImageToByteArray(img);
+                var ba = MyFiles.GetThumbnailByteArray(f);
+                newRow.SetField(col_thumbnail, ba);
+
+                dt.Rows.Add(newRow);
+            }
+
+            return dt;
         }
 
         private void dataGridView1_RowEnter(object sender, DataGridViewCellEventArgs e)
@@ -548,39 +645,95 @@ namespace PictureManagerApp
             }
         }
 
-        private void dataGridView1_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        private void TwtDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
-            /*System.Text.StringBuilder messageBoxCS = new System.Text.StringBuilder();
-            messageBoxCS.AppendFormat("{0} = {1}", "ColumnIndex", e.ColumnIndex);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "RowIndex", e.RowIndex);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "Button", e.Button);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "Clicks", e.Clicks);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "X", e.X);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "Y", e.Y);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "Delta", e.Delta);
-            messageBoxCS.AppendLine();
-            messageBoxCS.AppendFormat("{0} = {1}", "Location", e.Location);
-            messageBoxCS.AppendLine();
-            MessageBox.Show(messageBoxCS.ToString(), "CellMouseDoubleClick Event");*/
-            dataGridView1.Rows[e.RowIndex].Selected = true;
+            TwtDataGridView.Rows[e.RowIndex].Selected = true;
 
-            var row = dataGridView1.Rows[e.RowIndex];
+            var row = TwtDataGridView.Rows[e.RowIndex];
             var screen_name = (string)row.Cells[1].Value;
 
             var path = Twt.GetArchiveDirPath(screen_name);
             Log.trc($"'{screen_name}' => '{path}'");
-            cmbBoxPath.Text = path;
-            cmbBoxPath.Items.Add(path);
+            if (path != "")
+            {
+                cmbBoxPath.Text = path;
+                cmbBoxPath.Items.Add(path);
+            }
 
             path = Twt.GetCurrentDirPath(screen_name);
             Log.trc($"'{screen_name}' => '{path}'");
+            if (path != "")
+            {
+                cmbBoxPath.Items.Add(path);
+            }
+        }
+
+        private void DgvPxv_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            DgvPxv.Rows[e.RowIndex].Selected = true;
+
+            var row = DgvPxv.Rows[e.RowIndex];
+            var pxv_usr_id = (long)row.Cells[1].Value;
+
+            var path = Pxv.GetArchiveDirPath(pxv_usr_id);
+            Log.trc($"'{pxv_usr_id}' => '{path}'");
+            cmbBoxPath.Text = path;
+            cmbBoxPath.Items.Add(path);
+
+            path = Pxv.GetCurrentDirPath(pxv_usr_id);
+            Log.trc($"'{pxv_usr_id}' => '{path}'");
             cmbBoxPath.Items.Add(path);
         }
+
+        private void DirListDGV_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            DirListDGV.Rows[e.RowIndex].Selected = true;
+
+            var row = DirListDGV.Rows[e.RowIndex];
+            var filepath = (string)row.Cells[3].Value;
+            Log.trc($"'{filepath}' => '{filepath}'");
+            cmbBoxPath.Text = filepath;
+            //cmbBoxPath.Items.Add(filepath);
+            Start();
+        }
+
+        private void contextMenuStrip1_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+
+        }
+
+        private void ToolStripMenuItem_test_Click(object sender, EventArgs e)
+        {
+            DataTable dt2 = (DataTable)DirListDGV.DataSource;
+            DataRow dr2 = dt2.Rows[DirListDGV.CurrentRow.Index];
+            var row_idx = DirListDGV.CurrentRow.Index;
+
+            var bm = DirListDGV.BindingContext[DirListDGV.DataSource, DirListDGV.DataMember];
+            var drv = (DataRowView)bm.Current;
+            var dr = drv.Row;
+
+            DirListDGV.Rows[row_idx].Selected = true;
+
+            var row = DirListDGV.Rows[row_idx];
+
+            var datasource = (DataTable)this.DirListDGV.DataSource;
+            var cl = datasource.Columns[4];
+            datasource.Rows[0].SetField(cl, "★");
+        }
+
+        private void ToolStripMenuItem_SameHashFile_Click(object sender, EventArgs e)
+        {
+            Log.trc("[S]");
+            Start(null, FILTER_TYPE.FILTER_HASH);
+            Log.trc("[E]");
+        }
+
+        private void toolStripMenuItem_TsvRead_Click(object sender, EventArgs e)
+        {
+            Log.trc("[S]");
+            mTsvRowList = new TsvRowList(@"D:\download\del_list.tsv");
+            Log.trc("[E]");
+        }
+
     }
 }
