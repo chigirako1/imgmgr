@@ -75,7 +75,7 @@ namespace PictureManagerApp.src.Lib
             return "";
         }
 
-        private static string GetScreenNameFromPath(string path)
+        public static string GetScreenNameFromPath(string path)
         {
             var dirnames = path.Split('/');
             var dirname = dirnames[dirnames.Length - 1];
@@ -92,7 +92,20 @@ namespace PictureManagerApp.src.Lib
             return screen_name;
         }
 
-        public static TweetInfo GetTweetIdFromPath(string path)
+        public static string GetScreenNameFromDirName(string path)
+        {
+            var pattern = @"@(\w+)";
+            System.Text.RegularExpressions.MatchCollection mc = System.Text.RegularExpressions.Regex.Matches(path, pattern);
+            foreach (System.Text.RegularExpressions.Match m in mc)
+            {
+                var screen_name = m.Groups[1].Value;
+                return screen_name;
+            }
+            return null;
+        }
+
+
+        public static TweetInfo GetTweetInfoFromPath(string path)
         {
             var filename = Path.GetFileName(path);
             var dirname = Path.GetDirectoryName(path);

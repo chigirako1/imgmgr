@@ -12,6 +12,8 @@ using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Data.Common;
+using System.Runtime.CompilerServices;
+using System.Collections.Generic;
 
 namespace PictureManagerApp
 {
@@ -19,7 +21,7 @@ namespace PictureManagerApp
     {
         private const int MAX_PIC_WIDTH = 1200 / 2;
         private const int MAX_PIC_HEIGHT = 1920 / 2;
-        private const int MAX_FILE_SIZE = 140;
+        private const int MAX_FILE_SIZE = 165;//140;//kb
 
         private static readonly string[] CMBBOX_DIR_PATHS = [
             @"D:\download\PxDl",
@@ -645,13 +647,8 @@ namespace PictureManagerApp
             }
         }
 
-        private void TwtDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        private void AddTwtDir(string screen_name)
         {
-            TwtDataGridView.Rows[e.RowIndex].Selected = true;
-
-            var row = TwtDataGridView.Rows[e.RowIndex];
-            var screen_name = (string)row.Cells[1].Value;
-
             var path = Twt.GetArchiveDirPath(screen_name);
             Log.trc($"'{screen_name}' => '{path}'");
             if (path != "")
@@ -668,21 +665,42 @@ namespace PictureManagerApp
             }
         }
 
+        private void TwtDataGridView_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
+        {
+            TwtDataGridView.Rows[e.RowIndex].Selected = true;
+
+            var row = TwtDataGridView.Rows[e.RowIndex];
+            var screen_name = (string)row.Cells[1].Value;
+
+            AddTwtDir(screen_name);
+        }
+
+
+        private void AddPxvDir(long pxv_usr_id)
+        {
+            var path = Pxv.GetArchiveDirPath(pxv_usr_id);
+            Log.trc($"'{pxv_usr_id}' => '{path}'");
+            if (path != "")
+            {
+                cmbBoxPath.Text = path;
+                cmbBoxPath.Items.Add(path);
+            }
+
+            path = Pxv.GetCurrentDirPath(pxv_usr_id);
+            Log.trc($"'{pxv_usr_id}' => '{path}'");
+            if (path != "")
+            {
+                cmbBoxPath.Items.Add(path);
+            }
+        }
+
         private void DgvPxv_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             DgvPxv.Rows[e.RowIndex].Selected = true;
 
             var row = DgvPxv.Rows[e.RowIndex];
             var pxv_usr_id = (long)row.Cells[1].Value;
-
-            var path = Pxv.GetArchiveDirPath(pxv_usr_id);
-            Log.trc($"'{pxv_usr_id}' => '{path}'");
-            cmbBoxPath.Text = path;
-            cmbBoxPath.Items.Add(path);
-
-            path = Pxv.GetCurrentDirPath(pxv_usr_id);
-            Log.trc($"'{pxv_usr_id}' => '{path}'");
-            cmbBoxPath.Items.Add(path);
+            AddPxvDir(pxv_usr_id);
         }
 
         private void DirListDGV_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -731,7 +749,48 @@ namespace PictureManagerApp
         private void toolStripMenuItem_TsvRead_Click(object sender, EventArgs e)
         {
             Log.trc("[S]");
+
             mTsvRowList = new TsvRowList(@"D:\download\del_list.tsv");
+
+            HashSet<long> pxvids = new();
+            HashSet<string> screen_names = new();
+
+            foreach (var x in mTsvRowList.hoge())
+            {
+                var filename = Path.GetFileName(x.FileName);
+                if (filename.StartsWith("px-"))
+                {
+                    var pxvid = Pxv.GetPxvID(filename);
+                    if (pxvid != 0)
+                    {
+                        pxvids.Add(pxvid);
+                    }
+                }
+                else if (filename.StartsWith("tw-"))
+                {
+                    var screen_name = Twt.GetScreenNameFromDirName(filename);
+                    if (screen_name != null)
+                    {
+                        screen_names.Add(screen_name);
+                    }
+                }
+                else
+                {
+                }
+            }
+
+            foreach (var pxvid in pxvids)
+            {
+                //Log.trc($"{pxvid}");
+                AddPxvDir(pxvid);
+            }
+
+            foreach (var screen_name in screen_names)
+            {
+                //Log.trc($"{screen_name}");
+                AddTwtDir(screen_name);
+            }
+
             Log.trc("[E]");
         }
 

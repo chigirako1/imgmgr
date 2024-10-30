@@ -137,7 +137,7 @@ namespace PictureManagerApp.src.Model
             {
                 if (fitem.Mark)
                 {
-                    var tweetinfo = Twt.GetTweetIdFromPath(fitem.FilePath);
+                    var tweetinfo = Twt.GetTweetInfoFromPath(fitem.FilePath);
                     Log.log($"@{tweetinfo.ScreenName}/{tweetinfo.TweetID}-{tweetinfo.ImageNo}");
 
                     MyFiles.moveToTrashDir(fitem.FilePath, rootpath);
@@ -196,6 +196,17 @@ namespace PictureManagerApp.src.Model
             }
         }
 
+        public void SearchAndMark(string search_word)
+        {
+            foreach (var fitem in mFileList)
+            {
+                if (fitem.FilePath.Contains(search_word))
+                {
+                    fitem.Mark = true;
+                }
+            }
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -225,6 +236,8 @@ namespace PictureManagerApp.src.Model
             get { return mFileList[CurrPos]; }
         }
     }
+
+
 
     public sealed class FileItemFilePathComparer : IComparer<FileItem>
     {

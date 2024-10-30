@@ -106,7 +106,7 @@ namespace PictureManagerApp.src.Lib
             return "";
         }
 
-        private static long GetPxvID(string path)
+        public static long GetPxvID(string path)
         {
             var pxvid = 0L;
             var pattern = @"\(#?(\d+)\)";

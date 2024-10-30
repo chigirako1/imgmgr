@@ -31,11 +31,11 @@ namespace PictureManagerApp
         private const int TRANSITION_TIMER_PERIOD = 1000 / TRANSITION_FPS;
         private const int TRANSITION_DUE_TIME = 100;
 
-        //private const int THUMBNAIL_TIMER_PERIOD = 140;
-        //private const int THUMBNAIL_TIMER_PERIOD = 133;
-        private const int THUMBNAIL_TIMER_PERIOD = 122;
-        //private const int THUMBNAIL_TIMER_PERIOD = 111;//111もだめ？
         //private const int THUMBNAIL_TIMER_PERIOD = 100;//100だと重くなる.
+        //private const int THUMBNAIL_TIMER_PERIOD = 111;//111もだめ？
+        private const int THUMBNAIL_TIMER_PERIOD = 122;
+        //private const int THUMBNAIL_TIMER_PERIOD = 133;
+        //private const int THUMBNAIL_TIMER_PERIOD = 140;
 
         private const int SLIDESHOW_TIMER_PERIOD = 750;
         private const int PAGE_CHG_TIMER_PERIOD = 250;
@@ -462,7 +462,8 @@ namespace PictureManagerApp
                     KeyFuncTbl[Keys.Home] = KeyDownFunc_List_Home;
                     KeyFuncTbl[Keys.End] = KeyDownFunc_List_End;
                     break;
-                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR:
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_TILE:
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
                 default:
                     KeyFuncTbl[Keys.Left] = KeyDownFunc_Left;
@@ -1529,6 +1530,11 @@ namespace PictureManagerApp
         {
             mModel.RemoveCurrentFile();
             UpdatePicture();
+        }
+
+        private void toolStripMenuItem_tsv_Click(object sender, EventArgs e)
+        {
+            mModel.tsv();
         }
     }
 }

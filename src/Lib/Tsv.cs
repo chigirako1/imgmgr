@@ -29,11 +29,11 @@ namespace PictureManagerApp.src.Lib
             METHOD_MAX
         }
 
-        private string FileName;
-        private string EntryName;
-        private METHOD Method;
-        private DateTime RegDatetime;
-        private bool Done;
+        public string FileName { get; private set; }
+        public string EntryName { get; private set; }
+        public METHOD Method { get; private set; }
+        public DateTime RegDatetime { get; private set; }
+        public bool Done { get; private set; }
 
         public TsvRow(string line)
         {
@@ -74,6 +74,11 @@ namespace PictureManagerApp.src.Lib
                     RowList.Add(tsvRow);
                 }
             }
+        }
+
+        public List<TsvRow> hoge()
+        {
+            return RowList;
         }
     }
 

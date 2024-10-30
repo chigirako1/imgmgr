@@ -26,6 +26,12 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         private void PictureBox_Paint(object sender, PaintEventArgs e)
         {
+            PictureBox_Paint_OnePic(sender, e);
+            //rightPicBox_Paint_thumbnail(e, true);
+        }
+
+        private void PictureBox_Paint_OnePic(object sender, PaintEventArgs e)
+        {
             Graphics g = e.Graphics;
 
             FileItem fitem = mModel.GetCurrentFileItem();
@@ -56,7 +62,7 @@ namespace PictureManagerApp
                 alphaPercent = mAlphaPercent;
             }
 
-
+            //画像描画
             IMAGE_DISPLAY_MAGNIFICATION_TYPE magType = mMagType;
             DrawDimension d = ImageModule.DrawCompositedImage(
                 g,
@@ -67,9 +73,8 @@ namespace PictureManagerApp
                 alphaPercent,
                 magType);
 
-            {
-                PictureBox_PaintTxt(g, d, fitem);
-            }
+            // 画像情報描画
+            PictureBox_PaintTxt(g, d, fitem);
         }
 
         private void PictureBox_PaintTxt(Graphics g, DrawDimension d, FileItem fitem)
@@ -148,8 +153,13 @@ namespace PictureManagerApp
 
         private Size GetThumbnailSize()
         {
+            return GetThumbnailSize(ThumbnailCols, ThumbnailRows);
+        }
+
+        private Size GetThumbnailSize(int cols, int rows)
+        {
             PictureBox p = RightPicBox;
-            return new Size(p.Width / ThumbnailCols, p.Height / ThumbnailRows);
+            return new Size(p.Width / cols, p.Height / rows);
         }
 
         //---------------------------------------------------------------------
@@ -165,21 +175,33 @@ namespace PictureManagerApp
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST:
                     rightPicBox_Paint_list(e);
                     break;
-                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LINEAR:
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
+                    rightPicBox_Paint_overview(e);
+                    break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_TILE:
                 default:
                     rightPicBox_Paint_thumbnail(e);
                     break;
             }
         }
 
-        private void rightPicBox_Paint_thumbnail(PaintEventArgs e)
+        private void rightPicBox_Paint_thumbnail(PaintEventArgs e, bool main = false)
         { 
             var g = e.Graphics;
 
             int col = ThumbnailCols;
             int row = ThumbnailRows;
 
-            var tsize = GetThumbnailSize();
+            Size tsize;
+            if (main)
+            {
+                var p = pictureBox;
+                tsize = new Size(p.Width / 4, p.Height / 3);
+            }
+            else
+            {
+                tsize = GetThumbnailSize();
+            }
             int thumWidth = tsize.Width;
             int thumHeight = tsize.Height;
 
@@ -191,6 +213,93 @@ namespace PictureManagerApp
                 var idx = mModel.GetAbsIdx(i);
                 var fitem = mModel.GetFileItem(idx);//GetCurrentFileItemByRelativeIndex(i);
                 var imgsize = fitem.GetImageSize();
+                Image thumbImg;
+                if (main)
+                {
+                    thumbImg = fitem.GetImage();
+                }
+                else
+                {
+                    thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight);
+                }
+                    
+
+                FillRectangle(g, fitem, x, y, thumWidth, thumHeight);
+
+                if (idx == 0)
+                {
+                    //先頭ファイルの目印
+                    if (false)
+                    {
+                        g.FillRectangle(BRUSH_0, x, y, thumWidth / 2, thumHeight);
+                    }
+                    else
+                    {
+                        var triangle = new System.Drawing.Drawing2D.GraphicsPath();
+                        Point p1 = new Point(x, y);
+                        Point p2 = new Point(x, y + thumHeight);
+                        Point p3 = new Point(x + thumWidth, y);
+                        triangle.AddPolygon(new Point[] { p1, p2, p3 });
+
+                        e.Graphics.FillPath(BRUSH_0, triangle);
+                    }
+                }
+
+                if (thumbImg != null)
+                {
+                    ImageModule.DrawImage(
+                                          g,
+                                          x,
+                                          y,
+                                          thumWidth,
+                                          thumHeight,
+                                          thumbImg);
+
+                    if (imgsize.Width * imgsize.Height < 600 * 960)
+                    {
+                        int fsize = FONT_SIZE;
+                        var fnt = new Font(FONT_NAME, fsize);
+                        string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", imgsize.Width, imgsize.Height, thumWidth, thumHeight);
+                        var txtbrush = Brushes.Red;
+                        g.DrawString(txt, fnt, txtbrush, x, y);
+                    }
+                }
+
+                if (fitem.Mark)
+                {
+                    var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
+                    g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
+                }
+
+                x += thumWidth;
+
+                if ((i + 1) % col == 0)
+                {
+                    x = 0;
+                    y += thumHeight;
+                }
+            }
+        }
+
+        private void rightPicBox_Paint_overview(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+
+            int col = 6;// ThumbnailCols;
+            int row = 6;// ThumbnailRows;
+
+            var tsize = GetThumbnailSize(col, row);
+            int thumWidth = tsize.Width;
+            int thumHeight = tsize.Height;
+
+            int x = 0;
+            int y = 0;
+            var dispNum = col * row;
+            for (int i = 0; i < dispNum && i < mModel.PictureTotalNumber; i++)
+            {
+                var idx = mModel.GetAbsIdx(i);
+                var fitem = mModel.GetFileItem(idx);
+                var imgsize = fitem.GetImageSize();
                 var thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight);
 
                 FillRectangle(g, fitem, x, y, thumWidth, thumHeight);
@@ -198,13 +307,10 @@ namespace PictureManagerApp
                 if (idx == 0)
                 {
                     //先頭ファイルの目印
-                    //g.FillRectangle(BRUSH_0, x, y, thumWidth / 2, thumHeight);
-
+                    var triangle = new System.Drawing.Drawing2D.GraphicsPath();
                     Point p1 = new Point(x, y);
                     Point p2 = new Point(x, y + thumHeight);
                     Point p3 = new Point(x + thumWidth, y);
-
-                    var triangle = new System.Drawing.Drawing2D.GraphicsPath();
                     triangle.AddPolygon(new Point[] { p1, p2, p3 });
 
                     e.Graphics.FillPath(BRUSH_0, triangle);

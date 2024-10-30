@@ -77,13 +77,14 @@ namespace PictureManagerApp.src.Model
 
     public enum THUMBNAIL_VIEW_TYPE
     {
-        THUMBNAIL_VIEW_LINEAR,
+        THUMBNAIL_VIEW_TILE,
+        THUMBNAIL_VIEW_OVERVIEW,
         THUMBNAIL_VIEW_LIST,
         THUMBNAIL_VIEW_NEXT,
 
         THUMBNAIL_VIEW_MAX,
 
-        THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_LINEAR,
+        THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_TILE,
 
         THUMBNAIL_VIEW_NO_MAIN_SPLIT,
 
@@ -103,6 +104,7 @@ namespace PictureManagerApp.src.Model
         private string mPath;
         //private SORT_TYPE mSortType;
         private FileList mFileList;
+        private DATA_SOURCE_TYPE mDataSrcType;
 
         private int mIdx = -1;
         private DateTime? mDtFrom;
@@ -122,7 +124,15 @@ namespace PictureManagerApp.src.Model
         private static readonly string STR_METHOD_FAV = "FAV";
 
         public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
-        public int mMarkCount { private set; get; }//都度集計したほうが良いのでは？漏れ
+        public int mMarkCount {
+            private set
+            {
+                //mMarkCount = value;
+            }
+            get {
+                return mFileList.MarkCount();
+            }
+        }
         public int UpDownCount { set; get; }
         public int PageCount { set; get; }
 
@@ -281,6 +291,21 @@ namespace PictureManagerApp.src.Model
             Log.log($"[S]:path={path}");
 
             mPath = path;
+
+            if (mPath.Contains("PxDl") || mPath.Contains("/pxv/"))
+            {
+                mDataSrcType = DATA_SOURCE_TYPE.DATA_SOURCE_PXV;
+            }
+            else if (mPath.Contains("Twitter") || mPath.Contains("/twt/"))
+            {
+                mDataSrcType = DATA_SOURCE_TYPE.DATA_SOURCE_TWT;
+            }
+            else
+            {
+                mDataSrcType = DATA_SOURCE_TYPE.DATA_SOURCE_UNKNOWN;
+            }
+
+
             if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
             {
                 BuildFileList_Dir();
@@ -1321,6 +1346,51 @@ namespace PictureManagerApp.src.Model
         public void Sort(SORT_TYPE sort_type)
         {
             mFileList.Sort(sort_type);
+        }
+
+        public void tsv()
+        {
+            long s_pxvid = 0;
+            string s_twtid = "";
+
+            if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV)
+            {
+                s_pxvid = Pxv.GetPxvID(mPath);
+            }
+            else if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
+            {
+                //s_twtid = Twt.GetScreenNameFromDirName(mPath);
+                s_twtid = Twt.GetScreenNameFromPath(mPath);
+            }
+
+            var m = new TsvRowList(@"D:\download\del_list.tsv");
+            foreach (var x in m.hoge())
+            {
+                var filename = Path.GetFileName(x.FileName);
+                if (s_pxvid != 0 && filename.StartsWith("px-"))
+                {
+                    var pxvid = Pxv.GetPxvID(filename);
+                    if (pxvid != 0 && pxvid == s_pxvid)
+                    {
+                        Log.trc(x.EntryName);
+                    }
+                }
+                else if (s_twtid != "" && filename.StartsWith("tw-"))
+                {
+                    var screen_name = Twt.GetScreenNameFromDirName(filename);
+                    if (screen_name != null && s_twtid == screen_name)
+                    {
+                        var twt_info = Twt.GetTweetInfoFromPath(x.EntryName);
+                        //Log.trc(twt_info.TweetID.ToString());
+
+                        mFileList.SearchAndMark($"{twt_info.TweetID} {twt_info.ImageNo}");
+                    }
+                }
+                else
+                {
+                }
+            }
+
         }
 
         //=====================================================================
