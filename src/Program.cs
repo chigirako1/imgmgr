@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PictureManagerApp.src.Lib;
+using System;
 using System.Windows.Forms;
 
 namespace PictureManagerApp.src
@@ -11,9 +12,14 @@ namespace PictureManagerApp.src
         [STAThread]
         static void Main()
         {
+            var cfg = new Config();
+            cfg.Load();
+
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
             Application.Run(new MainForm());
+
+            cfg.Save();
         }
     }
 }

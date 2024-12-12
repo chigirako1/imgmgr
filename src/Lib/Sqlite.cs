@@ -64,7 +64,6 @@ namespace PictureManagerApp.src.Lib
             return new SQLiteConnection(sqlConnectionSb.ToString());
         }
 
-
         public static void GetPxvArtistInfo(int pxvid, PxvArtist pxvartist)
         {
             using (var cn = GetSQLiteConnection())
@@ -81,6 +80,30 @@ namespace PictureManagerApp.src.Lib
                         SetPxvArtistInfo(reader, pxvartist);
                     }
                 }
+            }
+        }
+
+        public static long GetPxvArtistIdFromName(string pxv_user_name)
+        {
+            using (var cn = GetSQLiteConnection())
+            {
+                cn.Open();
+                using (var cmd = new SQLiteCommand(cn))
+                {
+                    //cmd.CommandText = "select sqlite_version()";
+                    //result = (string)cmd.ExecuteScalar();
+
+                    cmd.CommandText = $"SELECT pxvid FROM artists WHERE pxvname = '{pxv_user_name}'";
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            var pxvid = (long)reader["pxvid"];
+                            return pxvid;
+                        }
+                    }
+                }
+                return 0;
             }
         }
 

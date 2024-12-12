@@ -138,6 +138,28 @@ namespace PictureManagerApp.src.Model
 
         private TsvRowList mRowList;
 
+        public static long GetPxvIdFromPath(string filename)
+        {
+            var pxvid = Pxv.GetPxvID(filename);
+            if (pxvid == 0)
+            {
+                var name = Pxv.GuessPxvUserName(filename);
+                pxvid = Sqlite.GetPxvArtistIdFromName(name);
+                if (pxvid == 0)
+                {
+                    Log.warning($"PXVIDが不明です:'{filename}'");
+                }
+                else
+                {
+                }
+            }
+            else
+            {
+            }
+            return pxvid;
+        }
+
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -228,7 +250,6 @@ namespace PictureManagerApp.src.Model
             }
             Log.trc($"ThumbViewType={ThumbViewType}");
         }
-
 
         //---------------------------------------------------------------------
         // 
@@ -1048,7 +1069,16 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                txt = "★未登録★";
+                
+                //var ti = Twt.GetTweetInfoFromPath(item.FilePath);
+                if (true)//ti.TweetID == 0)
+                {
+                    txt = "★未登録★";
+                }
+                else
+                {
+                    txt = String.Format($"DB情報:【{0}】{1}|{2}<{3}({4})>{5}");
+                }
             }
 
             return txt;
@@ -1355,7 +1385,8 @@ namespace PictureManagerApp.src.Model
 
             if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV)
             {
-                s_pxvid = Pxv.GetPxvID(mPath);
+                //s_pxvid = Pxv.GetPxvID(mPath);
+                s_pxvid = PictureModel.GetPxvIdFromPath(mPath);
             }
             else if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
             {
@@ -1369,10 +1400,13 @@ namespace PictureManagerApp.src.Model
                 var filename = Path.GetFileName(x.FileName);
                 if (s_pxvid != 0 && filename.StartsWith("px-"))
                 {
-                    var pxvid = Pxv.GetPxvID(filename);
+                    //var pxvid = Pxv.GetPxvID(filename);
+                    var pxvid = PictureModel.GetPxvIdFromPath(filename);
                     if (pxvid != 0 && pxvid == s_pxvid)
                     {
                         Log.trc(x.EntryName);
+                        // pxv artwork idと画像番号の取得
+                        // TODO:
                     }
                 }
                 else if (s_twtid != "" && filename.StartsWith("tw-"))

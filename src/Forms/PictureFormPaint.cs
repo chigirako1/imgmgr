@@ -1,12 +1,9 @@
 ﻿using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
+
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
-//using static System.Net.Mime.MediaTypeNames;
-
-//using static System.Net.Mime.MediaTypeNames;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace PictureManagerApp
 {
@@ -186,7 +183,7 @@ namespace PictureManagerApp
         }
 
         private void rightPicBox_Paint_thumbnail(PaintEventArgs e, bool main = false)
-        { 
+        {
             var g = e.Graphics;
 
             int col = ThumbnailCols;
@@ -222,7 +219,7 @@ namespace PictureManagerApp
                 {
                     thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight);
                 }
-                    
+
 
                 FillRectangle(g, fitem, x, y, thumWidth, thumHeight);
 

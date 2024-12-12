@@ -23,6 +23,9 @@ namespace PictureManagerApp
         private const int MAX_PIC_HEIGHT = 1920 / 2;
         private const int MAX_FILE_SIZE = 165;//140;//kb
 
+        private const int LIST_THUMBNAIL_WIDTH = 128;
+        private const int LIST_THUMBNAIL_HEIGHT = 128;
+
         private static readonly string[] CMBBOX_DIR_PATHS = [
             @"D:\download\PxDl",
             @"D:\download\PxDl-",
@@ -544,7 +547,7 @@ namespace PictureManagerApp
                 this.mTwtDatatable = new DataTable();
 
                 var tblname = "twitters";
-                var colname = "id, twtid, twtname, filenum, status";
+                var colname = "id, twtid, twtname, rating, drawing_method, filenum, status";
                 var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname);
                 adapter.Fill(this.mTwtDatatable);
 
@@ -626,7 +629,7 @@ namespace PictureManagerApp
 
                 //var img = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
                 //var ba = ImageModule.ConvImageToByteArray(img);
-                var ba = MyFiles.GetThumbnailByteArray(f);
+                var ba = MyFiles.GetThumbnailByteArray(f, LIST_THUMBNAIL_WIDTH, LIST_THUMBNAIL_HEIGHT);
                 newRow.SetField(col_thumbnail, ba);
 
                 dt.Rows.Add(newRow);
@@ -703,16 +706,41 @@ namespace PictureManagerApp
             AddPxvDir(pxv_usr_id);
         }
 
+        private void StartFilePath(string filepath)
+        {
+            Log.trc($"'{filepath}' => '{filepath}'");
+            cmbBoxPath.Text = filepath;
+            //cmbBoxPath.Items.Add(filepath);
+            Start();
+        }
+
+        private void StartDgvRow(DataGridViewRow row)
+        {
+            var filepath = (string)row.Cells[3].Value;
+            StartFilePath(filepath);
+        }
+
         private void DirListDGV_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
             DirListDGV.Rows[e.RowIndex].Selected = true;
 
             var row = DirListDGV.Rows[e.RowIndex];
-            var filepath = (string)row.Cells[3].Value;
-            Log.trc($"'{filepath}' => '{filepath}'");
-            cmbBoxPath.Text = filepath;
-            //cmbBoxPath.Items.Add(filepath);
-            Start();
+            StartDgvRow(row);
+        }
+
+        private void ToolStripMenuItem_SelStt_Click(object sender, EventArgs e)
+        {
+            try
+            {
+                var idx = DirListDGV.CurrentCell.RowIndex;
+                var row = DirListDGV.Rows[idx];
+                StartDgvRow(row);
+            }
+            catch (Exception ex)
+            {
+
+            }
+            finally { }
         }
 
         private void contextMenuStrip1_Opening(object sender, System.ComponentModel.CancelEventArgs e)
@@ -760,7 +788,7 @@ namespace PictureManagerApp
                 var filename = Path.GetFileName(x.FileName);
                 if (filename.StartsWith("px-"))
                 {
-                    var pxvid = Pxv.GetPxvID(filename);
+                    var pxvid = PictureModel.GetPxvIdFromPath(filename);
                     if (pxvid != 0)
                     {
                         pxvids.Add(pxvid);

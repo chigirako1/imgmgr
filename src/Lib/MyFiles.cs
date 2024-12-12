@@ -57,13 +57,13 @@ namespace PictureManagerApp.src.Lib
             }
         }
 
-        public static byte[] GetThumbnailByteArray(string zippath)
+        public static byte[] GetThumbnailByteArray(string zippath, int width, int height)
         {
             //var img = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
 
             var entries = GetZipEntryList(zippath);
             var img = MyFiles.GetImageFromZipFile(zippath, entries[0]);
-            var thumbimg = ImageModule.GetThumbnailImage(img, 256, 256);
+            var thumbimg = ImageModule.GetThumbnailImage(img, width, height);
             var ba = ImageModule.ConvImageToByteArray(thumbimg);
             return ba;
         }

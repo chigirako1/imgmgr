@@ -26,6 +26,11 @@ namespace PictureManagerApp.src.Lib
             System.Diagnostics.Debug.WriteLine($"[TRC] {memberName}:{s}");
         }
 
+        public static void warning(string s)
+        {
+            Console.Error.WriteLine(s);
+        }
+
         public static void err(string s)
         {
             Console.Error.WriteLine(s);

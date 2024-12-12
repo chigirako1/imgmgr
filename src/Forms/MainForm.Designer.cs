@@ -79,6 +79,7 @@
             ヘルプHToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
             ToolStripMenuItem_test = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SelStt = new System.Windows.Forms.ToolStripMenuItem();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -580,7 +581,7 @@
             // 
             // ツールTToolStripMenuItem
             // 
-            ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_AddPath, ToolStripMenuItem_SelPicShow, ToolStripMenuItem_SameHashFile, toolStripMenuItem_TsvRead });
+            ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_AddPath, ToolStripMenuItem_SelPicShow, ToolStripMenuItem_SameHashFile, toolStripMenuItem_TsvRead, ToolStripMenuItem_SelStt });
             ツールTToolStripMenuItem.Name = "ツールTToolStripMenuItem";
             ツールTToolStripMenuItem.Size = new System.Drawing.Size(79, 27);
             ツールTToolStripMenuItem.Text = "ツール(&T)";
@@ -588,7 +589,7 @@
             // ToolStripMenuItem_AddPath
             // 
             ToolStripMenuItem_AddPath.Name = "ToolStripMenuItem_AddPath";
-            ToolStripMenuItem_AddPath.Size = new System.Drawing.Size(257, 28);
+            ToolStripMenuItem_AddPath.Size = new System.Drawing.Size(269, 28);
             ToolStripMenuItem_AddPath.Text = "パス追加";
             ToolStripMenuItem_AddPath.Click += ToolStripMenuItem_AddPath_Click;
             // 
@@ -596,21 +597,21 @@
             // 
             ToolStripMenuItem_SelPicShow.Name = "ToolStripMenuItem_SelPicShow";
             ToolStripMenuItem_SelPicShow.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            ToolStripMenuItem_SelPicShow.Size = new System.Drawing.Size(257, 28);
+            ToolStripMenuItem_SelPicShow.Size = new System.Drawing.Size(269, 28);
             ToolStripMenuItem_SelPicShow.Text = "選択した画像表示";
             ToolStripMenuItem_SelPicShow.Click += ToolStripMenuItem_SelPicShow_Click;
             // 
             // ToolStripMenuItem_SameHashFile
             // 
             ToolStripMenuItem_SameHashFile.Name = "ToolStripMenuItem_SameHashFile";
-            ToolStripMenuItem_SameHashFile.Size = new System.Drawing.Size(257, 28);
-            ToolStripMenuItem_SameHashFile.Text = "同一ハッシュ値ファイルのみ";
+            ToolStripMenuItem_SameHashFile.Size = new System.Drawing.Size(269, 28);
+            ToolStripMenuItem_SameHashFile.Text = "同一ハッシュ値ファイルのみ...";
             ToolStripMenuItem_SameHashFile.Click += ToolStripMenuItem_SameHashFile_Click;
             // 
             // toolStripMenuItem_TsvRead
             // 
             toolStripMenuItem_TsvRead.Name = "toolStripMenuItem_TsvRead";
-            toolStripMenuItem_TsvRead.Size = new System.Drawing.Size(257, 28);
+            toolStripMenuItem_TsvRead.Size = new System.Drawing.Size(269, 28);
             toolStripMenuItem_TsvRead.Text = "TSV読み込み";
             toolStripMenuItem_TsvRead.Click += toolStripMenuItem_TsvRead_Click;
             // 
@@ -633,6 +634,14 @@
             ToolStripMenuItem_test.Size = new System.Drawing.Size(108, 28);
             ToolStripMenuItem_test.Text = "test";
             ToolStripMenuItem_test.Click += ToolStripMenuItem_test_Click;
+            // 
+            // ToolStripMenuItem_SelStt
+            // 
+            ToolStripMenuItem_SelStt.Name = "ToolStripMenuItem_SelStt";
+            ToolStripMenuItem_SelStt.ShortcutKeys = System.Windows.Forms.Keys.F12;
+            ToolStripMenuItem_SelStt.Size = new System.Drawing.Size(269, 28);
+            ToolStripMenuItem_SelStt.Text = "選択中Gr開始";
+            ToolStripMenuItem_SelStt.Click += ToolStripMenuItem_SelStt_Click;
             // 
             // MainForm
             // 
@@ -736,6 +745,7 @@
         private System.Windows.Forms.ToolStripMenuItem toolStripMenuItem_TsvRead;
         private System.Windows.Forms.TabPage tabPagePxv;
         private System.Windows.Forms.DataGridView DgvPxv;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelStt;
     }
 }
 

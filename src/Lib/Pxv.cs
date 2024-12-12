@@ -119,5 +119,18 @@ namespace PictureManagerApp.src.Lib
             }
             return 0;
         }
+
+        public static string GuessPxvUserName(string path)
+        {
+            var pattern = @"\d{8}-(.+) \[\d+\]";
+            System.Text.RegularExpressions.MatchCollection mc = System.Text.RegularExpressions.Regex.Matches(path, pattern);
+            foreach (System.Text.RegularExpressions.Match m in mc)
+            {
+                var pxv_user_name = m.Groups[1].Value;
+
+                return pxv_user_name;
+            }
+            return "";
+        }
     }
 }

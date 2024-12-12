@@ -65,13 +65,16 @@ namespace PictureManagerApp.src.Lib
         {
             RowList = new List<TsvRow>();
 
-            using (var reader = new StreamReader(filepath))
+            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
-                while (!reader.EndOfStream)
+                using (var reader = new StreamReader(fs))
                 {
-                    var line = reader.ReadLine();
-                    var tsvRow = new TsvRow(line);
-                    RowList.Add(tsvRow);
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        var tsvRow = new TsvRow(line);
+                        RowList.Add(tsvRow);
+                    }
                 }
             }
         }
