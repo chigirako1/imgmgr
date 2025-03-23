@@ -13,7 +13,12 @@ namespace PictureManagerApp.src.Lib
         public long TweetID;
         public int ImageNo;
         public string ScreenName;
-        public DateTime dlDate;
+        //public DateTime dlDate;
+
+        override public string ToString()
+        {
+            return $"@{ScreenName}:{TweetID} {ImageNo}";
+        }
     }
 
     class Twt
@@ -77,7 +82,9 @@ namespace PictureManagerApp.src.Lib
 
         public static string GetScreenNameFromPath(string path)
         {
-            var dirnames = path.Split('/');
+
+            //var dirnames = path.Split('/');
+            var dirnames = path.Split(Path.DirectorySeparatorChar);
             var dirname = dirnames[dirnames.Length - 1];
 
             var screen_name = "";
@@ -112,17 +119,30 @@ namespace PictureManagerApp.src.Lib
             var screenname = Path.GetFileName(dirname);
 
             TweetInfo tweetinfo = new();
+            tweetinfo.ScreenName = screenname;
+
             var pattern = @"(\d+)\s+(\d+)\s+(\d+-\d+\d+)";
             System.Text.RegularExpressions.MatchCollection mc = System.Text.RegularExpressions.Regex.Matches(filename, pattern);
             foreach (System.Text.RegularExpressions.Match m in mc)
             {
                 tweetinfo.TweetID = long.Parse(m.Groups[1].Value);
                 tweetinfo.ImageNo = int.Parse(m.Groups[2].Value);
-                tweetinfo.ScreenName = screenname;
-                tweetinfo.dlDate = DateTime.Parse(m.Groups[3].Value);
+                //tweetinfo.dlDate = DateTime.Parse(m.Groups[3].Value);
                 break;
             }
-            //Log.trc($"'{path}':'{tweetinfo.ToString()}'");
+
+            //20231108 17150226604498206x9 0
+            var pattern2 = @"(\d{8})\s+(\d+)\s+(\d)";
+            var mc2 = System.Text.RegularExpressions.Regex.Matches(filename, pattern2);
+            foreach (System.Text.RegularExpressions.Match m in mc2)
+            {
+                //tweetinfo.dlDate = DateTime.Parse(m.Groups[1].Value);
+                tweetinfo.TweetID = long.Parse(m.Groups[2].Value);
+                tweetinfo.ImageNo = int.Parse(m.Groups[3].Value);
+                break;
+            }
+
+            //Log.dbg($"'{path}':'{tweetinfo}'");
             return tweetinfo;
         }
     }

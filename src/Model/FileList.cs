@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text.RegularExpressions;
 using PictureManagerApp.src.Lib;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
@@ -65,7 +66,7 @@ namespace PictureManagerApp.src.Model
                 if (FileHashCnt.ContainsKey(hash))
                 {
                     FileHashCnt[hash]++;
-                    Log.log($"重複ファイル{fitem.FilePath}");
+                    Log.log($"重複ファイル='{fitem.FilePath}'");
                 }
                 else
                 {
@@ -207,6 +208,41 @@ namespace PictureManagerApp.src.Model
             }
         }
 
+        public void TotalFileSizeOfSelectedFile()
+        {
+            var total = 0L;
+            var slct = 0L;
+            var not_slct = 0L;
+            foreach (var fitem in mFileList)
+            {
+                total += fitem.FileSize;
+                if (fitem.Mark)
+                {
+                    slct += fitem.FileSize;
+                }
+                else
+                {
+                    not_slct += fitem.FileSize;
+                }
+            }
+
+            Log.log($"total({mFileList.Count})=\t{MyFiles.FormatFileSize(total)}");
+            Log.log($"選択中({MarkCount()})=\t{MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)");
+            Log.log($"非選択({mFileList.Count - MarkCount()})=\t{MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)");
+        }
+
+        public void SavePicsInfo(string ofilepath)
+        {
+            using (var sw = new StreamWriter(ofilepath, false))
+            {
+                foreach (FileItem fitem in mFileList)
+                {
+                    var line = fitem.GetPicInfoLine();
+                    sw.WriteLine(line);
+                }
+            }
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -236,8 +272,6 @@ namespace PictureManagerApp.src.Model
             get { return mFileList[CurrPos]; }
         }
     }
-
-
 
     public sealed class FileItemFilePathComparer : IComparer<FileItem>
     {

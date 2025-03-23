@@ -40,5 +40,13 @@ namespace PictureManagerApp.src.Lib
         {
             Console.Error.WriteLine(s);
         }
+
+        public static void dbg(string s)
+        {
+#if DEBUG
+            //Console.Error.WriteLine("[DBG]" + s);
+            System.Diagnostics.Debug.WriteLine("[DBG]" + s);
+#endif
+        }
     }
 }

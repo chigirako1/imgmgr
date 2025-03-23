@@ -14,6 +14,7 @@ using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
+using static PictureManagerApp.src.Lib.TsvRow;
 
 namespace PictureManagerApp
 {
@@ -23,26 +24,54 @@ namespace PictureManagerApp
         private const int MAX_PIC_HEIGHT = 1920 / 2;
         private const int MAX_FILE_SIZE = 165;//140;//kb
 
-        private const int LIST_THUMBNAIL_WIDTH = 128;
-        private const int LIST_THUMBNAIL_HEIGHT = 128;
+        private const int LIST_THUMBNAIL_WIDTH = 64;
+        private const int LIST_THUMBNAIL_HEIGHT = 64;
+        //private bool list_thumnail = true;
+        private bool list_thumnail = false;
+
+        private const string LIST_DGV_ZIP_CLM_IDX = "#";
+        private const string LIST_DGV_ZIP_CLM_STAR = "★";
+        private const string LIST_DGV_ZIP_CLM_PAGE_TOTAL = "全";
+        private const string LIST_DGV_ZIP_CLM_PAGE_NOW = "今";
+        private const string LIST_DGV_ZIP_CLM_PERCENT = "%";
+        private const string LIST_DGV_ZIP_CLM_THUMB = "T";
+        private const string LIST_DGV_ZIP_CLM_NAME = "名前";
+        private const string LIST_DGV_ZIP_CLM_RATING = "評価";
+        private const string LIST_DGV_ZIP_CLM_FILENAME = "ファイル名";
+        private const string LIST_DGV_ZIP_CLM_PATH = "パス";
+
+
+        private const string USB_MEMORY_DIR_PATH = @"work\r18";
 
         private static readonly string[] CMBBOX_DIR_PATHS = [
             @"D:\download\PxDl",
             @"D:\download\PxDl-",
             @"D:\download\PxDl-0trash",
+            @"D:\download\PxDl--0trash",
+
             @"D:\dl\AnkPixiv\Twitter",
+            @"D:\dl\AnkPixiv\Twitter-",
             @"D:\dl\AnkPixiv\Twitter-0trash",
+            @"D:\dl\AnkPixiv\Twitter--0trash",
             @"D:\dl\AnkPixiv\Nijie",
             @"D:\dl\AnkPixiv\Nijie-0trash",
-            @"D:\work\bin\r18",
+
+            @"D:\r18\dlPic\pxv",
             @"D:\r18\dlPic\twitter",
             @"D:\r18\dlPic\Nijie\nje",
+
+            //@"D:\work\bin\r18",
+            //@"D:\work\bin\r18t",
+
+#if DEBUG
+            @"D:\download\PxDl-\!pic_infos!.tsv"
+#endif
         ];
 
         private static readonly string[] SP_WORDS = [
-            "-iv",
             "-w2x",
-            "-cnv",
+            "-iv",
+            //"-cnv",
             "",
         ];
 
@@ -122,20 +151,46 @@ namespace PictureManagerApp
             //if (Directory.Exists(path1))
             //  cmbBoxPath.Text = path1;
 
-            foreach (string path in CMBBOX_DIR_PATHS)
+            var cdir = System.Environment.CurrentDirectory;
+            //var dri = System.IO.Path.GetDirectoryName(cdir);
+            var root_path = Path.GetPathRoot(cdir);
+            var extmem_path = System.IO.Path.Combine(root_path, USB_MEMORY_DIR_PATH);
+
+            if (Directory.Exists(extmem_path))
             {
-                if (Directory.Exists(path))
+                var dirs = Directory.EnumerateDirectories(extmem_path);
+                foreach (var dir in dirs.OrderBy(x => x))
                 {
-                    cmbBoxPath.Items.Add(path);
+                    cmbBoxPath.Items.Add(dir);
+                }
+            }
+            else
+            {
+                foreach (string path in CMBBOX_DIR_PATHS)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        cmbBoxPath.Items.Add(path);
+                    }
+#if DEBUG
+                    else if (File.Exists(path))
+                    {
+                        cmbBoxPath.Items.Add(path);
+                    }
+#endif
                 }
             }
 
-            cmbBoxPath.Text = (string)cmbBoxPath.Items[0];
+            if (cmbBoxPath.Items.Count > 0)
+            {
+                cmbBoxPath.Text = (string)cmbBoxPath.Items[0];
+            }
 
+            /*
             var dir = System.Environment.CurrentDirectory;
             dir = Directory.GetParent(dir).ToString();
             dir = Directory.GetParent(dir).ToString();
-            cmbBoxPath.Items.Add(dir);
+            cmbBoxPath.Items.Add(dir);*/
         }
 
         private void InitWindow()
@@ -150,12 +205,29 @@ namespace PictureManagerApp
             {
                 //横長画面の場合
                 this.StartPosition = FormStartPosition.CenterScreen;
-                int loc_y = this.Location.Y;
-                if (h > 1200)
+                if (w <= 1920)
                 {
-                    loc_y -= 100;
+                    this.Width = w - 100;
+                    this.Height = h - 100;
+
+                    var loc_x = (w - this.Width) / 2;
+                    int loc_y = this.Location.Y;
+                    loc_y = (h - this.Height) / 2;
+
+                    this.Location = new Point(loc_x, loc_y);
                 }
-                this.Location = new Point(this.Location.X, loc_y);
+                else
+                {
+                    this.Width = w / 2;
+                    this.Height = h / 2;
+
+                    var loc_x = (w - this.Width) / 2;
+                    int loc_y = this.Location.Y;
+                    loc_y = (h - this.Height) / 2;
+
+                    this.Location = new Point(loc_x, loc_y);
+                }
+
             }
             else
             {
@@ -218,9 +290,12 @@ namespace PictureManagerApp
                 }
 
                 PictureForm picForm = new();
+                picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
                 picForm.SetModel(model);
                 picForm.ShowDialog();
                 Log.trc($"picForm.ShowDialog() end");
+
+                model.UpdateListFile();
 
                 //選択されたファイルを記録する
                 var pics = model.GetSelectedPic();
@@ -332,6 +407,10 @@ namespace PictureManagerApp
             {
                 model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE);
             }
+            else if (radioBtn_PicOrinet_LS_only.Checked)
+            {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE_ONLY);
+            }
         }
 
         private void btnStart_Click(object sender, EventArgs e)
@@ -393,7 +472,6 @@ namespace PictureManagerApp
                 cmbBoxPath.Items.Add(dir);
             }
 
-
             var fileArray = Directory.GetFiles(
                 path,
                 "*.zip",
@@ -440,19 +518,37 @@ namespace PictureManagerApp
 
         private void btnNext_Click(object sender, EventArgs e)
         {
-            var idx = cmbBoxPath.Items.IndexOf(cmbBoxPath.Text);
-            idx++;
-            if (idx >= cmbBoxPath.Items.Count)
+            var bContinue = true;
+            while (bContinue)
             {
-                MessageBox.Show("次はない",
-                    "エラー",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return;
+                var idx = cmbBoxPath.Items.IndexOf(cmbBoxPath.Text);
+                idx++;
+                if (idx >= cmbBoxPath.Items.Count)
+                {
+                    MessageBox.Show("次はない",
+                        "エラー",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                    return;
 
+                }
+
+                string msg = "次も？";
+                DialogResult result = MessageBox.Show(msg,
+                            msg,
+                            MessageBoxButtons.YesNoCancel,
+                            MessageBoxIcon.Question,
+                            MessageBoxDefaultButton.Button1);
+                if (result == DialogResult.Yes)
+                {
+                    cmbBoxPath.SelectedIndex = idx;
+                    Start();
+                }
+                else if (result != DialogResult.Cancel)
+                {
+                    break;
+                }
             }
-            cmbBoxPath.SelectedIndex = idx;
-            Start();
         }
 
         private void btnPicSizeToggle_Click(object sender, EventArgs e)
@@ -567,7 +663,9 @@ namespace PictureManagerApp
 
                 var tblname = "artists";
                 var colname = "id, pxvid, pxvname, feature, rating, filenum, status";
-                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname);
+                var where_p = "status = '停止'";
+                where_p += "AND feature = 'AI' AND rating >= 100 ORDER BY rating DESC";
+                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p);
                 adapter.Fill(this.mPxvDatatable);
 
                 this.DgvPxv.DataSource = this.mPxvDatatable;
@@ -576,21 +674,52 @@ namespace PictureManagerApp
 
         private void InitZipListDGV()
         {
-            this.DirListDGV.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            this.DirListDGV.AllowUserToAddRows = false;
-            this.DirListDGV.RowTemplate.MinimumHeight = 256;
+            var dgv = this.DirListDGV;
+            dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
+            dgv.AllowUserToAddRows = false;
 
-            this.DirListDGV.ContextMenuStrip = this.contextMenuStrip1;
+            if (list_thumnail)
+            {
+                dgv.RowTemplate.MinimumHeight = LIST_THUMBNAIL_HEIGHT;
+            }
 
-            this.DirListDGV.DataSource = GetDataTable();
+            dgv.ReadOnly = true;                      //読取専用
+            dgv.AllowUserToDeleteRows = false;        //行削除禁止
+            dgv.AllowUserToAddRows = false;           //行挿入禁止
+            dgv.AllowUserToResizeRows = false;        //行の高さ変更禁止
+            dgv.RowHeadersVisible = false;            //行ヘッダーを非表示にする
+            dgv.MultiSelect = false;                  //セル、行、列が複数選択禁止
+            dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;       //セルを選択すると行全体が選択されるようにする
+
+            dgv.ContextMenuStrip = this.contextMenuStrip1;
+
+            var ds = GetDataTable(cmbBoxPath.Text);
+            if (ds == null)
+            {
+                return;
+            }
+            dgv.DataSource = ds;
+
+            dgv.Columns[LIST_DGV_ZIP_CLM_STAR].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
+
+            dgv.Columns[LIST_DGV_ZIP_CLM_IDX].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgv.Columns[LIST_DGV_ZIP_CLM_PAGE_NOW].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgv.Columns[LIST_DGV_ZIP_CLM_PAGE_TOTAL].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgv.Columns[LIST_DGV_ZIP_CLM_PERCENT].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+            dgv.Columns[LIST_DGV_ZIP_CLM_RATING].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
         }
 
-        private DataTable GetDataTable()
+        private DataTable GetDataTable(string path)
         {
-            var path = @"D:\export-done\pdf-zip-lnv";
-            //path = @"D:\export-done\pdf-zip-lnv\[[out20240802mz-tw-new-lnv[32]023";
-            path = @"D:\export\[[out20240819mz-tw-new-lnv[193]036";
-            path = cmbBoxPath.Text;
+            if (!Directory.Exists(path))
+            {
+                //指定されたパスのディレクトリが存在しなければだめ
+                MessageBox.Show($"'{path}'は存在しないかディレクトリではありません",
+                    "エラー",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return null;
+            }
 
             var fileArray = Directory.GetFiles(
                             path,
@@ -600,42 +729,66 @@ namespace PictureManagerApp
                 f => String.Compare(Path.GetExtension(f), ".zip", true) == 0
             );
 
+            var typeint32 = Type.GetType("System.Int32");
+
             var dt = new DataTable();
 
-            var id = dt.Columns.Add("ID");
-            var col_thumbnail = dt.Columns.Add("サムネイル");
-            col_thumbnail.DataType = System.Type.GetType("System.Byte[]"); //Type byte[] to store image bytes.
-            col_thumbnail.AllowDBNull = true;
-            var col_filename = dt.Columns.Add("ファイル名");
-            var col_path = dt.Columns.Add("パス");
-            var col_star = dt.Columns.Add("★");
+            var col_idx = dt.Columns.Add(LIST_DGV_ZIP_CLM_IDX, typeint32);
+            var col_star = dt.Columns.Add(LIST_DGV_ZIP_CLM_STAR);
 
-            /*
-            var col_pic = new DataGridViewImageColumn();
-            col_pic.Image = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
-            col_pic.ImageLayout = DataGridViewImageCellLayout.Zoom;
-            col_pic.Description = "イメージ";
-            DirListDGV.Columns.Add(col_pic);
-            */
+            var col_page_total = dt.Columns.Add(LIST_DGV_ZIP_CLM_PAGE_TOTAL, typeint32);
+            var col_page_now = dt.Columns.Add(LIST_DGV_ZIP_CLM_PAGE_NOW, typeint32);
+            var col_percent = dt.Columns.Add(LIST_DGV_ZIP_CLM_PERCENT, typeint32);
+
+            var col_thumbnail = dt.Columns.Add(LIST_DGV_ZIP_CLM_THUMB);
+            col_thumbnail.DataType = System.Type.GetType("System.Byte[]");
+            col_thumbnail.AllowDBNull = true;
+
+            var col_name = dt.Columns.Add(LIST_DGV_ZIP_CLM_NAME);
+            var col_rating = dt.Columns.Add(LIST_DGV_ZIP_CLM_RATING, typeint32);
+
+            var col_filename = dt.Columns.Add(LIST_DGV_ZIP_CLM_FILENAME);
+            var col_path = dt.Columns.Add(LIST_DGV_ZIP_CLM_PATH);
 
             int i = 0;
             foreach (var f in files.OrderBy(x => x))
             {
                 i++;
+
                 var newRow = dt.NewRow();
-                newRow.SetField(id, i);
-                newRow.SetField(col_filename, System.IO.Path.GetFileName(f));
+                newRow.SetField(col_idx, i);
+                newRow.SetField(col_star, "");
+
+                if (list_thumnail)
+                {
+                    var ba = MyFiles.GetThumbnailByteArray(f, LIST_THUMBNAIL_WIDTH, LIST_THUMBNAIL_HEIGHT, 1);
+                    newRow.SetField(col_thumbnail, ba);
+                }
+
+                var filename = System.IO.Path.GetFileName(f);
+                newRow.SetField(col_filename, filename);
                 newRow.SetField(col_path, f);
 
-                //var img = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
-                //var ba = ImageModule.ConvImageToByteArray(img);
-                var ba = MyFiles.GetThumbnailByteArray(f, LIST_THUMBNAIL_WIDTH, LIST_THUMBNAIL_HEIGHT);
-                newRow.SetField(col_thumbnail, ba);
+                var info = DirItem.GetInfoFromFilename(filename);
+                newRow.SetField(col_name, info.Name);
+                newRow.SetField(col_rating, info.Rating);
+
+                newRow.SetField(col_page_total, info.PageTotal);
+                newRow.SetField(col_page_now, 0);
+                newRow.SetField(col_percent, 0);
 
                 dt.Rows.Add(newRow);
             }
 
             return dt;
+        }
+
+        private void StartDgvRow_(DataGridViewRow row)
+        {
+            var idx = this.DirListDGV.Columns[LIST_DGV_ZIP_CLM_PATH].Index;
+
+            var filepath = (string)row.Cells[idx].Value;
+            StartFilePath(filepath);
         }
 
         private void dataGridView1_RowEnter(object sender, DataGridViewCellEventArgs e)
@@ -699,6 +852,11 @@ namespace PictureManagerApp
 
         private void DgvPxv_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
         {
+            if (e.RowIndex < 0)
+            {
+                return;
+            }
+
             DgvPxv.Rows[e.RowIndex].Selected = true;
 
             var row = DgvPxv.Rows[e.RowIndex];
@@ -716,8 +874,7 @@ namespace PictureManagerApp
 
         private void StartDgvRow(DataGridViewRow row)
         {
-            var filepath = (string)row.Cells[3].Value;
-            StartFilePath(filepath);
+            StartDgvRow_(row);
         }
 
         private void DirListDGV_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -738,14 +895,9 @@ namespace PictureManagerApp
             }
             catch (Exception ex)
             {
-
+                Log.trc(ex.ToString());
             }
             finally { }
-        }
-
-        private void contextMenuStrip1_Opening(object sender, System.ComponentModel.CancelEventArgs e)
-        {
-
         }
 
         private void ToolStripMenuItem_test_Click(object sender, EventArgs e)
@@ -761,10 +913,17 @@ namespace PictureManagerApp
             DirListDGV.Rows[row_idx].Selected = true;
 
             var row = DirListDGV.Rows[row_idx];
+            //row.SetField(cl, "★");
 
             var datasource = (DataTable)this.DirListDGV.DataSource;
-            var cl = datasource.Columns[4];
-            datasource.Rows[0].SetField(cl, "★");
+            //var cl = datasource.Columns[4];
+            //datasource.Rows[0].SetField(cl, "★");
+            var cl = datasource.Columns[1];
+
+            string val = datasource.Rows[row_idx].Field<string>(cl);
+
+            datasource.Rows[row_idx].SetField(cl, "★");
+
         }
 
         private void ToolStripMenuItem_SameHashFile_Click(object sender, EventArgs e)
@@ -783,7 +942,7 @@ namespace PictureManagerApp
             HashSet<long> pxvids = new();
             HashSet<string> screen_names = new();
 
-            foreach (var x in mTsvRowList.hoge())
+            foreach (var x in mTsvRowList.GetRowList())
             {
                 var filename = Path.GetFileName(x.FileName);
                 if (filename.StartsWith("px-"))
@@ -822,5 +981,22 @@ namespace PictureManagerApp
             Log.trc("[E]");
         }
 
+        private void btnOpenExplorer_Click(object sender, EventArgs e)
+        {
+            var opt = cmbBoxPath.Text;
+            MyFiles.OpenGuiShell(opt);
+        }
+
+        private void btnGroupListStart_Click(object sender, EventArgs e)
+        {
+            var pathStr = cmbBoxPath.Text;
+            var model = new PictureModel();
+            model.BuildFileList(pathStr);
+
+            PictureForm picForm = new();
+            picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
+            picForm.SetModel(model);
+            picForm.ShowDialog();
+        }
     }
 }

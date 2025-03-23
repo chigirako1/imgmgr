@@ -20,8 +20,8 @@ namespace PictureManagerApp.src.Model
         //private Image mImage;
         private Image mThumbnail;
 
-        private string FileHash;
-
+        //private string FileHash = null;//"";
+        public string FileHash { private set; get; } = null;
 
         public bool Mark {
             set; get;
@@ -60,11 +60,29 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                FileInfo fi = new(path);
+                System.IO.FileInfo fi = new(path);
                 FileSize = fi.Length;
                 LastWriteTime = fi.LastWriteTime;
             }
             //FileHash = "";
+        }
+
+        public FileItem(string path, long filesize, int width, int height, string hash)
+        {
+            this.mPath = path;
+            this.mZipPath = "";
+
+            System.IO.FileInfo fi = new(path);
+            if (filesize != fi.Length)
+            {
+                throw new ArgumentException();
+            }
+            this.FileSize = fi.Length;
+            this.LastWriteTime = fi.LastWriteTime;
+
+            this.ImageSize.Width = width;
+            this.ImageSize.Height = height;
+            this.FileHash = hash;
         }
 
         public FileItem(FileItem org)
@@ -167,7 +185,12 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public static bool isSpecifiedDateFile(string filepath, DateTime? from, DateTime? to)
         {
-            FileInfo fi = new(filepath);
+            System.IO.FileInfo fi = new(filepath);
+            return isSpecifiedDateFile(fi, from, to);
+        }
+
+        public static bool isSpecifiedDateFile(System.IO.FileInfo fi, DateTime? from, DateTime? to)
+        {
             DateTime dt = fi.LastWriteTime;
             if (from != null && dt.CompareTo(from) < 0)
             {
@@ -182,7 +205,6 @@ namespace PictureManagerApp.src.Model
             return true;
         }
 
-
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -193,7 +215,17 @@ namespace PictureManagerApp.src.Model
                 return true;
             }
 
-            FileInfo fi = new(filepath);
+            System.IO.FileInfo fi = new(filepath);
+            return isAboveOfMaxFilesizeImage(fi, minFileSize);
+        }
+
+        public static bool isAboveOfMaxFilesizeImage(System.IO.FileInfo fi, int minFileSize)
+        {
+            if (minFileSize == 0)
+            {
+                return true;
+            }
+
             if (fi.Length >= minFileSize)
             {
                 return true;
@@ -201,7 +233,6 @@ namespace PictureManagerApp.src.Model
 
             return false;
         }
-        
 
         //---------------------------------------------------------------------
         // 
@@ -213,7 +244,17 @@ namespace PictureManagerApp.src.Model
                 return true;
             }
 
-            FileInfo fi = new(filepath);
+            System.IO.FileInfo fi = new(filepath);
+            return isBelowOfMaxFilesizeImage(fi, maxFileSize);
+        }
+
+        public static bool isBelowOfMaxFilesizeImage(System.IO.FileInfo fi, int maxFileSize)
+        {
+            if (maxFileSize == 0)
+            {
+                return true;
+            }
+
             if (fi.Length <= maxFileSize)
             {
                 return true;
@@ -232,18 +273,36 @@ namespace PictureManagerApp.src.Model
                 return true;
             }
 
-            //using var img = GetImageFromFile();
-            using var img = GetImage();
+
+            int img_w, img_h;
+            if (ImageSize.Width == 0 || ImageSize.Height == 0)
+            {
+                using var img = GetImage();
+                img_w = img.Width;
+                img_h = img.Height;
+            }
+            else
+            {
+                img_w = ImageSize.Width;
+                img_h = ImageSize.Height;
+            }
+
             switch (orient)
             {
                 case PIC_ORIENT_TYPE.PIC_ORINET_PORTRAIT:
-                    if (img.Width <= img.Height)
+                    if (img_w <= img_h)
                     {
                         return true;
                     }
                     break;
                 case PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE:
-                    if (img.Width >= img.Height)
+                    if (img_w >= img_h)
+                    {
+                        return true;
+                    }
+                    break;
+                case PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE_ONLY:
+                    if (img_w > img_h)
                     {
                         return true;
                     }
@@ -270,24 +329,36 @@ namespace PictureManagerApp.src.Model
                 }
                 else
                 {
-                    using var img = GetImageFromFile();
+                    if (ImageSize.Width == 0 && ImageSize.Height == 0)
+                    {
+                        using var img = GetImageFromFile();
 #if false
-                    if (size.Width != 0 && img.Width > size.Width)
-                    {
-                        return false;
-                    }
-                    if (size.Height != 0 && img.Height > size.Height)
-                    {
-                        return false;
-                    }
+                        if (size.Width != 0 && img.Width > size.Width)
+                        {
+                            return false;
+                        }
+                        if (size.Height != 0 && img.Height > size.Height)
+                        {
+                            return false;
+                        }
 #else
-                    if (img == null) return false;
-                    var pixel = size.Width * size.Height;
-                    if (pixel != 0 && img.Width * img.Height > pixel)
-                    {
-                        return false;
-                    }
+                        if (img == null) return false;
+
+                        var pixel = size.Width * size.Height;
+                        if (pixel != 0 && img.Width * img.Height > pixel)
+                        {
+                            return false;
+                        }
 #endif
+                    }
+                    else
+                    {
+                        var pixel = size.Width * size.Height;
+                        if (pixel != 0 && ImageSize.Width * ImageSize.Height > pixel)
+                        {
+                            return false;
+                        }
+                    }
                 }
             }
 
@@ -329,7 +400,7 @@ namespace PictureManagerApp.src.Model
                 ImageSize.Width = img.Width;
                 ImageSize.Height = img.Height;
             } catch {
-                Log.err($"GetImageFromFile fail");
+                Log.err($"GetImageFromFile fail. '{this.FilePath}'");
                 img = null;
                 ImageSize.Width = 0;
                 ImageSize.Height = 0;
@@ -418,10 +489,18 @@ namespace PictureManagerApp.src.Model
 
             if (mZipPath == "")
             {
-                return MyFiles.ComputeFileHash(mPath);
+                FileHash = MyFiles.ComputeFileHash(mPath);
+                return FileHash;
             }
 
             return null;
+        }
+
+        public string GetPicInfoLine()
+        {
+            string line = $"{FilePath}\t{FileSize}\t{ImageSize.Width}\t{ImageSize.Height}\t{FileHash}";
+
+            return line;
         }
     }
 }

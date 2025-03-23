@@ -24,6 +24,7 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.Space] = KeyDownFunc_SelectToggle;
 
             KeyFuncTbl[Keys.Delete] = KeyDownFunc_Del;
+            KeyFuncTbl[Keys.F] = KeyDownFunc_Fav;
 
             //KeyFuncTbl[Keys.F1] = ;used
             //KeyFuncTbl[Keys.F2] = ;used
@@ -33,10 +34,12 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.F6] = KeyDownFunc_ThumbnailChg;
             //KeyFuncTbl[Keys.F9] = ;used
 
-            KeyFuncTbl[Keys.A] = KeyDownFunc_Left;
-            KeyFuncTbl[Keys.S] = KeyDownFunc_Right;
+            KeyFuncTbl[Keys.Q] = KeyDownFunc_Prev;
+            KeyFuncTbl[Keys.A] = KeyDownFunc_Next;
+
             KeyFuncTbl[Keys.W] = KeyDownFunc_Home;
             KeyFuncTbl[Keys.Z] = KeyDownFunc_End;
+
 
             KeyFuncTbl[Keys.PageUp] = KeyDownFunc_PageUp;
             KeyFuncTbl[Keys.PageDown] = KeyDownFunc_PageDown;
@@ -56,8 +59,8 @@ namespace PictureManagerApp
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
                 default:
-                    KeyFuncTbl[Keys.Left] = KeyDownFunc_Left;
-                    KeyFuncTbl[Keys.Right] = KeyDownFunc_Right;
+                    KeyFuncTbl[Keys.Left] = KeyDownFunc_Prev;
+                    KeyFuncTbl[Keys.Right] = KeyDownFunc_Next;
                     KeyFuncTbl[Keys.Up] = KeyDownFunc_Up;
                     KeyFuncTbl[Keys.Down] = KeyDownFunc_Down;
 
@@ -130,7 +133,7 @@ namespace PictureManagerApp
         }
 
         //
-        private bool KeyDownFunc_Left(object sender, KeyEventArgs e)
+        private bool KeyDownFunc_Prev(object sender, KeyEventArgs e)
         {
             if (e.Shift)
             {
@@ -147,7 +150,7 @@ namespace PictureManagerApp
             return true;
         }
 
-        private bool KeyDownFunc_Right(object sender, KeyEventArgs e)
+        private bool KeyDownFunc_Next(object sender, KeyEventArgs e)
         {
             if (e.Shift)
             {
@@ -220,6 +223,12 @@ namespace PictureManagerApp
             return true;
         }
 
+        private bool KeyDownFunc_Fav(object sender, KeyEventArgs e)
+        {
+            DoAction(ACTION_TYPE.ACTION_ADD_FAV_LIST);
+            return true;
+        }
+
         private bool KeyDownFunc_SelectToggle(object sender, KeyEventArgs e)
         {
             if (e.Shift)
@@ -284,7 +293,5 @@ namespace PictureManagerApp
         {
             return true;
         }
-
-
     }
 }

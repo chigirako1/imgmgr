@@ -20,9 +20,9 @@ namespace PictureManagerApp.src.Lib
         }
     }
 
-    public sealed class NaturalFileInfoNameComparer : IComparer<FileInfo>
+    public sealed class NaturalFileInfoNameComparer : IComparer<System.IO.FileInfo>
     {
-        public int Compare(FileInfo a, FileInfo b)
+        public int Compare(System.IO.FileInfo a, System.IO.FileInfo b)
         {
             return SafeNativeMethods.StrCmpLogicalW(a.Name, b.Name);
         }

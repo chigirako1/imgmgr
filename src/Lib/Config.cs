@@ -25,6 +25,7 @@ namespace PictureManagerApp.src.Lib
             }
             catch (System.Exception e)
             {
+                Log.trc(e.ToString());
                 FileName = "a";
             }
         }
@@ -41,6 +42,7 @@ namespace PictureManagerApp.src.Lib
             }
             catch (System.Exception e)
             {
+                Log.trc(e.ToString());
             }
             //config.Save();
         }

@@ -1,4 +1,5 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
 
@@ -94,28 +95,28 @@ namespace PictureManagerApp
                     txt = "▶️" + txt;
                 }
                 g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
 
                 //
-                y += fsize + inc;
                 txt = mModel.GetArtistInfoFromDB();
                 g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
 
                 //
-                y += fsize + inc;
                 txt = string.Format("{0,4}x{1,4}", pictureBox.Width, pictureBox.Height);
                 g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
 
                 //
-                y += fsize + inc;
-                //txt = string.Format("{0,4}x{1,4}", mCurrentImg.Width, mCurrentImg.Height);
                 var asp = ImageModule.GetAspectRatio16_9(mCurrentImg.Width, mCurrentImg.Height);
                 txt = string.Format("{0,4}x{1,4}[{2}]", mCurrentImg.Width, mCurrentImg.Height, asp);
                 g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
 
                 //
-                y += fsize + inc;
                 txt = string.Format("{0,4}x{1,4}({2}%)", d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1, d.ratio);
                 g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
             }
             else
             {
@@ -124,7 +125,8 @@ namespace PictureManagerApp
                 {
                     txt = "▶️" + txt;
                 }
-                g.DrawString(txt, fnt, txtbrush, x, y);
+                var txt2 = string.Format("[{0,4}x{1,4}]", mCurrentImg.Width, mCurrentImg.Height);
+                g.DrawString(txt + txt2, fnt, txtbrush, x, y);
 
                 //
                 y += fsize + inc;
@@ -220,13 +222,13 @@ namespace PictureManagerApp
                     thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight);
                 }
 
-
                 FillRectangle(g, fitem, x, y, thumWidth, thumHeight);
 
                 if (idx == 0)
                 {
                     //先頭ファイルの目印
-                    if (false)
+                    var t = false;
+                    if (t)
                     {
                         g.FillRectangle(BRUSH_0, x, y, thumWidth / 2, thumHeight);
                     }
@@ -275,6 +277,29 @@ namespace PictureManagerApp
                     x = 0;
                     y += thumHeight;
                 }
+            }
+
+            if (mModel.PictureTotalNumber > dispNum)
+            {
+                var w_ = 120;
+                var h_ = 30;
+                var x_ = RightPicBox.Width - w_;
+                var y_ = RightPicBox.Height - h_;
+
+                var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
+                g.FillRectangle(opaqueBrush, x_, y_, w_, h_);
+
+                var idx = mModel.GetAbsIdx(dispNum - 1) + 1;
+                //var idx = mModel.GetAbsIdx(0);
+                var current_page_no = Math.Ceiling((decimal)idx / dispNum);// + 1;
+                var total_page = Math.Ceiling((decimal)mModel.PictureTotalNumber / dispNum);
+
+                int fsize = FONT_SIZE;
+                var fnt = new Font(FONT_NAME, fsize);
+                //string txt = string.Format($"{idx * 100 / mModel.PictureTotalNumber}%");
+                string txt = string.Format($"{current_page_no}/{total_page}({idx * 100 / mModel.PictureTotalNumber}%)");
+                var txtbrush = Brushes.White;
+                g.DrawString(txt, fnt, txtbrush, x_, y_);
             }
         }
 

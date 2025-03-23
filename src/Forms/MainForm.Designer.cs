@@ -50,6 +50,7 @@
             tabPage_Pic = new System.Windows.Forms.TabPage();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
+            radioBtn_PicOrinet_LS_only = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_LS = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_PR = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_All = new System.Windows.Forms.RadioButton();
@@ -76,10 +77,12 @@
             ToolStripMenuItem_SelPicShow = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SameHashFile = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem_TsvRead = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SelStt = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプHToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
             ToolStripMenuItem_test = new System.Windows.Forms.ToolStripMenuItem();
-            ToolStripMenuItem_SelStt = new System.Windows.Forms.ToolStripMenuItem();
+            btnOpenExplorer = new System.Windows.Forms.Button();
+            btnGroupListStart = new System.Windows.Forms.Button();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -112,7 +115,8 @@
             // 
             // startBtn
             // 
-            startBtn.Location = new System.Drawing.Point(382, 73);
+            startBtn.Font = new System.Drawing.Font("Yu Gothic UI", 12.75F, System.Drawing.FontStyle.Bold);
+            startBtn.Location = new System.Drawing.Point(334, 73);
             startBtn.Margin = new System.Windows.Forms.Padding(6);
             startBtn.Name = "startBtn";
             startBtn.Size = new System.Drawing.Size(166, 73);
@@ -334,6 +338,7 @@
             // 
             // grpBox_PicOrient
             // 
+            grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_LS_only);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_LS);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_PR);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_All);
@@ -341,10 +346,21 @@
             grpBox_PicOrient.Margin = new System.Windows.Forms.Padding(2);
             grpBox_PicOrient.Name = "grpBox_PicOrient";
             grpBox_PicOrient.Padding = new System.Windows.Forms.Padding(2);
-            grpBox_PicOrient.Size = new System.Drawing.Size(231, 195);
+            grpBox_PicOrient.Size = new System.Drawing.Size(312, 195);
             grpBox_PicOrient.TabIndex = 2;
             grpBox_PicOrient.TabStop = false;
             grpBox_PicOrient.Text = "画像の向き";
+            // 
+            // radioBtn_PicOrinet_LS_only
+            // 
+            radioBtn_PicOrinet_LS_only.AutoSize = true;
+            radioBtn_PicOrinet_LS_only.Location = new System.Drawing.Point(38, 137);
+            radioBtn_PicOrinet_LS_only.Margin = new System.Windows.Forms.Padding(2);
+            radioBtn_PicOrinet_LS_only.Name = "radioBtn_PicOrinet_LS_only";
+            radioBtn_PicOrinet_LS_only.Size = new System.Drawing.Size(232, 27);
+            radioBtn_PicOrinet_LS_only.TabIndex = 1;
+            radioBtn_PicOrinet_LS_only.Text = "横向き(正方形1:1は含まない)";
+            radioBtn_PicOrinet_LS_only.UseVisualStyleBackColor = true;
             // 
             // radioBtn_PicOrinet_LS
             // 
@@ -531,7 +547,7 @@
             // 
             // btnAppendSubDir
             // 
-            btnAppendSubDir.Location = new System.Drawing.Point(155, 74);
+            btnAppendSubDir.Location = new System.Drawing.Point(79, 74);
             btnAppendSubDir.Margin = new System.Windows.Forms.Padding(2);
             btnAppendSubDir.Name = "btnAppendSubDir";
             btnAppendSubDir.Size = new System.Drawing.Size(120, 72);
@@ -596,7 +612,7 @@
             // ToolStripMenuItem_SelPicShow
             // 
             ToolStripMenuItem_SelPicShow.Name = "ToolStripMenuItem_SelPicShow";
-            ToolStripMenuItem_SelPicShow.ShortcutKeys = System.Windows.Forms.Keys.F1;
+            ToolStripMenuItem_SelPicShow.ShortcutKeys = System.Windows.Forms.Keys.F5;
             ToolStripMenuItem_SelPicShow.Size = new System.Drawing.Size(269, 28);
             ToolStripMenuItem_SelPicShow.Text = "選択した画像表示";
             ToolStripMenuItem_SelPicShow.Click += ToolStripMenuItem_SelPicShow_Click;
@@ -615,6 +631,14 @@
             toolStripMenuItem_TsvRead.Text = "TSV読み込み";
             toolStripMenuItem_TsvRead.Click += toolStripMenuItem_TsvRead_Click;
             // 
+            // ToolStripMenuItem_SelStt
+            // 
+            ToolStripMenuItem_SelStt.Name = "ToolStripMenuItem_SelStt";
+            ToolStripMenuItem_SelStt.ShortcutKeys = System.Windows.Forms.Keys.F1;
+            ToolStripMenuItem_SelStt.Size = new System.Drawing.Size(269, 28);
+            ToolStripMenuItem_SelStt.Text = "選択中Gr開始";
+            ToolStripMenuItem_SelStt.Click += ToolStripMenuItem_SelStt_Click;
+            // 
             // ヘルプHToolStripMenuItem
             // 
             ヘルプHToolStripMenuItem.Name = "ヘルプHToolStripMenuItem";
@@ -626,7 +650,6 @@
             contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_test });
             contextMenuStrip1.Name = "contextMenuStrip1";
             contextMenuStrip1.Size = new System.Drawing.Size(109, 32);
-            contextMenuStrip1.Opening += contextMenuStrip1_Opening;
             // 
             // ToolStripMenuItem_test
             // 
@@ -635,13 +658,28 @@
             ToolStripMenuItem_test.Text = "test";
             ToolStripMenuItem_test.Click += ToolStripMenuItem_test_Click;
             // 
-            // ToolStripMenuItem_SelStt
+            // btnOpenExplorer
             // 
-            ToolStripMenuItem_SelStt.Name = "ToolStripMenuItem_SelStt";
-            ToolStripMenuItem_SelStt.ShortcutKeys = System.Windows.Forms.Keys.F12;
-            ToolStripMenuItem_SelStt.Size = new System.Drawing.Size(269, 28);
-            ToolStripMenuItem_SelStt.Text = "選択中Gr開始";
-            ToolStripMenuItem_SelStt.Click += ToolStripMenuItem_SelStt_Click;
+            btnOpenExplorer.Anchor = System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Right;
+            btnOpenExplorer.Location = new System.Drawing.Point(677, 37);
+            btnOpenExplorer.Name = "btnOpenExplorer";
+            btnOpenExplorer.Size = new System.Drawing.Size(194, 42);
+            btnOpenExplorer.TabIndex = 9;
+            btnOpenExplorer.Text = "エクスプローラーで開く";
+            btnOpenExplorer.UseVisualStyleBackColor = true;
+            btnOpenExplorer.Click += btnOpenExplorer_Click;
+            // 
+            // btnGroupListStart
+            // 
+            btnGroupListStart.Font = new System.Drawing.Font("Yu Gothic UI", 12.75F);
+            btnGroupListStart.Location = new System.Drawing.Point(556, 135);
+            btnGroupListStart.Margin = new System.Windows.Forms.Padding(6);
+            btnGroupListStart.Name = "btnGroupListStart";
+            btnGroupListStart.Size = new System.Drawing.Size(260, 41);
+            btnGroupListStart.TabIndex = 5;
+            btnGroupListStart.Text = "グループリスト開始";
+            btnGroupListStart.UseVisualStyleBackColor = true;
+            btnGroupListStart.Click += btnGroupListStart_Click;
             // 
             // MainForm
             // 
@@ -649,6 +687,8 @@
             AutoScaleDimensions = new System.Drawing.SizeF(96F, 96F);
             AutoScaleMode = System.Windows.Forms.AutoScaleMode.Dpi;
             ClientSize = new System.Drawing.Size(914, 858);
+            Controls.Add(btnOpenExplorer);
+            Controls.Add(btnGroupListStart);
             Controls.Add(startBtn);
             Controls.Add(btnNextDay);
             Controls.Add(btnNext);
@@ -746,6 +786,9 @@
         private System.Windows.Forms.TabPage tabPagePxv;
         private System.Windows.Forms.DataGridView DgvPxv;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelStt;
+        private System.Windows.Forms.Button btnOpenExplorer;
+        private System.Windows.Forms.RadioButton radioBtn_PicOrinet_LS_only;
+        private System.Windows.Forms.Button btnGroupListStart;
     }
 }
 

@@ -6,11 +6,21 @@ using System.IO.Compression;
 using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using System.Security.Cryptography;
+using System.Text.RegularExpressions;
 
 namespace PictureManagerApp.src.Lib
 {
     static class MyFiles
     {
+        public static string FormatFileSize(long bytes)
+        {
+            var unit = 1024;
+            if (bytes < unit) { return $"{bytes} B"; }
+
+            var exp = (int)(Math.Log(bytes) / Math.Log(unit));
+            return $"{bytes / Math.Pow(unit, exp):F2} {("KMGTPE")[exp - 1]}B";
+        }
+
         public static void moveToTrashDir(string path, string rootpath, string appendStr = "-0trash")
         {
             move(path, rootpath, appendStr);
@@ -21,7 +31,7 @@ namespace PictureManagerApp.src.Lib
             Log.trc("------");
             Log.log($"path={path}");
 
-            FileInfo fi = new(path);
+            System.IO.FileInfo fi = new(path);
 
             string p = Path.GetRelativePath(rootpath, path);
             Log.log($"p={p}");
@@ -57,12 +67,14 @@ namespace PictureManagerApp.src.Lib
             }
         }
 
-        public static byte[] GetThumbnailByteArray(string zippath, int width, int height)
+        public static byte[] GetThumbnailByteArray(string zippath, int width, int height, int picidx=0)
         {
-            //var img = new Bitmap(@"D:\pic\my-pic\com.example.imageviewer\test.jpg");
-
             var entries = GetZipEntryList(zippath);
-            var img = MyFiles.GetImageFromZipFile(zippath, entries[0]);
+            if (entries.Count < 2)
+            {
+                picidx = 0;
+            }
+            var img = MyFiles.GetImageFromZipFile(zippath, entries[picidx]);
             var thumbimg = ImageModule.GetThumbnailImage(img, width, height);
             var ba = ImageModule.ConvImageToByteArray(thumbimg);
             return ba;
@@ -119,5 +131,24 @@ namespace PictureManagerApp.src.Lib
             var bs = hashProvider.ComputeHash(fs);
             return BitConverter.ToString(bs).ToLower().Replace("-", "");
         }
+
+        public static void OpenGuiShell(string dirpath)
+        {
+            Log.trc($"'{dirpath}'");
+            dirpath = dirpath.Replace("/", "\\");
+            System.Diagnostics.Process.Start(
+                "EXPLORER.EXE",
+                dirpath);
+        }
+
+        public static void OpenGuiShellFile(string filepath)
+        {
+            Log.trc($"'{filepath}'");
+            filepath = filepath.Replace("/", "\\");
+            System.Diagnostics.Process.Start(
+                "EXPLORER.EXE",
+                @"/select," + filepath);
+        }
     }
+
 }

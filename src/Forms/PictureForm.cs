@@ -46,8 +46,13 @@ namespace PictureManagerApp
         private static readonly Brush BG_BRUSH = Brushes.Black;
         private static readonly Color COLOR_MARK = Color.Red;
 
+#if UNDEFINED
         private int ThumbnailCols = 4;
         private int ThumbnailRows = 3;
+#else
+        private int ThumbnailCols = 8;
+        private int ThumbnailRows = 5;
+#endif
 
         //=====================================================================
         // delegate
@@ -171,7 +176,7 @@ namespace PictureManagerApp
             bool landscape = h < w;
 
             if (mModel.IsZip())
-            {
+            {   //zipファイルの場合
                 this.Width = w - 0;
                 this.Height = h - 0;
 
@@ -186,9 +191,17 @@ namespace PictureManagerApp
                     this.ThumbnailCols = 1;
                     this.ThumbnailRows = RightPicBox.Height / RightPicBox.Width;
                     SetMoveNum();
+
+                    if (true)
+                    {
+                        //サムネイル非表示
+                        ToolStripMenuItem_ThumbnailOn.Checked = false;
+                        ThumbnailAreaView(false);
+                    }
                 }
                 else
                 {
+                    //縦画面の場合はサムネイル非表示
                     ToolStripMenuItem_ThumbnailOn.Checked = false;
                     ThumbnailAreaView(false);
                 }
@@ -198,7 +211,7 @@ namespace PictureManagerApp
                 DisplayTxt = false;
             }
             else
-            {
+            {   //通常のフォルダの場合
                 if (landscape)
                 {
                     this.Width = w - 100;
@@ -216,7 +229,8 @@ namespace PictureManagerApp
                     this.Width = w - 0;
                     this.Height = h - 0;
 
-                    if (false)
+                    bool flg = false;
+                    if (flg)
                     {
                         ToolStripMenuItem_ThumbnailOn.Checked = false;
                         ThumbnailAreaView(false);
@@ -444,8 +458,6 @@ namespace PictureManagerApp
                 }
             }
 
-            mModel.UpdateListFile();
-
             //表示中ファイル位置の記憶
             //TODO
 
@@ -634,7 +646,7 @@ namespace PictureManagerApp
 
         private void SetStatusBar_SelectedItemCount()
         {
-            StatusLbl_MarkCnt.Text = mModel.mMarkCount.ToString();
+            StatusLbl_MarkCnt.Text = $"{mModel.mMarkCount}選択中";//mModel.mMarkCount.ToString();
         }
 
         //---------------------------------------------------------------------
@@ -728,6 +740,9 @@ namespace PictureManagerApp
                     mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
             }
+
+            /// TODO: 画面外のサムネイル更新の場合は表示更新しないようにする
+            /// 
             if (this != null)
             {
                 UI_change();
@@ -1038,11 +1053,8 @@ namespace PictureManagerApp
         {
             var fitem = mModel.GetCurrentFileItem();
             //var opt = @"/select, """ + fitem.FilePath + @"""";
-            var opt = Path.GetDirectoryName(fitem.FilePath);
-            Log.trc($"{opt}");
-            System.Diagnostics.Process.Start(
-                "EXPLORER.EXE",
-                opt);
+            var opt = fitem.FilePath;//Path.GetDirectoryName(fitem.FilePath);
+            MyFiles.OpenGuiShellFile(opt);
         }
 
         private void MenuItem_MagSub_FitNoMag_Click(object sender, EventArgs e)
@@ -1283,6 +1295,16 @@ namespace PictureManagerApp
         private void toolStripMenuItem_tsv_Click(object sender, EventArgs e)
         {
             mModel.tsv();
+        }
+
+        private void toolStripMenuItem_Stat_Click(object sender, EventArgs e)
+        {
+            mModel.Stat();
+        }
+
+        private void ToolStripMenuItem_SaveFilesPath_Click(object sender, EventArgs e)
+        {
+            mModel.SaveFilesPath();
         }
     }
 }

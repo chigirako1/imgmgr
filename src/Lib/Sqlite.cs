@@ -58,6 +58,12 @@ namespace PictureManagerApp.src.Lib
             return adapter;
         }
 
+        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string tblname, string colname, string where_phrase)
+        {
+            var adapter = new SQLiteDataAdapter($"SELECT {colname} FROM {tblname} WHERE {where_phrase};", con);
+            return adapter;
+        }
+
         private static SQLiteConnection GetSQLiteConnection()
         {
             var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = sqlite_db_file_path };

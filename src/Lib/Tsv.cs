@@ -5,12 +5,17 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.StartPanel;
 
 namespace PictureManagerApp.src.Lib
 {
-    class TsvRow
+    abstract class TsvRow
     {
-        public enum COL_NAME
+    }
+
+    class PicEvalRow : TsvRow
+    {
+            public enum COL_NAME
         {
             COL_FILE_NAME,
             COL_ENTRY_NAME,
@@ -35,7 +40,7 @@ namespace PictureManagerApp.src.Lib
         public DateTime RegDatetime { get; private set; }
         public bool Done { get; private set; }
 
-        public TsvRow(string line)
+        public PicEvalRow(string line)
         {
             var values = line.Split('\t');
             FileName = values[0];
@@ -59,11 +64,11 @@ namespace PictureManagerApp.src.Lib
 
     class TsvRowList
     {
-        List<TsvRow> RowList;
+        List<PicEvalRow> RowList;
 
         public TsvRowList(string filepath)
         {
-            RowList = new List<TsvRow>();
+            RowList = new List<PicEvalRow>();
 
             using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
             {
@@ -72,25 +77,44 @@ namespace PictureManagerApp.src.Lib
                     while (!reader.EndOfStream)
                     {
                         var line = reader.ReadLine();
-                        var tsvRow = new TsvRow(line);
+                        var tsvRow = new PicEvalRow(line);
                         RowList.Add(tsvRow);
                     }
                 }
             }
         }
 
-        public List<TsvRow> hoge()
+        public List<PicEvalRow> GetRowList()
         {
             return RowList;
         }
     }
 
-    class Tsv
+    class Table
     {
-        public static void BuildRows()
-        {
-            
+        List<string> Lines = new();
 
+        public Table(string filepath)
+        {
+            using (var fs = new FileStream(filepath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            {
+                using (var reader = new StreamReader(fs))
+                {
+                    while (!reader.EndOfStream)
+                    {
+                        var line = reader.ReadLine();
+                        Lines.Add(line);
+                    }
+                }
+            }
+        }
+
+        public IEnumerator<string> GetEnumerator()
+        {
+            foreach (var line in Lines)
+            {
+                yield return line;
+            }
         }
     }
 }
