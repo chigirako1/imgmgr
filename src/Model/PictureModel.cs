@@ -51,6 +51,8 @@ namespace PictureManagerApp.src.Model
         PIC_ORINET_PORTRAIT,
         PIC_ORINET_LANDSCAPE,
         PIC_ORINET_LANDSCAPE_ONLY,
+        PIC_ORINET_SQUARE,
+        PIC_ORINET_LONG,
 
         PIC_ORINET_MAX
     }
@@ -91,12 +93,14 @@ namespace PictureManagerApp.src.Model
 
     public enum THUMBNAIL_VIEW_TYPE
     {
-        THUMBNAIL_VIEW_TILE,
-        THUMBNAIL_VIEW_OVERVIEW,
-        THUMBNAIL_VIEW_LIST,
-        THUMBNAIL_VIEW_NEXT,
+        THUMBNAIL_VIEW_TILE,        //並べる
+        THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
+        THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる
+        THUMBNAIL_VIEW_NEXT,        //次の画像をでっかく表示
 
         THUMBNAIL_VIEW_MAX,
+
+        THUMBNAIL_VIEW_DIRECTORY,   //同一フォルダを一画面に全部
 
         THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_TILE,
 
@@ -130,9 +134,16 @@ namespace PictureManagerApp.src.Model
         private int mMaxFileSize = 0;
         private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
 
-        private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
+        private static readonly string FILELIST_FILENAME = "!filelist!.txt";
+        private static readonly string DEL_LIST_TXT_PATH = @"D:\download\del_list.tsv";
+        //private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
         private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
         private string mSeachWord = "";
+
+        private string DelListPath;
+
+        private static readonly string PIC_INFOS_FILENAME = @"!pic_infos!.tsv";
+        private static readonly string PIC_COMPARE_FILENAME = @"!pic_compare!.tsv";
 
         private static readonly string STR_METHOD_DEL = "DEL";
         private static readonly string STR_METHOD_FAV = "FAV";
@@ -184,6 +195,9 @@ namespace PictureManagerApp.src.Model
             mMarkCount = 0;
             mIdx = 0;
             ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DEFAULT;
+
+            //DelListPath = DEL_LIST_TXT_FILENAME;
+
             Log.trc("[E]");
         }
 
@@ -211,6 +225,11 @@ namespace PictureManagerApp.src.Model
         {
             Log.log($"filter={filter}");
             FilterType = filter;
+        }
+
+        public void SetDelListPath(string delListPath)
+        {
+            DelListPath = delListPath;
         }
 
         //---------------------------------------------------------------------
@@ -354,10 +373,20 @@ namespace PictureManagerApp.src.Model
 
                 if (FilterType == FILTER_TYPE.FILTER_HASH)
                 {
-                    var ofilepath = Path.Combine(mPath, "!pic_infos!.tsv");
+                    var ofilepath = Path.Combine(mPath, PIC_INFOS_FILENAME);
                     mFileList.SavePicsInfo(ofilepath);
 
-                    mFileList.multipleFileOnly();
+                    bool update_db;
+                    if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
+                    {
+                        update_db = true;
+                    }
+                    else
+                    {
+                        update_db = false;
+                    }
+
+                    mFileList.multipleFileOnly(update_db);
                     mMarkCount = mFileList.MarkCount();
                 }
             }
@@ -369,7 +398,24 @@ namespace PictureManagerApp.src.Model
             {
                 mPath = Path.GetDirectoryName(path);
                 //mDataSrcType = GetSourceType(path);
+
                 BuildFileList_Tsv(path);
+
+                if (FilterType == FILTER_TYPE.FILTER_HASH)
+                {
+                    bool update_db;
+                    if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
+                    {
+                        update_db = true;
+                    }
+                    else
+                    {
+                        update_db = false;
+                    }
+
+                    mFileList.multipleFileOnly(update_db);
+                    mMarkCount = mFileList.MarkCount();
+                }
             }
             else
             {
@@ -381,15 +427,13 @@ namespace PictureManagerApp.src.Model
 
         private IEnumerable<string> GetFileList(string path, string extlist, string search_word)
         {
-            Log.log($"対象={path}");
-
-            var fileArray = Directory.GetFiles(
-                            path,
-                            "*.*",
-                            SearchOption.AllDirectories);
+            Log.log($"対象='{path}'/拡張子='{extlist}'/検索ワード='{search_word}'");
 
             var extensions = extlist.Split(",");
-            var files = fileArray.Where(f => extensions.Contains(Path.GetExtension(f)));//大文字・小文字だめでは？
+            var files = MyFiles.GetAllFiles(path, extensions);
+            //var fileArray = MyFiles.GetFiles(path);
+            //var files = fileArray.Where(f => extensions.Contains(Path.GetExtension(f).ToLower()));
+            //var files = fileArray.Where(file => extensions.Any(pattern => file.ToLower().EndsWith(pattern)));
 
             if (search_word != "")
             {
@@ -414,7 +458,14 @@ namespace PictureManagerApp.src.Model
             {
                 if (cnt % 1000 == 1)
                 {
-                    Log.log($"#{cnt}/{total}:({mFileList.Count})");
+                    sw.Stop();
+                    var ts_elapsed = sw.Elapsed;
+                    Log.trc($"途中経過：{ts_elapsed}");
+
+                    var dupCnt = mFileList.GetDupCount();
+
+                    Log.log($"#{cnt}/{total}:({mFileList.Count}) 重複={dupCnt}");
+                    sw.Start();
                 }
                 cnt++;
 
@@ -450,6 +501,31 @@ namespace PictureManagerApp.src.Model
                         //Log.log($"非対象ファイル={f}");
                     }
                 }
+            }
+
+            {
+                var dirs = mFileList.GetDirs();
+
+                foreach (var d in dirs)
+                {
+                    if (Directory.Exists(d))
+                    {
+                        var gi = new GroupItem(d);
+                        Log.trc($"{gi.FilePath}");
+
+                        foreach (var file in mFileList.FileItems)
+                        {
+                            if (gi.FilePath == file.DirectoryName)
+                            {
+                                gi.AddFileItem(file);
+                            }
+                        }
+
+                        mFileList.Add(gi);
+                    }
+                }
+
+                mFileList.Sort(SORT_TYPE.SORT_PATH);
             }
 
             sw.Stop();
@@ -535,12 +611,10 @@ namespace PictureManagerApp.src.Model
             var filelist = MyFiles.GetZipEntryList(mPath);
 
             mFileList.ZipList = true;
-            foreach (var f in filelist)//.OrderBy(x => x))
+            foreach (var f in filelist)
             {
-                //if (FileItem.isSpecifiedFile(f, mDtFrom, mDtTo))
-                //var fi = new FileItem(f);
-                var fi = new FileItem(f, mPath);
-                //if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrient))
+                //var fi = new FileItem(f, mPath);
+                var fi = new ZipEntryItem(f, mPath);
                 if (IsTargetPic(fi))
                 {
                     mFileList.Add(fi);
@@ -550,22 +624,64 @@ namespace PictureManagerApp.src.Model
 
         private void BuildFileList_Tsv(string path)
         {
+            var line_cnt = 0;
+            var missing_file_cnt = 0;
             var table = new Table(path);
             foreach (var line in table)
             {
+                line_cnt++;
+
+                /*
                 var values = line.Split('\t');
                 var picpath = values[0];
                 var filesize = long.Parse(values[1]);
                 var width = int.Parse(values[2]);
                 var height = int.Parse(values[3]);
                 var hash = values[4];
+                */
+
+                string picpath;
+                long filesize;
+                int width;
+                int height;
+                string hash;
+
+                Table.SetParams(line,
+                    out picpath,
+                    out filesize,
+                    out width,
+                    out height,
+                    out hash);
 
                 try
                 {
+                    if (!File.Exists(picpath))
+                    {
+                        missing_file_cnt++;
+                        Log.warning($"存在しないファイルを無視します '{picpath}'(#{missing_file_cnt})");
+                        continue;
+                    }
+
+                    System.IO.FileInfo fi = new(path);
+                    if (fi.Length != filesize)
+                    {
+                        Log.warning($"ファイルサイズが変更されています '{picpath}'({filesize} => {fi.Length})");
+                    }
+
                     var fitem = new FileItem(picpath, filesize, width, height, hash);
                     if (SpecFileP(picpath) && IsTargetPic(fitem))
                     {
-                        mFileList.Add(fitem);
+                        bool computeHash;
+                        if (FilterType == FILTER_TYPE.FILTER_HASH)
+                        {
+                            computeHash = true;
+                        }
+                        else
+                        {
+                            computeHash = false;
+                        }
+
+                        mFileList.Add(fitem, computeHash);
                     }
                 }
                 catch (Exception ex)
@@ -573,6 +689,8 @@ namespace PictureManagerApp.src.Model
                     Log.err($"path='{picpath}'{ex}");
                 }
             }
+
+            Log.trc($"{line_cnt}行中{missing_file_cnt}ファイルが存在しませんでした。({line_cnt - missing_file_cnt})");
         }
 
         //---------------------------------------------------------------------
@@ -1145,7 +1263,11 @@ namespace PictureManagerApp.src.Model
         {
             var item = GetCurrentFileItem();
             var ti = Twt.GetTweetInfoFromPath(item.FilePath);
-            return ti.ScreenName;
+
+            //TODO: DBから情報を取ってくるようにする
+
+            var str = $"【】{ti.ScreenName}";
+            return str;
         }
 
         public string GetArtistInfoFromPxvDB()
@@ -1382,13 +1504,14 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public void UpdateListFile()
+        public void UpdateListFile(string tsv_filepath)
         {
-            var filename = DEL_LIST_TXT_FILENAME;
+            var filename = tsv_filepath;
             var append = true;
             using (var writer = new StreamWriter(filename, append))
             {
                 var sDate = GetTodayString();
+
                 for (int cnt = 0; cnt < mFileList.Count; cnt++)
                 {
                     var markStr = "";
@@ -1411,9 +1534,9 @@ namespace PictureManagerApp.src.Model
             }
         }
 
-        public void WriteRatingInfo()
+        public void WriteRatingInfo(string filename)
         {
-            var filename = DEL_LIST_TXT_FILENAME;
+            //var filename = DEL_LIST_TXT_FILENAME;
             var append = true;
             using (var writer = new StreamWriter(filename, append))
             {
@@ -1478,14 +1601,19 @@ namespace PictureManagerApp.src.Model
             mFileList.Sort(sort_type);
         }
 
-        public void Stat()
+        public string Stat()
         {
-            mFileList.TotalFileSizeOfSelectedFile();
+            var str = mFileList.TotalFileSizeOfSelectedFile();
+
+            var ofilepath = Path.Combine(mPath, PIC_COMPARE_FILENAME);
+            mFileList.WriteStatTsv(ofilepath);
+
+            return str;
         }
 
         public void SaveFilesPath()
         {
-            var txtpath = Path.Combine(mPath, "!filelist!.txt");
+            var txtpath = Path.Combine(mPath, FILELIST_FILENAME);
             using (var sw = new StreamWriter(txtpath, false))
             {
                 foreach (FileItem file in mFileList)
@@ -1512,7 +1640,7 @@ namespace PictureManagerApp.src.Model
                 s_twtid = Twt.GetScreenNameFromPath(mPath);
             }
 
-            var m = new TsvRowList(@"D:\download\del_list.tsv");
+            var m = new TsvRowList(DEL_LIST_TXT_PATH);
             foreach (var x in m.GetRowList())
             {
                 var filename = Path.GetFileName(x.FileName);

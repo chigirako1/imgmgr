@@ -1,4 +1,8 @@
-﻿using System;
+﻿#if DEBUG
+//#define DEV_SQL
+#endif
+
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -11,15 +15,24 @@ using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 using System.IO;
 using System.Xml.Linq;
+using static System.ComponentModel.Design.ObjectSelectorEditor;
+using System.Windows.Forms;
+using static PictureManagerApp.src.Lib.PicEvalRow;
 
 namespace PictureManagerApp.src.Lib
 {
     public class Sqlite
     {
+#if DEV_SQL
         //private const string DATA_SRC = @"D:\data\src\vs_cs\development.sqlite3";
         //private const string DATA_SRC = @"D:\data\src\ror\myapp\db\development - bak240324.sqlite3";
+        private const string DATA_SRC_DIRPATH = @"D:\export-done\test\out\";
         private const string DATA_SRC_FILENAME = "development.sqlite3";
-        private const string DATA_SRC_PATH = @"D:\data\src\ror\myapp\db\" + DATA_SRC_FILENAME;
+#else
+        private const string DATA_SRC_DIRPATH = @"D:\data\src\ror\myapp\db\";
+        private const string DATA_SRC_FILENAME = "development.sqlite3";
+#endif
+        private const string DATA_SRC_PATH = DATA_SRC_DIRPATH + DATA_SRC_FILENAME;
 
         public static string SQL_STATEMENT_WHERE_NO_UPDATE = "status != ''";
         public static string SQL_STATEMENT_WHERE_3D = "feature = '3D'";
@@ -66,6 +79,8 @@ namespace PictureManagerApp.src.Lib
 
         private static SQLiteConnection GetSQLiteConnection()
         {
+            //TODO:なんかやたら呼ばれる。サムネイル更新の度？に呼ばれるので対策必要
+            //Log.log($"db file='{sqlite_db_file_path}'");
             var sqlConnectionSb = new SQLiteConnectionStringBuilder { DataSource = sqlite_db_file_path };
             return new SQLiteConnection(sqlConnectionSb.ToString());
         }
@@ -190,19 +205,60 @@ namespace PictureManagerApp.src.Lib
             }
         }
 
-        public static void UpdateTweetsTable()
+        private static int GetMaxId(string tbl_name, SQLiteConnection cn)
+        {
+            var sql_str = $"SELECT MAX(id) FROM {tbl_name};";
+            var selectMaxCmd = new SQLiteCommand(sql_str, cn);
+            object val = selectMaxCmd.ExecuteScalar();
+            var maxId = int.Parse(val.ToString());
+            return maxId;
+        }
+
+        public static void UpdateTweetsTable(long tweetid, string screen_name)
         {
             using (var cn = GetSQLiteConnection())
             {
                 cn.Open();
                 using (var cmd = new SQLiteCommand(cn))
                 {
-                    // 更新
-                    //insert into test_table(id, name) values(001, 'example')
+                    var tbl_name = "tweets";
+                    var chg_col_name = "status";
+                    var col_name_cond = "tweet_id";
+                    var col_status_val = "'重複'";
 
-                    cmd.CommandText = $"INSERT into tweets() values({0})";
-                    var changedline = cmd.ExecuteNonQuery();
-                    Log.trc($"変更した行の数:{changedline}");
+                    var update = false;
+                    cmd.CommandText = $"SELECT * FROM {tbl_name} WHERE {col_name_cond} = {tweetid}";
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        if (reader.Read())
+                        {
+                            //既存のレコードがあるので更新
+                            update = true;
+                        }
+                    }
+
+                    if (update)
+                    {
+                        cmd.CommandText = $"UPDATE {tbl_name} set {chg_col_name} = {col_status_val}, updated_at = CURRENT_TIMESTAMP" +
+                                            $" WHERE {col_name_cond} = {tweetid}";
+                        var result = cmd.ExecuteNonQuery();
+                        if (result > 0)
+                        {
+                            Log.log($"更新成功\t'{tweetid}'@{screen_name}");
+                        }
+                        else
+                        {
+                            Log.log($"更新失敗\t'{tweetid}@{screen_name}'");
+                        }
+                    }
+                    else
+                    {
+                        var maxId = GetMaxId(tbl_name, cn);
+                        cmd.CommandText = $"INSERT into {tbl_name}(id, tweet_id, screen_name, status, created_at, updated_at)" +
+                                          $"values({maxId + 1}, {tweetid}, '{screen_name}', {col_status_val}, CURRENT_TIMESTAMP, CURRENT_TIMESTAMP)";
+                        var changedline = cmd.ExecuteNonQuery();
+                        Log.log($"変更した行の数:{changedline}\t'{tweetid}@{screen_name}'");
+                    }
                 }
                 cn.Close();
             }

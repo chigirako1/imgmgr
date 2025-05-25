@@ -5,6 +5,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Windows.Forms;
 
 namespace PictureManagerApp.src.Lib
 {
@@ -80,6 +81,17 @@ namespace PictureManagerApp.src.Lib
                 orgImg.Height,
                 GraphicsUnit.Pixel);
 
+
+            return bmpCanvas;
+        }
+
+        public static Image GetGroupThumbnailImage(int thumbWidth, int thumbHeight)
+        {
+            var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
+            Graphics g = Graphics.FromImage(bmpCanvas);
+
+            Brush BRUSH_0 = Brushes.Blue;
+            g.FillRectangle(BRUSH_0, 0, 0, thumbWidth, thumbHeight);
 
             return bmpCanvas;
         }
@@ -178,6 +190,29 @@ namespace PictureManagerApp.src.Lib
                 new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1),
                 0, 0, currentImg.Width, currentImg.Height,
                 GraphicsUnit.Pixel, ia);
+
+            g.Dispose();
+
+            return drawImg;
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        public static Image CreateCompositedImage(
+            int w,
+            int h)
+        {
+            var drawImg = new Bitmap(w, h);
+            var g = Graphics.FromImage(drawImg);
+
+            System.Drawing.Imaging.ImageAttributes ia = new();
+
+            /*DrawDimension d = getDispParam(w, h, currentImg.Width, currentImg.Height);
+            g.DrawImage(currentImg,
+                new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1),
+                0, 0, currentImg.Width, currentImg.Height,
+                GraphicsUnit.Pixel, ia);*/
 
             g.Dispose();
 

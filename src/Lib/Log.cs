@@ -12,7 +12,8 @@ namespace PictureManagerApp.src.Lib
         public static void log(string s)
         {
             //Console.WriteLine("[LOG]" + s);
-            System.Diagnostics.Debug.WriteLine("[LOG]  " + s);
+            //System.Diagnostics.Debug.WriteLine("[LOG]  " + s);
+            puts("[LOG]  " + s);
 
             //MethodBase.GetCurrentMethod().Name
         }
@@ -23,7 +24,8 @@ namespace PictureManagerApp.src.Lib
             [CallerLineNumber] int lineNumber = -1)
         {
             //Console.WriteLine(s);
-            System.Diagnostics.Debug.WriteLine($"[TRC] {memberName}:{s}");
+            //System.Diagnostics.Debug.WriteLine($"[TRC] {memberName}:{s}");
+            puts($"[TRC] {memberName}:{s}");
         }
 
         public static void warning(string s)
@@ -45,8 +47,14 @@ namespace PictureManagerApp.src.Lib
         {
 #if DEBUG
             //Console.Error.WriteLine("[DBG]" + s);
-            System.Diagnostics.Debug.WriteLine("[DBG]" + s);
+            //System.Diagnostics.Debug.WriteLine("[DBG]" + s);
+            puts("[DBG]" + s);
 #endif
+        }
+
+        private static void puts(string str)
+        {
+            System.Diagnostics.Debug.WriteLine(str);
         }
     }
 }

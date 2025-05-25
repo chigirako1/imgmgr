@@ -128,7 +128,8 @@ namespace PictureManagerApp.src.Lib
                 tweetinfo.TweetID = long.Parse(m.Groups[1].Value);
                 tweetinfo.ImageNo = int.Parse(m.Groups[2].Value);
                 //tweetinfo.dlDate = DateTime.Parse(m.Groups[3].Value);
-                break;
+                return tweetinfo;
+                //break;
             }
 
             //20231108 17150226604498206x9 0
@@ -139,7 +140,8 @@ namespace PictureManagerApp.src.Lib
                 //tweetinfo.dlDate = DateTime.Parse(m.Groups[1].Value);
                 tweetinfo.TweetID = long.Parse(m.Groups[2].Value);
                 tweetinfo.ImageNo = int.Parse(m.Groups[3].Value);
-                break;
+                return tweetinfo;
+                //break;
             }
 
             //Log.dbg($"'{path}':'{tweetinfo}'");

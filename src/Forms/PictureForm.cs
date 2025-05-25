@@ -40,12 +40,6 @@ namespace PictureManagerApp
         private const int SLIDESHOW_TIMER_PERIOD = 750;
         private const int PAGE_CHG_TIMER_PERIOD = 250;
 
-        private static readonly Brush BRUSH_0 = Brushes.Blue;
-        private static readonly Brush BRUSH_MARK = Brushes.DarkRed;
-        private static readonly Brush BRUSH_SLIDESHOW = Brushes.Gray;
-        private static readonly Brush BG_BRUSH = Brushes.Black;
-        private static readonly Color COLOR_MARK = Color.Red;
-
 #if UNDEFINED
         private int ThumbnailCols = 4;
         private int ThumbnailRows = 3;
@@ -1144,7 +1138,8 @@ namespace PictureManagerApp
         private void ToolStripMenuItem_SlideShow_Ms_Click(object sender, EventArgs e)
         {
             //スライドショーの更新間隔(ms)を設定
-            string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "ms", mSlideMs.ToString(), -1, -1);
+            //string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "ms", mSlideMs.ToString(), -1, -1);
+            string str = Util.InputBox("数値を入力してください", "ms", mSlideMs.ToString());
             if (str != "")
             {
                 var numVal = Int32.Parse(str);
@@ -1299,7 +1294,11 @@ namespace PictureManagerApp
 
         private void toolStripMenuItem_Stat_Click(object sender, EventArgs e)
         {
-            mModel.Stat();
+            var str = mModel.Stat();
+            MessageBox.Show(str,
+                "stat",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
         }
 
         private void ToolStripMenuItem_SaveFilesPath_Click(object sender, EventArgs e)

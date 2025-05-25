@@ -116,5 +116,20 @@ namespace PictureManagerApp.src.Lib
                 yield return line;
             }
         }
+
+        public static void SetParams(string line, 
+            out string picpath,
+            out long filesize,
+            out int width,
+            out int height,
+            out string hash)
+        {
+            var values = line.Split('\t');
+            picpath = values[0];
+            filesize = long.Parse(values[1]);
+            width = int.Parse(values[2]);
+            height = int.Parse(values[3]);
+            hash = values[4];
+        }
     }
 }

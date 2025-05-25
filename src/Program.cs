@@ -17,7 +17,7 @@ namespace PictureManagerApp.src
 
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new MainForm());
+            Application.Run(new MainForm(cfg));
 
             cfg.Save();
         }

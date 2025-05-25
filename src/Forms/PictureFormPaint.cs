@@ -5,6 +5,7 @@ using System.Windows.Forms;
 
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
+//using static System.Net.Mime.MediaTypeNames;
 
 namespace PictureManagerApp
 {
@@ -18,21 +19,56 @@ namespace PictureManagerApp
         //private static readonly Pen PEN_COLOR_FRAME = Pens.Crimson;
         private static readonly Pen PEN_COLOR_FRAME = new Pen(Color.Crimson, 3);
 
+        private static readonly Brush BRUSH_0 = Brushes.Blue;
+        private static readonly Brush BRUSH_MARK = Brushes.DarkRed;
+        private static readonly Brush BRUSH_SLIDESHOW = Brushes.Gray;
+        private static readonly Brush BG_BRUSH = Brushes.Black;
+        private static readonly Color COLOR_MARK = Color.Red;
 
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
         private void PictureBox_Paint(object sender, PaintEventArgs e)
         {
-            PictureBox_Paint_OnePic(sender, e);
-            //rightPicBox_Paint_thumbnail(e, true);
+            FileItem fitem = mModel.GetCurrentFileItem();
+
+            if (fitem.IsGroupEntry)
+            {
+                PictureBox_Paint_Group(sender, e, (GroupItem)fitem);
+            }
+            else
+            {
+                PictureBox_Paint_OnePic(sender, e, fitem);
+                //rightPicBox_Paint_thumbnail(e, true);
+            }
         }
 
-        private void PictureBox_Paint_OnePic(object sender, PaintEventArgs e)
+        private void PictureBox_Paint_Group(object sender, PaintEventArgs e, GroupItem fitem)
+        {
+            Graphics g = e.Graphics;
+            g.FillRectangle(BRUSH_0, 0, 0, pictureBox.Width, pictureBox.Height);
+
+
+            var img = ImageModule.CreateCompositedImage(10,10);
+
+            var fsize = FONT_SIZE;
+            var inc = FONT_SPACE;
+            var x = 0;
+            var y = 0;
+            var txtbrush = FONT_COLOR;
+            var fnt = new System.Drawing.Font(FONT_NAME, fsize);
+            var txt = $"'{fitem.FilePath}'({fitem.MemberCount()})";
+
+            g.DrawString(txt, fnt, txtbrush, x, y);
+            y += fsize + inc;
+
+            fnt.Dispose();
+        }
+
+        private void PictureBox_Paint_OnePic(object sender, PaintEventArgs e, FileItem fitem)
         {
             Graphics g = e.Graphics;
 
-            FileItem fitem = mModel.GetCurrentFileItem();
             Brush bgbrush;
             if (fitem.Mark)
             {
@@ -177,6 +213,7 @@ namespace PictureManagerApp
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                     rightPicBox_Paint_overview(e);
                     break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_TILE:
                 default:
                     rightPicBox_Paint_thumbnail(e);

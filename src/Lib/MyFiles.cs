@@ -12,6 +12,11 @@ namespace PictureManagerApp.src.Lib
 {
     static class MyFiles
     {
+        public static string PathCombine(string a, string b)
+        {
+            return System.IO.Path.Combine(a, b);
+        }
+
         public static string FormatFileSize(long bytes)
         {
             var unit = 1024;
@@ -28,16 +33,16 @@ namespace PictureManagerApp.src.Lib
 
         public static void move(string path, string rootpath, string appendStr)
         {
-            Log.trc("------");
-            Log.log($"path={path}");
+            Log.trc("------>");
+            Log.log($"path='{path}'");
 
             System.IO.FileInfo fi = new(path);
 
             string p = Path.GetRelativePath(rootpath, path);
-            Log.log($"p={p}");
+            Log.log($"p='{p}'");
 
             string moveToPath = Path.Combine(rootpath + appendStr, p);
-            Log.log($"moveToPath={moveToPath}");
+            Log.log($"moveToPath='{moveToPath}'");
 
             string dirname = Path.GetDirectoryName(moveToPath);
             if (!File.Exists(dirname))
@@ -51,9 +56,9 @@ namespace PictureManagerApp.src.Lib
             }
             catch (IOException e)
             {
-                Log.err($"{e}");
+                Log.err($"{e}/'{path}'");
             }
-            Log.trc("------");
+            Log.trc("<------");
         }
 
         public static Image GetImageFromZipFile(string zippath, string filepath)
@@ -149,6 +154,40 @@ namespace PictureManagerApp.src.Lib
                 "EXPLORER.EXE",
                 @"/select," + filepath);
         }
-    }
 
+        public static IEnumerable<string> GetFiles(string path)
+        {
+            var fileArray = Directory.GetFiles(
+                path,
+                "*.*",
+                SearchOption.AllDirectories);
+            return fileArray;
+        }
+
+        public static IEnumerable<string> GetAllFiles(string path, string[] patterns)
+        {
+            var files = GetFiles(path);
+            
+            if (patterns.Length > 0)
+            {
+                //string[] patterns = { ".zip", ".tsv" };
+                files = files.Where(file => patterns.Any(pattern => file.ToLower().EndsWith(pattern)));
+
+                //var ignoreCase = true;
+                //var files = fileArray.Where(
+                //    f => System.String.Compare(Path.GetExtension(f), extname, ignoreCase) == 0
+                //);
+            }
+
+            return files;
+        }
+
+        public static IEnumerable<string> ExtractDirectories(IEnumerable<string> paths)
+        {
+            var dirs = paths.Select(x => Path.GetDirectoryName(x)).Distinct();
+
+            return dirs;
+        }
+
+    }
 }

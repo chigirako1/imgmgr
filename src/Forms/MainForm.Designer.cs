@@ -50,6 +50,8 @@
             tabPage_Pic = new System.Windows.Forms.TabPage();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
+            radioBtn_PicOrinet_Long = new System.Windows.Forms.RadioButton();
+            radioBtn_PicOrinet_Square = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_LS_only = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_LS = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_PR = new System.Windows.Forms.RadioButton();
@@ -165,7 +167,7 @@
             // 
             // btnPicSizeToggle
             // 
-            btnPicSizeToggle.Location = new System.Drawing.Point(362, 450);
+            btnPicSizeToggle.Location = new System.Drawing.Point(362, 448);
             btnPicSizeToggle.Margin = new System.Windows.Forms.Padding(2);
             btnPicSizeToggle.Name = "btnPicSizeToggle";
             btnPicSizeToggle.Size = new System.Drawing.Size(163, 33);
@@ -177,7 +179,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new System.Drawing.Point(16, 450);
+            label5.Location = new System.Drawing.Point(16, 448);
             label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(159, 23);
@@ -186,7 +188,7 @@
             // 
             // numUD_MinFilesize
             // 
-            numUD_MinFilesize.Location = new System.Drawing.Point(186, 450);
+            numUD_MinFilesize.Location = new System.Drawing.Point(186, 448);
             numUD_MinFilesize.Margin = new System.Windows.Forms.Padding(2);
             numUD_MinFilesize.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
             numUD_MinFilesize.Name = "numUD_MinFilesize";
@@ -196,7 +198,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(16, 483);
+            label4.Location = new System.Drawing.Point(16, 481);
             label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(159, 23);
@@ -205,7 +207,7 @@
             // 
             // numUD_MaxFilesize
             // 
-            numUD_MaxFilesize.Location = new System.Drawing.Point(186, 483);
+            numUD_MaxFilesize.Location = new System.Drawing.Point(186, 481);
             numUD_MaxFilesize.Margin = new System.Windows.Forms.Padding(2);
             numUD_MaxFilesize.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
             numUD_MaxFilesize.Name = "numUD_MaxFilesize";
@@ -338,6 +340,8 @@
             // 
             // grpBox_PicOrient
             // 
+            grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_Long);
+            grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_Square);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_LS_only);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_LS);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_PR);
@@ -346,10 +350,32 @@
             grpBox_PicOrient.Margin = new System.Windows.Forms.Padding(2);
             grpBox_PicOrient.Name = "grpBox_PicOrient";
             grpBox_PicOrient.Padding = new System.Windows.Forms.Padding(2);
-            grpBox_PicOrient.Size = new System.Drawing.Size(312, 195);
+            grpBox_PicOrient.Size = new System.Drawing.Size(312, 288);
             grpBox_PicOrient.TabIndex = 2;
             grpBox_PicOrient.TabStop = false;
             grpBox_PicOrient.Text = "画像の向き";
+            // 
+            // radioBtn_PicOrinet_Long
+            // 
+            radioBtn_PicOrinet_Long.AutoSize = true;
+            radioBtn_PicOrinet_Long.Location = new System.Drawing.Point(38, 199);
+            radioBtn_PicOrinet_Long.Margin = new System.Windows.Forms.Padding(2);
+            radioBtn_PicOrinet_Long.Name = "radioBtn_PicOrinet_Long";
+            radioBtn_PicOrinet_Long.Size = new System.Drawing.Size(76, 27);
+            radioBtn_PicOrinet_Long.TabIndex = 1;
+            radioBtn_PicOrinet_Long.Text = "細長い";
+            radioBtn_PicOrinet_Long.UseVisualStyleBackColor = true;
+            // 
+            // radioBtn_PicOrinet_Square
+            // 
+            radioBtn_PicOrinet_Square.AutoSize = true;
+            radioBtn_PicOrinet_Square.Location = new System.Drawing.Point(38, 168);
+            radioBtn_PicOrinet_Square.Margin = new System.Windows.Forms.Padding(2);
+            radioBtn_PicOrinet_Square.Name = "radioBtn_PicOrinet_Square";
+            radioBtn_PicOrinet_Square.Size = new System.Drawing.Size(133, 27);
+            radioBtn_PicOrinet_Square.TabIndex = 1;
+            radioBtn_PicOrinet_Square.Text = "だいたい正方形";
+            radioBtn_PicOrinet_Square.UseVisualStyleBackColor = true;
             // 
             // radioBtn_PicOrinet_LS_only
             // 
@@ -368,9 +394,9 @@
             radioBtn_PicOrinet_LS.Location = new System.Drawing.Point(38, 106);
             radioBtn_PicOrinet_LS.Margin = new System.Windows.Forms.Padding(2);
             radioBtn_PicOrinet_LS.Name = "radioBtn_PicOrinet_LS";
-            radioBtn_PicOrinet_LS.Size = new System.Drawing.Size(75, 27);
+            radioBtn_PicOrinet_LS.Size = new System.Drawing.Size(167, 27);
             radioBtn_PicOrinet_LS.TabIndex = 1;
-            radioBtn_PicOrinet_LS.Text = "横向き";
+            radioBtn_PicOrinet_LS.Text = "横向き(正方形含む)";
             radioBtn_PicOrinet_LS.UseVisualStyleBackColor = true;
             // 
             // radioBtn_PicOrinet_PR
@@ -606,7 +632,7 @@
             // 
             ToolStripMenuItem_AddPath.Name = "ToolStripMenuItem_AddPath";
             ToolStripMenuItem_AddPath.Size = new System.Drawing.Size(269, 28);
-            ToolStripMenuItem_AddPath.Text = "パス追加";
+            ToolStripMenuItem_AddPath.Text = "パス追加 from DB";
             ToolStripMenuItem_AddPath.Click += ToolStripMenuItem_AddPath_Click;
             // 
             // ToolStripMenuItem_SelPicShow
@@ -789,6 +815,8 @@
         private System.Windows.Forms.Button btnOpenExplorer;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_LS_only;
         private System.Windows.Forms.Button btnGroupListStart;
+        private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Square;
+        private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Long;
     }
 }
 

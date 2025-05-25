@@ -46,9 +46,10 @@ namespace PictureManagerApp
 
             switch (mModel.ThumbViewType)
             {
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST:
-                    KeyFuncTbl[Keys.Left] = KeyDownFunc_List_Left;
-                    KeyFuncTbl[Keys.Right] = KeyDownFunc_List_Right;
+                    KeyFuncTbl[Keys.Left] = KeyDownFunc_List_Prev;
+                    KeyFuncTbl[Keys.Right] = KeyDownFunc_List_Next;
                     KeyFuncTbl[Keys.Up] = KeyDownFunc_List_Up;
                     KeyFuncTbl[Keys.Down] = KeyDownFunc_List_Down;
 
@@ -72,14 +73,17 @@ namespace PictureManagerApp
 
         }
 
-        private bool KeyDownFunc_List_Left(object sender, KeyEventArgs e)
+        //---------------------------------------------------------------------
+        // リスト表示
+        //---------------------------------------------------------------------
+        private bool KeyDownFunc_List_Prev(object sender, KeyEventArgs e)
         {
             //前のファイルに移動（ディレクトリ内をループ）
             mModel.ListPrev();
             return true;
         }
 
-        private bool KeyDownFunc_List_Right(object sender, KeyEventArgs e)
+        private bool KeyDownFunc_List_Next(object sender, KeyEventArgs e)
         {
             //次のファイルに移動（ディレクトリ内をループ）
             mModel.ListNext();

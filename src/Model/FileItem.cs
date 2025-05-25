@@ -2,7 +2,9 @@
 using System.Drawing;
 using System.IO;
 using System.IO.Compression;
+using System.Linq;
 using System.Security.Policy;
+using System.Xml.Linq;
 using PictureManagerApp.src.Lib;
 
 namespace PictureManagerApp.src.Model
@@ -12,9 +14,9 @@ namespace PictureManagerApp.src.Model
         //=====================================================================
         // private field
         //=====================================================================
-        private readonly string mPath;
-        private string mZipPath;
-        private Size ImageSize;
+        protected readonly string mPath;
+        protected string mZipPath;
+        protected Size ImageSize;
         private bool mThumbnailFail;
 
         //private Image mImage;
@@ -28,6 +30,7 @@ namespace PictureManagerApp.src.Model
         }
         public bool Removed { set; get; }
         public bool IsZipEntry { private set; get; }
+        public bool IsGroupEntry { private set; get; }
 
         public long FileSize { set; get; }
         public long CompressedLength { set; get; }
@@ -61,7 +64,15 @@ namespace PictureManagerApp.src.Model
             else
             {
                 System.IO.FileInfo fi = new(path);
-                FileSize = fi.Length;
+
+                if (((fi.Attributes & FileAttributes.Directory) == FileAttributes.Directory))
+                {
+                    IsGroupEntry = true;
+                }
+                else
+                {
+                    FileSize = fi.Length;
+                }
                 LastWriteTime = fi.LastWriteTime;
             }
             //FileHash = "";
@@ -106,12 +117,12 @@ namespace PictureManagerApp.src.Model
             get { return Path.GetDirectoryName(mPath); }
         }
 
-        public string GetZipEntryname()
+        public virtual string GetZipEntryname()
         {
-            if (mZipPath != "")
+            /*if (mZipPath != "")
             {
                 return this.FilePath;
-            }
+            }*/
             return null;
         }
 
@@ -120,13 +131,13 @@ namespace PictureManagerApp.src.Model
             return mZipPath + "\t" + mPath;
         }
 
-        public string GetFilename()
+        virtual public string GetFilename()
         {
-            if (mZipPath != "")
+            /*if (mZipPath != "")
             {
                 return Path.GetFileName(mZipPath);
             }
-            else
+            else*/
             {
                 return Path.GetFileName(mPath);
             }
@@ -139,6 +150,7 @@ namespace PictureManagerApp.src.Model
                 return mZipPath;
             }
 
+            var hoge = false;
             if (basePath == "")
             {
                 string dirname;
@@ -155,8 +167,9 @@ namespace PictureManagerApp.src.Model
                 //return dirUri.ToString();
                 return dirname;
             }
-            else
+            else if (hoge)
             {
+
                 Uri basepath = new(basePath + Path.DirectorySeparatorChar);
 
                 string dirname;
@@ -171,7 +184,23 @@ namespace PictureManagerApp.src.Model
 
                 Uri dirUri = new(dirname);
                 Uri relUri = basepath.MakeRelativeUri(dirUri);
-                return relUri.ToString();
+                var result = relUri.ToString();
+
+                return result;
+            }
+            else
+            {
+                string dirname;
+                if (filename_p)
+                {
+                    dirname = mPath;
+                }
+                else
+                {
+                    dirname = Path.GetDirectoryName(mPath);
+                }
+                var relativePath = Path.GetRelativePath(basePath, dirname);
+                return relativePath;
             }
         }
 
@@ -307,6 +336,22 @@ namespace PictureManagerApp.src.Model
                         return true;
                     }
                     break;
+                case PIC_ORIENT_TYPE.PIC_ORINET_SQUARE:
+                    //if (img_w == img_h)
+                    var n = Math.Abs(img_w - img_h);
+                    if (n < 100)
+                    {
+                        return true;
+                    }
+                    break;
+                case PIC_ORIENT_TYPE.PIC_ORINET_LONG:
+                    float rat = img_w * 100 / img_h;
+                    //まあアスペクト比ソートでいいかも
+                    if (rat > 200)//TODO:
+                    {
+                        return true;
+                    }
+                    break;
                 default:
                     return false;
             }
@@ -368,11 +413,18 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public Image GetImage()
+        public virtual Image GetImage()
         {
             if (mZipPath == "")
             {
-                return GetImageFromFile();
+                //if (IsGroupEntry)
+                {
+                    //return GetImage();
+                }
+                //else
+                {
+                    return GetImageFromFile();
+                }
             }
             else
             {
@@ -412,18 +464,6 @@ namespace PictureManagerApp.src.Model
 
         private Image GetImageFromZipFile()
         {
-            /*
-            using (var archive = ZipFile.OpenRead(mZipPath))
-            {
-                var ent = archive.GetEntry(FilePath);
-                var img = Image.FromStream(ent.Open());
-                ImageSize.Width = img.Width;
-                ImageSize.Height = img.Height;
-                return img;
-            }
-            */
-            //return MyFiles.GetImageFromZipFile(mZipPath, FilePath);
-
             var img = MyFiles.GetImageFromZipFile(mZipPath, FilePath);
             ImageSize.Width = img.Width;
             ImageSize.Height = img.Height;

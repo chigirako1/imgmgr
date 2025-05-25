@@ -15,6 +15,8 @@ using System.Data.Common;
 using System.Runtime.CompilerServices;
 using System.Collections.Generic;
 using static PictureManagerApp.src.Lib.TsvRow;
+using static System.Net.WebRequestMethods;
+using static System.Runtime.InteropServices.JavaScript.JSType;
 
 namespace PictureManagerApp
 {
@@ -44,8 +46,8 @@ namespace PictureManagerApp
         private const string USB_MEMORY_DIR_PATH = @"work\r18";
 
         private static readonly string[] CMBBOX_DIR_PATHS = [
-            @"D:\download\PxDl",
             @"D:\download\PxDl-",
+            @"D:\download\PxDl",
             @"D:\download\PxDl-0trash",
             @"D:\download\PxDl--0trash",
 
@@ -88,15 +90,18 @@ namespace PictureManagerApp
         private DataTable mTwtDatatable { get; set; }
         private DataTable mPxvDatatable { get; set; }
 
+        private Config Config { get; set; }
 
         //--------------
         //
         //--------------
-        public MainForm()
+        public MainForm(Config cfg)
         {
             Log.trc($"[S]");
 
             InitializeComponent();
+
+            this.Config = cfg;
 
             // check
             for (int i = 0; i < chkListBox_Ext.Items.Count; i++)
@@ -173,7 +178,7 @@ namespace PictureManagerApp
                         cmbBoxPath.Items.Add(path);
                     }
 #if DEBUG
-                    else if (File.Exists(path))
+                    else if (System.IO.File.Exists(path))
                     {
                         cmbBoxPath.Items.Add(path);
                     }
@@ -191,6 +196,12 @@ namespace PictureManagerApp
             dir = Directory.GetParent(dir).ToString();
             dir = Directory.GetParent(dir).ToString();
             cmbBoxPath.Items.Add(dir);*/
+
+            var cfgPath = this.Config.LastPath;
+            if (cfgPath != null)
+            {
+                cmbBoxPath.Items.Add(cfgPath);
+            }
         }
 
         private void InitWindow()
@@ -295,7 +306,13 @@ namespace PictureManagerApp
                 picForm.ShowDialog();
                 Log.trc($"picForm.ShowDialog() end");
 
-                model.UpdateListFile();
+                var path = @"del_list.tsv";
+                if (Config.DelListSavePos == "desktop")
+                {
+                    var desktop_path = System.Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                    path = MyFiles.PathCombine(desktop_path, path);
+                }
+                model.UpdateListFile(path);
 
                 //選択されたファイルを記録する
                 var pics = model.GetSelectedPic();
@@ -326,6 +343,8 @@ namespace PictureManagerApp
         {
             setModelParam_date(model);
             setModelParam_picSize(model);
+
+            model.SetDelListPath("");
 
             //ファイルサイズmin
             var minfilesize = (int)numUD_MinFilesize.Value;
@@ -411,6 +430,14 @@ namespace PictureManagerApp
             {
                 model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE_ONLY);
             }
+            else if (radioBtn_PicOrinet_Square.Checked)
+            {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_SQUARE);
+            }
+            else if (radioBtn_PicOrinet_Long.Checked)
+            {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LONG);
+            }
         }
 
         private void btnStart_Click(object sender, EventArgs e)
@@ -436,6 +463,10 @@ namespace PictureManagerApp
                     "title",
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Information);*/
+
+            var path = cmbBoxPath.Text;
+            var cfg = new Config();
+            cfg.SavePath(path);
             this.Close();
             Log.trc("[E]");
         }
@@ -454,9 +485,8 @@ namespace PictureManagerApp
 
         private void btnAppendSubDir_Click(object sender, EventArgs e)
         {
-            Log.trc("[S]");
-
             string path = cmbBoxPath.Text;
+            Log.trc($"[S]'{path}'");
             if (!Directory.Exists(path))
             {
                 MessageBox.Show("存在しないディレクトリです",
@@ -466,18 +496,11 @@ namespace PictureManagerApp
                 return;
             }
 
-            var dirs = Directory.EnumerateDirectories(path);
-            foreach (var dir in dirs.OrderBy(x => x))
-            {
-                cmbBoxPath.Items.Add(dir);
-            }
+            cmbBoxPath.Items.Add("---区切り---");
 
-            var fileArray = Directory.GetFiles(
-                path,
-                "*.zip",
-                SearchOption.TopDirectoryOnly);
-
-            foreach (var f in fileArray.OrderBy(x => x))
+            //ファイルの追加
+            var files = FileList.EnumerateFiles(path);
+            foreach (var f in files.OrderBy(x => x))
             {
                 {
                     cmbBoxPath.Items.Add(f);
@@ -485,6 +508,24 @@ namespace PictureManagerApp
                     //DirItem diritem = new(f);
                     //mDirList.Add(diritem);
                 }
+            }
+
+            cmbBoxPath.Items.Add("---区切り---");
+
+            // ディレクトリの登録
+            bool sort;
+            if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                sort = true;
+            }
+            else
+            {
+                sort = false;
+            }
+            var dirs = DirList.EnumerateDirectories(path, sort);
+            foreach (var dir in dirs)
+            {
+                cmbBoxPath.Items.Add(dir);
             }
 
             Log.trc("[E]");
@@ -651,6 +692,26 @@ namespace PictureManagerApp
             }
         }
 
+        private static string GetSqlCond()
+        {
+            string[] list = {
+                "退会",
+                "停止",//凍結？
+
+                "長期更新なし",
+                "半年以上更新なし",
+                "彼岸",
+                "別アカウントに移行",//
+                "作品ゼロ",
+                //"一部消えた",
+                "ほぼ消えた",
+            };
+
+            var list2 = list.Select(x => $"'{x}'").ToArray();
+
+            return System.String.Join(",", list2);
+        }
+
         private void InitPxvDGV()
         {
             var dbPath = Sqlite.GetSqliteFilePath();
@@ -663,8 +724,12 @@ namespace PictureManagerApp
 
                 var tblname = "artists";
                 var colname = "id, pxvid, pxvname, feature, rating, filenum, status";
-                var where_p = "status = '停止'";
-                where_p += "AND feature = 'AI' AND rating >= 100 ORDER BY rating DESC";
+                var where_p = "";
+                //where_p += " status = '停止'";
+                where_p += $" status IN ({GetSqlCond()})";
+                where_p += " AND feature = 'AI'";
+                //where_p += " AND rating >= 100";
+                where_p += " ORDER BY rating DESC";
                 var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p);
                 adapter.Fill(this.mPxvDatatable);
 
@@ -721,13 +786,8 @@ namespace PictureManagerApp
                 return null;
             }
 
-            var fileArray = Directory.GetFiles(
-                            path,
-                            "*.*",
-                            SearchOption.AllDirectories);
-            var files = fileArray.Where(
-                f => String.Compare(Path.GetExtension(f), ".zip", true) == 0
-            );
+            string[] patterns = {".zip" };
+            var files = MyFiles.GetAllFiles(path, patterns);
 
             var typeint32 = Type.GetType("System.Int32");
 
