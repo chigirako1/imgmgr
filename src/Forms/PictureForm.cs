@@ -33,7 +33,7 @@ namespace PictureManagerApp
 
         //private const int THUMBNAIL_TIMER_PERIOD = 100;//100だと重くなる.
         //private const int THUMBNAIL_TIMER_PERIOD = 111;//111もだめ？
-        private const int THUMBNAIL_TIMER_PERIOD = 122;
+        private const int THUMBNAIL_TIMER_PERIOD = 100;//122;
         //private const int THUMBNAIL_TIMER_PERIOD = 133;
         //private const int THUMBNAIL_TIMER_PERIOD = 140;
 
@@ -101,6 +101,7 @@ namespace PictureManagerApp
             Log.trc($"[S]");
             InitializeComponent();
 
+            //this.pictureBox.DoubleBuffered = true;
 
             Log.trc($"[E]");
         }
@@ -515,6 +516,7 @@ namespace PictureManagerApp
         {
             //Log.trc("[S]");
             Refresh();
+            //pictureBox.Refresh();
             //Log.trc("[E]");
         }
 
@@ -587,7 +589,8 @@ namespace PictureManagerApp
 
         private void SetStatusBar_FileNo()
         {
-            string no = String.Format("{0,5}/{1,5}", mModel.PictureNumber + 1, mModel.PictureTotalNumber);
+            var thumbcnt = mModel.CountIfHasThumbnail();
+            string no = String.Format("{0,5}/{1,5}({2})", mModel.PictureNumber + 1, mModel.PictureTotalNumber, thumbcnt);
             statusLbl_No.Text = no;
 
             /*if (mModel.PictureNumber == 0)
@@ -726,20 +729,27 @@ namespace PictureManagerApp
                 {
                     return;
                 }
+
                 var tsize = GetThumbnailSize();
-                var done = mModel.MakeThumbnail(tsize.Width, tsize.Height);
-                if (done)
+                var idx = mModel.MakeThumbnail(tsize.Width, tsize.Height);
+                if (idx == -1)
                 {
                     Log.log("thumbnail making done");
                     mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
                 }
-            }
 
-            /// TODO: 画面外のサムネイル更新の場合は表示更新しないようにする
-            /// 
-            if (this != null)
-            {
-                UI_change();
+                //SetStatusBar_FileNo();
+
+                if (this != null)
+                {
+                    /// TODO: 必要な場合のみ画面更新
+                    var update = true;
+                    if (update)
+                    {
+                        //UI_change();
+                        RightPicBox.Invalidate();
+                    }
+                }
             }
 
             //Log.trc("[E]");

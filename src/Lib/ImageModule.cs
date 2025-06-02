@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Runtime.ConstrainedExecution;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -27,6 +28,8 @@ namespace PictureManagerApp.src.Lib
 
     public struct DrawDimension
     {
+        public static int PER = 10000;
+
         public int width, height;
 
         public int src_x1, src_y1;
@@ -36,6 +39,11 @@ namespace PictureManagerApp.src.Lib
         public int dst_x2, dst_y2;
 
         public int ratio;
+        public int GetPercent()
+        {
+            int percent = ratio / (PER / 100);
+            return percent;
+        }
     }
 
     public static class ImageModule
@@ -65,33 +73,42 @@ namespace PictureManagerApp.src.Lib
         public static Image GetThumbnailImage(Image orgImg, int thumbWidth, int thumbHeight)
         {
             var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
-            Graphics g = Graphics.FromImage(bmpCanvas);
-
-            var d = getDispParam(thumbWidth, thumbHeight, orgImg.Width, orgImg.Height);
-            var dstRect = new Rectangle(
-                                d.dst_x1,
-                                d.dst_y1,
-                                d.dst_x2 - d.dst_x1,
-                                d.dst_y2 - d.dst_y1);
-            g.DrawImage(orgImg,
-                dstRect,
-                0,
-                0,
-                orgImg.Width,
-                orgImg.Height,
-                GraphicsUnit.Pixel);
-
+            using (var g = Graphics.FromImage(bmpCanvas))
+            //var g = Graphics.FromImage(bmpCanvas);
+            {
+                var d = getDispParam(thumbWidth, thumbHeight, orgImg.Width, orgImg.Height);
+                var dstRect = new Rectangle(
+                                    d.dst_x1,
+                                    d.dst_y1,
+                                    d.dst_x2 - d.dst_x1,
+                                    d.dst_y2 - d.dst_y1);
+                g.DrawImage(orgImg,
+                    dstRect,
+                    0,
+                    0,
+                    orgImg.Width,
+                    orgImg.Height,
+                    GraphicsUnit.Pixel);
+            }
 
             return bmpCanvas;
         }
 
-        public static Image GetGroupThumbnailImage(int thumbWidth, int thumbHeight)
+        public static Image GetGroupThumbnailImage(int thumbWidth, int thumbHeight, string txt)
         {
             var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
             Graphics g = Graphics.FromImage(bmpCanvas);
 
             Brush BRUSH_0 = Brushes.Blue;
             g.FillRectangle(BRUSH_0, 0, 0, thumbWidth, thumbHeight);
+
+            var FONT_COLOR = Brushes.Red;
+            var FONT_SIZE = 5;
+            var FONT_NAME = "MS ゴシック";
+            var txtbrush = FONT_COLOR;
+            var fsize = FONT_SIZE;
+            var fnt = new Font(FONT_NAME, fsize);
+            g.DrawString(txt, fnt, txtbrush, 0, 0);
 
             return bmpCanvas;
         }
@@ -199,24 +216,57 @@ namespace PictureManagerApp.src.Lib
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public static Image CreateCompositedImage(
-            int w,
-            int h)
+        public static Image CreateCompositedImage(List<Image> imgs, int canvasW, int canvasH)
         {
-            var drawImg = new Bitmap(w, h);
-            var g = Graphics.FromImage(drawImg);
+            var drawImg = new Bitmap(canvasW, canvasH);
+            using (var g = Graphics.FromImage(drawImg))
+            { 
+                var ia = new System.Drawing.Imaging.ImageAttributes();
 
-            System.Drawing.Imaging.ImageAttributes ia = new();
+                int x = 0;
+                int y = 0;
+                int w;
+                int h;
 
-            /*DrawDimension d = getDispParam(w, h, currentImg.Width, currentImg.Height);
-            g.DrawImage(currentImg,
-                new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1),
-                0, 0, currentImg.Width, currentImg.Height,
-                GraphicsUnit.Pixel, ia);*/
+                // 画面サイズと画像数から各サムネイル画像の幅、高さを算出
+                (w,h) = CalcThumbnailImageSize(imgs.Count(), canvasW, canvasH);
 
-            g.Dispose();
+                // 描画
+                foreach (var img in imgs)
+                {
+                    DrawImage(g, x, y, w, h, img, IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_OPTIMIZE_MAX);
+                    x += w;
+
+                    if (x >= canvasW)
+                    {
+                        x = 0;
+                        y += h;
+                    }
+                }
+            }
 
             return drawImg;
+        }
+
+        public static (int, int) CalcThumbnailImageSize(int numOfImg, int canvasW, int canvasH)
+        {
+            int col = (int)Math.Sqrt(numOfImg);
+            int row = (int)Math.Sqrt(numOfImg);
+            //splitNo.Col = Math.Min(max, (int)Math.Sqrt(count));
+            //splitNo.Row = Math.Min(max, (int)Math.Sqrt(count));
+            if (col * row < numOfImg)
+            {
+                row++;
+            }
+            if (col * row < numOfImg)
+            {
+                col++;
+            }
+
+            int w = canvasW / col;
+            int h = canvasH / row;
+
+            return (w, h);
         }
 
         //---------------------------------------------------------------------
@@ -228,20 +278,44 @@ namespace PictureManagerApp.src.Lib
             int y,
             int w,
             int h,
-            Image img
+            Image img,
+            IMAGE_DISPLAY_MAGNIFICATION_TYPE mag = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND
             )
         {
-            DrawDimension d = getDispParam(w, h, img.Width, img.Height, IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND);
+            DrawDimension dim = getDispParam(w, h, img.Width, img.Height, mag);
             var dstRect = new Rectangle(
-                d.dst_x1 + x, 
-                d.dst_y1 + y, 
-                d.dst_x2 - d.dst_x1, 
-                d.dst_y2 - d.dst_y1);
-            g.DrawImage(img,
-                dstRect,
-                0, 0, img.Width, img.Height,
-                GraphicsUnit.Pixel);
-            return d;
+                dim.dst_x1 + x, 
+                dim.dst_y1 + y, 
+                dim.dst_x2 - dim.dst_x1, 
+                dim.dst_y2 - dim.dst_y1);
+            var hoge = true;
+            //hoge = false;
+            if (hoge)
+            {
+                var srcRect = new Rectangle(
+                    dim.src_x1,
+                    dim.src_y1,
+                    dim.src_x2 - dim.src_x1,
+                    dim.src_y2 - dim.src_y1);
+
+                //Log.trc($"[{w}x{h}] img={img.Width}x{img.Height} dst={dstRect} src={srcRect}");
+
+                g.DrawImage(img,
+                    dstRect,
+                    srcRect,
+                    GraphicsUnit.Pixel);
+            }
+            else
+            {
+                g.DrawImage(img,
+                    dstRect,
+                    0,
+                    0,
+                    img.Width,
+                    img.Height,
+                    GraphicsUnit.Pixel);
+            }
+            return dim;
         }
 
         //---------------------------------------------------------------------
@@ -324,8 +398,8 @@ namespace PictureManagerApp.src.Lib
             DrawDimension d;
 
             // 画面に表示するサイズ
-            d.width = imgW * ratio / 100;
-            d.height = imgH * ratio / 100;
+            d.width = imgW * ratio / DrawDimension.PER;
+            d.height = imgH * ratio / DrawDimension.PER;
 
             if (scrnW >= d.width)
             {
@@ -347,8 +421,21 @@ namespace PictureManagerApp.src.Lib
                 //元画像の表示する部分の幅(x1,x2)の計算
                 //d.src_x1 = 0;
                 //d.src_x2 = scrnW * 100 / ratio;
-                d.src_x1 = (imgW - scrnW) / 2;
-                d.src_x2 = imgW - d.src_x1;
+
+                var rev = true;
+                if (rev)
+                {
+                    var hamideru = (d.width - scrnW);
+                    var hamideru2 = hamideru * DrawDimension.PER / ratio;
+
+                    d.src_x1 = hamideru2 / 2;
+                    d.src_x2 = imgW - d.src_x1;
+                }
+                else
+                {
+                    d.src_x1 = (imgW - scrnW) / 2;
+                    d.src_x2 = imgW - d.src_x1;
+                }
             }
 
             if (scrnH >= d.height)
@@ -373,8 +460,20 @@ namespace PictureManagerApp.src.Lib
                 //元画像の表示する部分の計算
                 //d.src_y1 = 0;
                 //d.src_y2 = scrnH * 100 / ratio;
-                d.src_y1 = (imgH - scrnH) / 2;
-                d.src_y2 = imgH - d.src_y1;
+
+                var f = true;
+                if (f)
+                {
+                    var hamideru = (d.height - scrnH);
+                    var hamideru2 = hamideru * DrawDimension.PER / ratio;
+                    d.src_y1 = hamideru2 / 2;
+                    d.src_y2 = imgH - d.src_y1;
+                }
+                else
+                {
+                    d.src_y1 = (imgH - scrnH) / 2;
+                    d.src_y2 = imgH - d.src_y1;
+                }
             }
 
             d.ratio = ratio;
@@ -391,10 +490,10 @@ namespace PictureManagerApp.src.Lib
             IMAGE_DISPLAY_MAGNIFICATION_TYPE magType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND
             )
         {
-            int ratio = 100;
+            int ratio = DrawDimension.PER;
 
-            int ratio_w = scrnW * 100 / imgW;
-            int ratio_h = scrnH * 100 / imgH;
+            int ratio_w = scrnW * DrawDimension.PER / imgW;
+            int ratio_h = scrnH * DrawDimension.PER / imgH;
 
             switch (magType)
             {
@@ -407,7 +506,7 @@ namespace PictureManagerApp.src.Lib
                     {
                         ratio = ratio_w;
                     }
-                    ratio = ratio > 100 ? 100 : ratio;
+                    ratio = ratio > DrawDimension.PER ? DrawDimension.PER : ratio;
                     break;
                 case IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN:                /* 縦も横も画面内に収める(はみ出さない。小さい画像は拡大する) */
                     if (ratio_w > ratio_h)
@@ -438,7 +537,7 @@ namespace PictureManagerApp.src.Lib
                 case IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_SPECIFY:                   /* 拡大縮小率を指定 */
                 case IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_AS_IS:                     /* 拡大縮小を行わない */
                 default:
-                    ratio = 100;
+                    ratio = DrawDimension.PER;
                     break;
             }
 

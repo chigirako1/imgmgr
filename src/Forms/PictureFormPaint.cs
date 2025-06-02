@@ -5,6 +5,7 @@ using System.Windows.Forms;
 
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 //using static System.Net.Mime.MediaTypeNames;
 
 namespace PictureManagerApp
@@ -43,26 +44,37 @@ namespace PictureManagerApp
             }
         }
 
-        private void PictureBox_Paint_Group(object sender, PaintEventArgs e, GroupItem fitem)
+        private void PictureBox_Paint_Group(object sender, PaintEventArgs e, GroupItem gitem)
         {
             Graphics g = e.Graphics;
             g.FillRectangle(BRUSH_0, 0, 0, pictureBox.Width, pictureBox.Height);
 
-
-            var img = ImageModule.CreateCompositedImage(10,10);
+            //var imgs = gitem.GetGroupImages();
+            //var img = ImageModule.CreateCompositedImage(imgs, pictureBox.Width, pictureBox.Height);
+            var img = gitem.GetGroupImage(pictureBox.Width, pictureBox.Height);
+            g.DrawImage(img, 0, 0);
 
             var fsize = FONT_SIZE;
             var inc = FONT_SPACE;
             var x = 0;
             var y = 0;
             var txtbrush = FONT_COLOR;
-            var fnt = new System.Drawing.Font(FONT_NAME, fsize);
-            var txt = $"'{fitem.FilePath}'({fitem.MemberCount()})";
 
-            g.DrawString(txt, fnt, txtbrush, x, y);
-            y += fsize + inc;
+            using (var fnt = new Font(FONT_NAME, fsize))
+            {
+                var txt = "";
 
-            fnt.Dispose();
+                txt = $"'{gitem.FilePath}'";
+                g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
+
+                txt = $"{gitem.MemberCount()}ファイル";
+                g.DrawString(txt, fnt, txtbrush, x, y);
+                y += fsize + inc;
+            }
+
+            g.DrawRectangle(PEN_COLOR_FRAME, 0, 0, pictureBox.Width, pictureBox.Height);
+
         }
 
         private void PictureBox_Paint_OnePic(object sender, PaintEventArgs e, FileItem fitem)
@@ -97,8 +109,8 @@ namespace PictureManagerApp
             }
 
             //画像描画
-            IMAGE_DISPLAY_MAGNIFICATION_TYPE magType = mMagType;
-            DrawDimension d = ImageModule.DrawCompositedImage(
+            var magType = mMagType;
+            var d = ImageModule.DrawCompositedImage(
                 g,
                 pictureBox.Width,
                 pictureBox.Height,
@@ -150,7 +162,7 @@ namespace PictureManagerApp
                 y += fsize + inc;
 
                 //
-                txt = string.Format("{0,4}x{1,4}({2}%)", d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1, d.ratio);
+                txt = string.Format("{0,4}x{1,4}({2}%)", d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1, d.GetPercent());
                 g.DrawString(txt, fnt, txtbrush, x, y);
                 y += fsize + inc;
             }
@@ -198,7 +210,7 @@ namespace PictureManagerApp
         }
 
         //---------------------------------------------------------------------
-        // 
+        //
         //---------------------------------------------------------------------
         private void rightPicBox_Paint(object sender, PaintEventArgs e)
         {

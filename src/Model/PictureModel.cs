@@ -109,6 +109,18 @@ namespace PictureManagerApp.src.Model
         //以下は除外
     }
 
+    public enum DISP_ROT_TYPE
+    {
+        DISP_ROT_NONE,
+        DISP_ROT_R090,
+        DISP_ROT_R180,
+        DISP_ROT_R270,
+
+        DISP_ROT_DEFAULT = DISP_ROT_NONE,
+
+        DISP_ROT_MAX
+    }
+
     public enum FILTER_TYPE
     {
         FILTER_NONE,
@@ -456,19 +468,6 @@ namespace PictureManagerApp.src.Model
 
             foreach (var f in files.OrderBy(x => x))
             {
-                if (cnt % 1000 == 1)
-                {
-                    sw.Stop();
-                    var ts_elapsed = sw.Elapsed;
-                    Log.trc($"途中経過：{ts_elapsed}");
-
-                    var dupCnt = mFileList.GetDupCount();
-
-                    Log.log($"#{cnt}/{total}:({mFileList.Count}) 重複={dupCnt}");
-                    sw.Start();
-                }
-                cnt++;
-
                 if (SpecFileP(f))
                 {
                     var fi = new FileItem(f);
@@ -501,8 +500,23 @@ namespace PictureManagerApp.src.Model
                         //Log.log($"非対象ファイル={f}");
                     }
                 }
+
+                cnt++;
+                if (cnt % 1000 == 0)
+                {
+                    sw.Stop();
+                    var ts_elapsed = sw.Elapsed;
+                    Log.trc($"途中経過：{ts_elapsed}");
+
+                    var dupCnt = mFileList.GetDupCount();
+
+                    Log.log($"#{cnt}/{total}({cnt * 100 / total}%) 重複={dupCnt}\t({mFileList.Count})");
+                    sw.Start();
+                }
             }
 
+            var group = true;
+            if (group && mFileList.Count > 100)
             {
                 var dirs = mFileList.GetDirs();
 
@@ -511,22 +525,30 @@ namespace PictureManagerApp.src.Model
                     if (Directory.Exists(d))
                     {
                         var gi = new GroupItem(d);
-                        Log.trc($"{gi.FilePath}");
+                        // Log.trc($"{gi.FilePath}");
 
                         foreach (var file in mFileList.FileItems)
                         {
+                            if (file.IsGroupEntry)
+                            {
+                                continue;
+                            }
+
                             if (gi.FilePath == file.DirectoryName)
                             {
                                 gi.AddFileItem(file);
                             }
                         }
 
-                        mFileList.Add(gi);
+                        if (gi.MemberCount() > 4)
+                        {
+                            mFileList.Add(gi);
+                        }
                     }
                 }
-
-                mFileList.Sort(SORT_TYPE.SORT_PATH);
             }
+
+            mFileList.Sort(SORT_TYPE.SORT_PATH);
 
             sw.Stop();
             var ts = sw.Elapsed;
@@ -712,9 +734,9 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public bool MakeThumbnail(int thumWidth, int thumHeight)
+        public int MakeThumbnail(int thumWidth, int thumHeight)
         {
-            if (thumWidth == 0 || thumHeight == 0) return false;
+            if (thumWidth == 0 || thumHeight == 0) return 0;// false;
 
             int idx = mIdx;
             int cnt;
@@ -738,10 +760,10 @@ namespace PictureManagerApp.src.Model
             if (cnt >= mFileList.Count)
             {
                 Log.trc("thumbnail make done");
-                return true;
+                return -1;
             }
 
-            FileItem fitem = mFileList[idx];
+            var fitem = mFileList[idx];
             if (fitem.HasThumbnailImage())
             {
                 Log.err($"??? !!! ??? #{idx}.");
@@ -749,11 +771,16 @@ namespace PictureManagerApp.src.Model
             else
             {
                 //Log.log($"making thumbnail #{idx}.");
-                Image thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight, true);
+                var thumbImg = fitem.GetThumbnailImage(thumWidth, thumHeight, true);
             }
 
             //Log.trc("thumbnail make cont.");
-            return false;
+            return idx;
+        }
+
+        public int CountIfHasThumbnail()
+        {
+            return this.mFileList.CountIfHasThumbnail();
         }
 
         //---------------------------------------------------------------------

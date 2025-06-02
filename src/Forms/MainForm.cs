@@ -153,6 +153,12 @@ namespace PictureManagerApp
 
         private void InitPathCmbBox(string path1)
         {
+            var cfgPath = this.Config.LastPath;
+            if (cfgPath != null)
+            {
+                cmbBoxPath.Items.Add(cfgPath);
+            }
+
             //if (Directory.Exists(path1))
             //  cmbBoxPath.Text = path1;
 
@@ -196,12 +202,6 @@ namespace PictureManagerApp
             dir = Directory.GetParent(dir).ToString();
             dir = Directory.GetParent(dir).ToString();
             cmbBoxPath.Items.Add(dir);*/
-
-            var cfgPath = this.Config.LastPath;
-            if (cfgPath != null)
-            {
-                cmbBoxPath.Items.Add(cfgPath);
-            }
         }
 
         private void InitWindow()

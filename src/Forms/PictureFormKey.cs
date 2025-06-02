@@ -21,7 +21,7 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.Escape] = KeyDownFunc_Escape;
 
             KeyFuncTbl[Keys.NumPad0] = KeyDownFunc_SelectToggle;
-            KeyFuncTbl[Keys.Space] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.Space] = KeyDownFunc_SlideShow;//KeyDownFunc_SelectToggle;
 
             KeyFuncTbl[Keys.Delete] = KeyDownFunc_Del;
             KeyFuncTbl[Keys.F] = KeyDownFunc_Fav;
@@ -34,12 +34,14 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.F6] = KeyDownFunc_ThumbnailChg;
             //KeyFuncTbl[Keys.F9] = ;used
 
-            KeyFuncTbl[Keys.Q] = KeyDownFunc_Prev;
-            KeyFuncTbl[Keys.A] = KeyDownFunc_Next;
+            KeyFuncTbl[Keys.Q] = KeyDownFunc_Next;
+            KeyFuncTbl[Keys.A] = KeyDownFunc_Prev;
 
             KeyFuncTbl[Keys.W] = KeyDownFunc_Home;
             KeyFuncTbl[Keys.Z] = KeyDownFunc_End;
 
+            KeyFuncTbl[Keys.L] = KeyDownFunc_RotLeft;
+            KeyFuncTbl[Keys.R] = KeyDownFunc_RotRight;
 
             KeyFuncTbl[Keys.PageUp] = KeyDownFunc_PageUp;
             KeyFuncTbl[Keys.PageDown] = KeyDownFunc_PageDown;
@@ -291,6 +293,22 @@ namespace PictureManagerApp
                 }
             }
             Log.trc($"[E]");
+        }
+
+        private bool KeyDownFunc_SlideShow(object sender, KeyEventArgs e)
+        {
+            ToggleSlideshow(mSlideMs);
+            return true;
+        }
+
+        private bool KeyDownFunc_RotLeft(object sender, KeyEventArgs e)
+        {
+            return true;
+        }
+
+        private bool KeyDownFunc_RotRight(object sender, KeyEventArgs e)
+        {
+            return true;
         }
 
         private bool KeyDownFunc_(object sender, KeyEventArgs e)

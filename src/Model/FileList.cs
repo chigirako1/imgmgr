@@ -66,6 +66,11 @@ namespace PictureManagerApp.src.Model
             get { return mFileList.Count; }
         }
 
+        public int CountIfHasThumbnail()
+        {
+            return mFileList.Count(x => x.HasThumbnailImage());
+        }
+
         public int MarkCount()
         {
             return mFileList.Count(x => x.Mark);
@@ -240,6 +245,11 @@ namespace PictureManagerApp.src.Model
 
         private  bool IsSingle(FileItem fitem)
         {
+            if (fitem.IsGroupEntry)
+            {
+                return true;
+            }
+
             var hashv = fitem.GetFileHash();
             var cnt = FileHashCnt[hashv];
             if (cnt < 2)
@@ -343,8 +353,15 @@ namespace PictureManagerApp.src.Model
             {
                 foreach (FileItem fitem in mFileList)
                 {
-                    var line = fitem.GetPicInfoLine();
-                    sw.WriteLine(line);
+                    if (fitem.IsGroupEntry)
+                    {
+                        //ignore
+                    }
+                    else
+                    {
+                        var line = fitem.GetPicInfoLine();
+                        sw.WriteLine(line);
+                    }
                 }
             }
         }
@@ -353,7 +370,7 @@ namespace PictureManagerApp.src.Model
         {
             //var dirs = mFileList.Select(x => Path.GetDirectoryName(x.FilePath)).Distinct();
 
-            //本のデータを変更できるように「ToHashSet」で複製する
+            //もとのデータを変更できるように「ToHashSet」で複製する
             var dirs = mFileList.Select(x => Path.GetDirectoryName(x.FilePath)).ToHashSet();
             return dirs;
         }
