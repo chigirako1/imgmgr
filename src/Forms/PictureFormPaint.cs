@@ -12,13 +12,18 @@ namespace PictureManagerApp
 {
     public partial class PictureForm : Form
     {
-        private const string FONT_NAME = "MS ゴシック";
+        private const string FONT_NAME = "Yu Gotic UI";// MS ゴシック";
         private const int FONT_SIZE = 20;
         private const int FONT_SPACE = 3;
         private const int OPA_VAL = 128;
+
         private static readonly Brush FONT_COLOR = Brushes.Aqua;
         //private static readonly Pen PEN_COLOR_FRAME = Pens.Crimson;
         private static readonly Pen PEN_COLOR_FRAME = new Pen(Color.Crimson, 3);
+
+        private const int PEN_PROGRESS_WIDTH = 5;
+        //private static readonly Pen PEN_COLOR_PROGRESS = new Pen(Color.LawnGreen, 15);
+        private static readonly Pen PEN_COLOR_PROGRESS = new Pen(Color.Gray, PEN_PROGRESS_WIDTH);
 
         private static readonly Brush BRUSH_0 = Brushes.Blue;
         private static readonly Brush BRUSH_MARK = Brushes.DarkRed;
@@ -31,11 +36,15 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         private void PictureBox_Paint(object sender, PaintEventArgs e)
         {
-            FileItem fitem = mModel.GetCurrentFileItem();
+            var fitem = mModel.GetCurrentFileItem();
 
             if (fitem.IsGroupEntry)
             {
                 PictureBox_Paint_Group(sender, e, (GroupItem)fitem);
+            }
+            else if (mModel.ThumbViewType == THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MANGA)
+            {
+                PictureBox_Paint_Manga(sender, e);
             }
             else
             {
@@ -74,13 +83,41 @@ namespace PictureManagerApp
             }
 
             g.DrawRectangle(PEN_COLOR_FRAME, 0, 0, pictureBox.Width, pictureBox.Height);
-
         }
 
-        private void PictureBox_Paint_OnePic(object sender, PaintEventArgs e, FileItem fitem)
+        private void PictureBox_Paint_Manga(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
+            g.FillRectangle(BG_BRUSH, 0, 0, pictureBox.Width, pictureBox.Height);
 
+            var fitem1 = mModel.GetCurrentFileItem();
+            var fitem2 = mModel.GetCurrentFileItemByRelativeIndex(1);
+
+            var img2 = fitem2.GetImage();
+            var size1 = fitem1.GetImageSize();
+            var size2 = fitem2.GetImageSize();
+            if (size1.Width < size1.Height && size2.Width < size2.Height)
+            {   //縦長画像
+
+                //画像描画
+                var img = ImageModule.GetOneImage(fitem1.GetImage(), img2, pictureBox.Width, pictureBox.Height);
+                g.DrawImage(img, 0, 0);
+            }
+            else
+            {   //横長の場合は一枚のみ表示
+                ImageModule.DrawImage(
+                    g, 0, 0, pictureBox.Width, pictureBox.Height,
+                    fitem1.GetImage(),
+                    IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN);
+            }
+
+            // 進捗プログレスバー的な
+            var (p1, p2) = GetProgressPoint();
+            g.DrawLine(PEN_COLOR_PROGRESS, p1, p2);
+        }
+
+        private void FillBG(Graphics g, FileItem fitem)
+        {
             Brush bgbrush;
             if (fitem.Mark)
             {
@@ -95,6 +132,13 @@ namespace PictureManagerApp
                 bgbrush = BG_BRUSH;
             }
             g.FillRectangle(bgbrush, 0, 0, pictureBox.Width, pictureBox.Height);
+        }
+
+        private void PictureBox_Paint_OnePic(object sender, PaintEventArgs e, FileItem fitem)
+        {
+            Graphics g = e.Graphics;
+
+            FillBG(g, fitem);
 
             if (mCurrentImg == null)
             {
@@ -121,6 +165,22 @@ namespace PictureManagerApp
 
             // 画像情報描画
             PictureBox_PaintTxt(g, d, fitem);
+
+            // 進捗プログレスバー的な
+            var (p1, p2) = GetProgressPoint();
+            g.DrawLine(PEN_COLOR_PROGRESS, p1, p2);
+        }
+
+        private (Point, Point) GetProgressPoint()
+        {
+            var unit = 10000;
+            var (now, total) = mModel.GetIndex();
+            var width = pictureBox.Width * (now * unit / total) / unit;
+            var y = pictureBox.Height - PEN_PROGRESS_WIDTH;
+
+            var p1 = new Point(0, y);
+            var p2 = new Point(width, y);
+            return (p1, p2);
         }
 
         private void PictureBox_PaintTxt(Graphics g, DrawDimension d, FileItem fitem)
@@ -130,72 +190,72 @@ namespace PictureManagerApp
             var inc = FONT_SPACE;
             int x = 0;
             int y = 0;
-            Brush txtbrush = FONT_COLOR;
-            Font fnt = new(FONT_NAME, fsize);
-
-            string txt;
-            //
-            if (DisplayTxt)
+            var txtbrush = FONT_COLOR;
+            using (var fnt = new Font(FONT_NAME, fsize))
             {
-                txt = mModel.GetPictureInfoText();
-                if (mSlideshow)
+                string txt;
+
+                //
+                if (DisplayTxt)
                 {
-                    txt = "▶️" + txt;
+                    txt = mModel.GetPictureInfoText();
+                    if (mSlideshow)
+                    {
+                        txt = "▶️" + txt;
+                    }
+                    g.DrawString(txt, fnt, txtbrush, x, y);
+                    y += fsize + inc;
+
+                    //
+                    txt = mModel.GetArtistInfoFromDB();
+                    g.DrawString(txt, fnt, txtbrush, x, y);
+                    y += fsize + inc;
+
+                    //
+                    txt = string.Format("{0,4}x{1,4}", pictureBox.Width, pictureBox.Height);
+                    g.DrawString(txt, fnt, txtbrush, x, y);
+                    y += fsize + inc;
+
+                    //
+                    var asp = ImageModule.GetAspectRatio16_9(mCurrentImg.Width, mCurrentImg.Height);
+                    txt = string.Format("{0,4}x{1,4}[{2}]", mCurrentImg.Width, mCurrentImg.Height, asp);
+                    g.DrawString(txt, fnt, txtbrush, x, y);
+                    y += fsize + inc;
+
+                    //
+                    txt = string.Format("{0,4}x{1,4}({2}%)", d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1, d.GetPercent());
+                    g.DrawString(txt, fnt, txtbrush, x, y);
+                    y += fsize + inc;
                 }
-                g.DrawString(txt, fnt, txtbrush, x, y);
-                y += fsize + inc;
-
-                //
-                txt = mModel.GetArtistInfoFromDB();
-                g.DrawString(txt, fnt, txtbrush, x, y);
-                y += fsize + inc;
-
-                //
-                txt = string.Format("{0,4}x{1,4}", pictureBox.Width, pictureBox.Height);
-                g.DrawString(txt, fnt, txtbrush, x, y);
-                y += fsize + inc;
-
-                //
-                var asp = ImageModule.GetAspectRatio16_9(mCurrentImg.Width, mCurrentImg.Height);
-                txt = string.Format("{0,4}x{1,4}[{2}]", mCurrentImg.Width, mCurrentImg.Height, asp);
-                g.DrawString(txt, fnt, txtbrush, x, y);
-                y += fsize + inc;
-
-                //
-                txt = string.Format("{0,4}x{1,4}({2}%)", d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1, d.GetPercent());
-                g.DrawString(txt, fnt, txtbrush, x, y);
-                y += fsize + inc;
-            }
-            else
-            {
-                txt = mModel.GetPictureInfoText(true);
-                if (mSlideshow)
+                else
                 {
-                    txt = "▶️" + txt;
+                    txt = mModel.GetPictureInfoText(true);
+                    if (mSlideshow)
+                    {
+                        txt = "▶️" + txt;
+                    }
+                    var txt2 = string.Format("[{0,4}x{1,4}]", mCurrentImg.Width, mCurrentImg.Height);
+                    g.DrawString(txt + txt2, fnt, txtbrush, x, y);
+
+                    //
+                    y += fsize + inc;
+                    txt = mModel.GetZipEntryname();
+                    g.DrawString(txt, fnt, txtbrush, x, y);
                 }
-                var txt2 = string.Format("[{0,4}x{1,4}]", mCurrentImg.Width, mCurrentImg.Height);
-                g.DrawString(txt + txt2, fnt, txtbrush, x, y);
 
-                //
-                y += fsize + inc;
-                txt = mModel.GetZipEntryname();
-                g.DrawString(txt, fnt, txtbrush, x, y);
+                if (fitem.Fav)
+                {
+                    txt = "❤";
+                    y = pictureBox.Height - fsize;
+                    g.DrawString(txt, fnt, txtbrush, 0, y);
+                }
+                if (fitem.Del)
+                {
+                    txt = "❌️";
+                    y = pictureBox.Height - fsize - fsize;
+                    g.DrawString(txt, fnt, txtbrush, 0, y);
+                }
             }
-
-            if (fitem.Fav)
-            {
-                txt = "❤";
-                y = pictureBox.Height - fsize;
-                g.DrawString(txt, fnt, txtbrush, 0, y);
-            }
-            if (fitem.Del)
-            {
-                txt = "❌️";
-                y = pictureBox.Height - fsize - fsize;
-                g.DrawString(txt, fnt, txtbrush, 0, y);
-            }
-
-            fnt.Dispose();
         }
 
         private Size GetThumbnailSize()

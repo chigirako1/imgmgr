@@ -15,12 +15,15 @@ namespace PictureManagerApp.src.Model
         public enum SORT_TYPE
         {
             SORT_PATH,
+            SORT_FILENAME,
             SORT_FILESIZE,
             SORT_IMAGESIZE,
             SORT_LAST_WRITE_TIME,
             SORT_NUM_PIXEL,
             SORT_ASPECT_RATIO,
             SORT_FILE_HASH,
+            SORT_TITLE,
+            SORT_ARTWORK_ID,
 
             SORT_MAX
         }
@@ -74,6 +77,14 @@ namespace PictureManagerApp.src.Model
         public int MarkCount()
         {
             return mFileList.Count(x => x.Mark);
+        }
+
+        internal void UnmarkAll()
+        {
+            foreach (var file in mFileList)
+            {
+                file.Mark = false;
+            }
         }
 
         public int GetDupCount()
@@ -138,6 +149,12 @@ namespace PictureManagerApp.src.Model
                 case SORT_TYPE.SORT_FILE_HASH:
                     comp = new FileItemHashComparer();
                     break;
+                case SORT_TYPE.SORT_FILENAME:
+                    comp = new FileItemNameComparer();
+                    break;
+                case SORT_TYPE.SORT_TITLE:
+                    comp = new FileItemTitleComparer();
+                    break;
                 case SORT_TYPE.SORT_PATH:
                 default:
                     comp = new FileItemFilePathComparer();
@@ -168,8 +185,8 @@ namespace PictureManagerApp.src.Model
             {
                 if (fitem.Mark)
                 {
-                    var tweetinfo = Twt.GetTweetInfoFromPath(fitem.FilePath);
-                    Log.log($"@{tweetinfo.ScreenName}/{tweetinfo.TweetID}-{tweetinfo.ImageNo}");
+                    //var tweetinfo = Twt.GetTweetInfoFromPath(fitem.FilePath);
+                    //Log.log($"@{tweetinfo.ScreenName}/{tweetinfo.TweetID}-{tweetinfo.ImageNo}");
 
                     MyFiles.moveToTrashDir(fitem.FilePath, rootpath);
                     fitem.Removed = true;
@@ -228,6 +245,8 @@ namespace PictureManagerApp.src.Model
                     else
                     {
                         Log.warning($"同じハッシュ値ですが、ファイルサイズが異なります。({filesize}:{fitem.FileSize})'{fitem.FilePath}'");
+                        //Environment.Exit(-1);
+                        throw new InvalidOperationException();
                     }
                 }
                 else
@@ -413,6 +432,47 @@ namespace PictureManagerApp.src.Model
         }
     }
 
+    public sealed class FileItemNameComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var f_a = a.GetFilename() + a.FilePath;
+            var f_b = b.GetFilename() + b.FilePath;
+            return String.Compare(f_a, f_b);
+        }
+    }
+
+    public sealed class FileItemTitleComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var title_a = a.GetTitle() + a.FilePath;
+            var title_b = b.GetTitle() + b.FilePath;
+            return String.Compare(title_a, title_b);
+        }
+    }
+
+    public sealed class FileItemArtworkIdComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var id_a = a.GetArtworkID();
+            var id_b = b.GetArtworkID();
+            if (id_a > id_b)
+            {
+                return 1;
+            }
+            else if (id_a < id_b)
+            {
+                return -1;
+            }
+            else
+            {
+                return String.Compare(a.FilePath, b.FilePath);
+            }
+        }
+    }
+
     public sealed class FileItemFileSizeComparer : IComparer<FileItem>
     {
         public int Compare(FileItem a, FileItem b)
@@ -427,7 +487,8 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                return 0;
+                //return 0;
+                return String.Compare(a.FilePath, b.FilePath);
             }
         }
     }
@@ -449,7 +510,8 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                return 0;
+                //return 0;
+                return String.Compare(a.FilePath, b.FilePath);
             }
         }
     }
@@ -470,7 +532,8 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                return 0;
+                //return 0;
+                return String.Compare(a.FilePath, b.FilePath);
             }
         }
     }

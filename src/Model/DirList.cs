@@ -3,9 +3,11 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement.Menu;
 
 namespace PictureManagerApp.src.Model
 {
@@ -104,18 +106,41 @@ namespace PictureManagerApp.src.Model
         //=====================================================================
         public void Add(DirItem diritem)
         {
+            if (this.mDic.ContainsKey(diritem.Path))
+            {
+                //登録済み
+                //??
+                throw new InvalidOperationException();
+            }
+
             mDirList.Add(diritem);
-            //mDic.Add();
+            mDic.Add(diritem.Path, diritem);
         }
 
         public void Update(PictureModel model)
         {
-            //var diritem = mDirList[0];
-            //diritem.Update();
-
-            model.GetCurrentFileIndex();
-
+            var path = model.GetPath();
+            if (mDic.ContainsKey(path))
+            {
+                var diritem = mDic[path];
+                var idx = model.GetCurrentFileIndex();
+                diritem.PageNo = idx;
+                diritem.TotalPageNo = model.PictureTotalNumber;
+            }
+            else
+            {
+                throw new InvalidOperationException();//tekitou
+            }
         }
 
+        public DirItem GetDirItem(string path)
+        {
+            if (this.mDic.ContainsKey(path))
+            {
+                return mDic[path];
+            }
+
+            return null;
+        }
     }
 }

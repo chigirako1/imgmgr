@@ -31,13 +31,18 @@ namespace PictureManagerApp.src.Forms
             return IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND;
         }
 
+        internal string GetDstRootPath()
+        {
+            return txtDstRootPath.Text;
+        }
+
         public int GetThumbMs()
         {
             var thumbMs = decimal.ToInt32(numericUpDownThumbMS.Value);
             return thumbMs;
         }
 
-        public ColRowForm(int col, int row)
+        public ColRowForm(int col, int row, string dstPath)
         {
             InitializeComponent();
 
@@ -48,6 +53,8 @@ namespace PictureManagerApp.src.Forms
             RowNumUpDown.Value = row;
 
             radioBtn_Mag_FitScreen.Checked = true;
+
+            txtDstRootPath.Text = dstPath;
         }
 
         private void ColRowOkButton_Click(object sender, EventArgs e)

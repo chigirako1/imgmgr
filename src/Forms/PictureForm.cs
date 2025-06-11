@@ -438,6 +438,22 @@ namespace PictureManagerApp
 
         private bool WindowQuitOp(bool forceClose = false)
         {
+            if (mModel.IsZip())
+            {
+                if (mSlideshow)
+                {
+                    ToggleSlideshow(mSlideMs);
+                    return false;
+                }
+
+                //表示中ファイル位置の記憶
+                //TODO
+
+
+                Close();
+                return false;
+            }
+
             if (!forceClose)
             {
                 if (mSlideshow)
@@ -453,16 +469,16 @@ namespace PictureManagerApp
                 }
             }
 
-            //表示中ファイル位置の記憶
-            //TODO
-
             if (mModel.mMarkCount == 0 || mModel.IsZip())
             {
                 Close();
                 return false;
             }
 
-            var msg = String.Format("選択したファイル({0})を移動しますか？", mModel.mMarkCount.ToString());
+            var msg = String.Format("選択したファイル({0})を移動しますか？'{1}'",
+                mModel.mMarkCount.ToString(),
+                ""//model.path
+                );
             DialogResult result = MessageBox.Show(msg,
                 "移動？",
                 MessageBoxButtons.YesNoCancel,
@@ -941,8 +957,8 @@ namespace PictureManagerApp
 
         private void TToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            ColRowForm crForm = new(this.ThumbnailCols, this.ThumbnailRows);
-            DialogResult result = crForm.ShowDialog();
+            var crForm = new ColRowForm(this.ThumbnailCols, this.ThumbnailRows, mModel.GetRootPath());
+            var result = crForm.ShowDialog();
             if (result == DialogResult.OK)
             {
                 (int col, int row) = crForm.GetColRow();
@@ -952,8 +968,8 @@ namespace PictureManagerApp
                 mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
 
                 mMagType = crForm.GetMagType();
-
                 mThumbMs = crForm.GetThumbMs();
+                mModel.SetDstRootPath(crForm.GetDstRootPath());
 
                 Refresh();
             }
@@ -1087,10 +1103,12 @@ namespace PictureManagerApp
             ToolStripMenuItem[] groupMenuItems = new ToolStripMenuItem[]
             {
                 this.toolStripMenuItem_Sort_FilePath,
+                this.ToolStripMenuItem_Sort_Filename,
                 this.toolStripMenuItem_Sort_FileSize,
                 this.ToolStripMenuItem_Sort_NumPixel,
                 this.ToolStripMenuItem_AspectRatio,
                 this.ToolStripMenuItem_Sort_FileHash,
+                this.toolStripMenuItem_Sort_Title,
             };
 
             //グループのToolStripMenuItemを列挙する
@@ -1118,6 +1136,14 @@ namespace PictureManagerApp
                     else if (item == this.ToolStripMenuItem_Sort_FileHash)
                     {
                         sort_type = SORT_TYPE.SORT_FILE_HASH;
+                    }
+                    else if (item == this.ToolStripMenuItem_Sort_Filename)
+                    {
+                        sort_type = SORT_TYPE.SORT_FILENAME;
+                    }
+                    else if (item == this.toolStripMenuItem_Sort_Title)
+                    {
+                        sort_type = SORT_TYPE.SORT_TITLE;
                     }
                     else
                     {
@@ -1157,7 +1183,6 @@ namespace PictureManagerApp
                 mSlideMs = numVal;
             }
         }
-
 
         private void pictureBox_MouseDown(object sender, MouseEventArgs e)
         {
@@ -1314,6 +1339,16 @@ namespace PictureManagerApp
         private void ToolStripMenuItem_SaveFilesPath_Click(object sender, EventArgs e)
         {
             mModel.SaveFilesPath();
+        }
+
+        private void toolStripMenuItem_UnselectAll_Click(object sender, EventArgs e)
+        {
+            mModel.UnmarkAll();
+        }
+
+        private void ToolStripMenuItem_FileSel_Click(object sender, EventArgs e)
+        {
+
         }
     }
 }

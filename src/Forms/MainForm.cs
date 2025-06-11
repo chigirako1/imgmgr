@@ -26,49 +26,9 @@ namespace PictureManagerApp
         private const int MAX_PIC_HEIGHT = 1920 / 2;
         private const int MAX_FILE_SIZE = 165;//140;//kb
 
-        private const int LIST_THUMBNAIL_WIDTH = 64;
-        private const int LIST_THUMBNAIL_HEIGHT = 64;
-        //private bool list_thumnail = true;
-        private bool list_thumnail = false;
-
-        private const string LIST_DGV_ZIP_CLM_IDX = "#";
-        private const string LIST_DGV_ZIP_CLM_STAR = "★";
-        private const string LIST_DGV_ZIP_CLM_PAGE_TOTAL = "全";
-        private const string LIST_DGV_ZIP_CLM_PAGE_NOW = "今";
-        private const string LIST_DGV_ZIP_CLM_PERCENT = "%";
-        private const string LIST_DGV_ZIP_CLM_THUMB = "T";
-        private const string LIST_DGV_ZIP_CLM_NAME = "名前";
-        private const string LIST_DGV_ZIP_CLM_RATING = "評価";
-        private const string LIST_DGV_ZIP_CLM_FILENAME = "ファイル名";
-        private const string LIST_DGV_ZIP_CLM_PATH = "パス";
-
-
-        private const string USB_MEMORY_DIR_PATH = @"work\r18";
-
-        private static readonly string[] CMBBOX_DIR_PATHS = [
-            @"D:\download\PxDl-",
-            @"D:\download\PxDl",
-            @"D:\download\PxDl-0trash",
-            @"D:\download\PxDl--0trash",
-
-            @"D:\dl\AnkPixiv\Twitter",
-            @"D:\dl\AnkPixiv\Twitter-",
-            @"D:\dl\AnkPixiv\Twitter-0trash",
-            @"D:\dl\AnkPixiv\Twitter--0trash",
-            @"D:\dl\AnkPixiv\Nijie",
-            @"D:\dl\AnkPixiv\Nijie-0trash",
-
-            @"D:\r18\dlPic\pxv",
-            @"D:\r18\dlPic\twitter",
-            @"D:\r18\dlPic\Nijie\nje",
-
-            //@"D:\work\bin\r18",
-            //@"D:\work\bin\r18t",
-
-#if DEBUG
-            @"D:\download\PxDl-\!pic_infos!.tsv"
-#endif
-        ];
+        private const int DGV_COL_IDX_STAR = 1;
+        private const int DGV_COL_IDX_PAGE_NOW = 3;
+        private const int DGV_COL_IDX_PERCENT = 4;
 
         private static readonly string[] SP_WORDS = [
             "-w2x",
@@ -131,11 +91,7 @@ namespace PictureManagerApp
             {
                 path = args[1];
             }
-            else
-            {
-                path = CMBBOX_DIR_PATHS[0];
-            }
-            InitPathCmbBox(path);
+            InitPathCmbBox();
 
             //指定文字
             cmbBox_FilenameFilter.Text = "";
@@ -151,7 +107,7 @@ namespace PictureManagerApp
             Log.trc($"[E]");
         }
 
-        private void InitPathCmbBox(string path1)
+        private void InitPathCmbBox()
         {
             var cfgPath = this.Config.LastPath;
             if (cfgPath != null)
@@ -159,49 +115,25 @@ namespace PictureManagerApp
                 cmbBoxPath.Items.Add(cfgPath);
             }
 
-            //if (Directory.Exists(path1))
-            //  cmbBoxPath.Text = path1;
-
-            var cdir = System.Environment.CurrentDirectory;
-            //var dri = System.IO.Path.GetDirectoryName(cdir);
-            var root_path = Path.GetPathRoot(cdir);
-            var extmem_path = System.IO.Path.Combine(root_path, USB_MEMORY_DIR_PATH);
-
-            if (Directory.Exists(extmem_path))
+            var list = PictureModel.GetDirPathList();
+            foreach (string path in list)
             {
-                var dirs = Directory.EnumerateDirectories(extmem_path);
-                foreach (var dir in dirs.OrderBy(x => x))
+                if (Directory.Exists(path))
                 {
-                    cmbBoxPath.Items.Add(dir);
+                    cmbBoxPath.Items.Add(path);
                 }
-            }
-            else
-            {
-                foreach (string path in CMBBOX_DIR_PATHS)
-                {
-                    if (Directory.Exists(path))
-                    {
-                        cmbBoxPath.Items.Add(path);
-                    }
 #if DEBUG
-                    else if (System.IO.File.Exists(path))
-                    {
-                        cmbBoxPath.Items.Add(path);
-                    }
-#endif
+                else if (System.IO.File.Exists(path))
+                {
+                    cmbBoxPath.Items.Add(path);
                 }
+#endif
             }
 
             if (cmbBoxPath.Items.Count > 0)
             {
                 cmbBoxPath.Text = (string)cmbBoxPath.Items[0];
             }
-
-            /*
-            var dir = System.Environment.CurrentDirectory;
-            dir = Directory.GetParent(dir).ToString();
-            dir = Directory.GetParent(dir).ToString();
-            cmbBoxPath.Items.Add(dir);*/
         }
 
         private void InitWindow()
@@ -294,25 +226,39 @@ namespace PictureManagerApp
                 else if (txtBox_FileList.Text == "")
                 {
                     model.BuildFileList(pathStr);
+
+                    var di = mDirList.GetDirItem(pathStr);
+                    if (di == null)
+                    {
+                        var diritem = new DirItem(pathStr);
+                        mDirList.Add(diritem);
+                    }
+                    else
+                    {
+                        model.SetCurrentFileIndex(di.PageNo);
+                    }
                 }
                 else
                 {
                     model.BuildFileListFromText(txtBox_FileList.Text, pathStr);
                 }
 
-                PictureForm picForm = new();
+                var picForm = new PictureForm();
                 picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
                 picForm.SetModel(model);
                 picForm.ShowDialog();
                 Log.trc($"picForm.ShowDialog() end");
 
-                var path = @"del_list.tsv";
+                bool desktop;
                 if (Config.DelListSavePos == "desktop")
                 {
-                    var desktop_path = System.Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
-                    path = MyFiles.PathCombine(desktop_path, path);
+                    desktop = true;
                 }
-                model.UpdateListFile(path);
+                else
+                {
+                    desktop = false;
+                }
+                model.UpdateListFile(desktop);
 
                 //選択されたファイルを記録する
                 var pics = model.GetSelectedPic();
@@ -322,7 +268,10 @@ namespace PictureManagerApp
                     mFavFileList.Add(fitem);
                 }
 
-                mDirList.Update(model);
+                if (filelist == null)
+                {
+                    mDirList.Update(model);
+                }
             }
             catch (Exception ex)
             {
@@ -505,8 +454,8 @@ namespace PictureManagerApp
                 {
                     cmbBoxPath.Items.Add(f);
 
-                    //DirItem diritem = new(f);
-                    //mDirList.Add(diritem);
+                    var diritem = new DirItem(f);
+                    mDirList.Add(diritem);
                 }
             }
 
@@ -517,6 +466,7 @@ namespace PictureManagerApp
             if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
             {
                 sort = true;
+                Log.trc("ファイル数ソート");
             }
             else
             {
@@ -666,7 +616,18 @@ namespace PictureManagerApp
             }
             else if (txt == "zip list")
             {
-                InitZipListDGV();
+                string path = cmbBoxPath.Text;
+
+                if (!Directory.Exists(path))
+                {
+                    //指定されたパスのディレクトリが存在しなければだめ
+                    MessageBox.Show($"'{path}'は存在しないかディレクトリではありません",
+                        "エラー",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+
+                InitZipListDGV(path);
             }
             else
             {
@@ -737,118 +698,48 @@ namespace PictureManagerApp
             }
         }
 
-        private void InitZipListDGV()
+        private void InitZipListDGV(string path)
         {
+
             var dgv = this.DirListDGV;
-            dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
-            dgv.AllowUserToAddRows = false;
-
-            if (list_thumnail)
-            {
-                dgv.RowTemplate.MinimumHeight = LIST_THUMBNAIL_HEIGHT;
-            }
-
-            dgv.ReadOnly = true;                      //読取専用
-            dgv.AllowUserToDeleteRows = false;        //行削除禁止
-            dgv.AllowUserToAddRows = false;           //行挿入禁止
-            dgv.AllowUserToResizeRows = false;        //行の高さ変更禁止
-            dgv.RowHeadersVisible = false;            //行ヘッダーを非表示にする
-            dgv.MultiSelect = false;                  //セル、行、列が複数選択禁止
-            dgv.SelectionMode = DataGridViewSelectionMode.FullRowSelect;       //セルを選択すると行全体が選択されるようにする
 
             dgv.ContextMenuStrip = this.contextMenuStrip1;
+            var list_thumbnail = false;
 
-            var ds = GetDataTable(cmbBoxPath.Text);
-            if (ds == null)
-            {
-                return;
-            }
-            dgv.DataSource = ds;
-
-            dgv.Columns[LIST_DGV_ZIP_CLM_STAR].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
-
-            dgv.Columns[LIST_DGV_ZIP_CLM_IDX].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dgv.Columns[LIST_DGV_ZIP_CLM_PAGE_NOW].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dgv.Columns[LIST_DGV_ZIP_CLM_PAGE_TOTAL].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dgv.Columns[LIST_DGV_ZIP_CLM_PERCENT].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-            dgv.Columns[LIST_DGV_ZIP_CLM_RATING].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
-        }
-
-        private DataTable GetDataTable(string path)
-        {
-            if (!Directory.Exists(path))
-            {
-                //指定されたパスのディレクトリが存在しなければだめ
-                MessageBox.Show($"'{path}'は存在しないかディレクトリではありません",
-                    "エラー",
-                    MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
-                return null;
-            }
-
-            string[] patterns = {".zip" };
-            var files = MyFiles.GetAllFiles(path, patterns);
-
-            var typeint32 = Type.GetType("System.Int32");
-
-            var dt = new DataTable();
-
-            var col_idx = dt.Columns.Add(LIST_DGV_ZIP_CLM_IDX, typeint32);
-            var col_star = dt.Columns.Add(LIST_DGV_ZIP_CLM_STAR);
-
-            var col_page_total = dt.Columns.Add(LIST_DGV_ZIP_CLM_PAGE_TOTAL, typeint32);
-            var col_page_now = dt.Columns.Add(LIST_DGV_ZIP_CLM_PAGE_NOW, typeint32);
-            var col_percent = dt.Columns.Add(LIST_DGV_ZIP_CLM_PERCENT, typeint32);
-
-            var col_thumbnail = dt.Columns.Add(LIST_DGV_ZIP_CLM_THUMB);
-            col_thumbnail.DataType = System.Type.GetType("System.Byte[]");
-            col_thumbnail.AllowDBNull = true;
-
-            var col_name = dt.Columns.Add(LIST_DGV_ZIP_CLM_NAME);
-            var col_rating = dt.Columns.Add(LIST_DGV_ZIP_CLM_RATING, typeint32);
-
-            var col_filename = dt.Columns.Add(LIST_DGV_ZIP_CLM_FILENAME);
-            var col_path = dt.Columns.Add(LIST_DGV_ZIP_CLM_PATH);
-
-            int i = 0;
-            foreach (var f in files.OrderBy(x => x))
-            {
-                i++;
-
-                var newRow = dt.NewRow();
-                newRow.SetField(col_idx, i);
-                newRow.SetField(col_star, "");
-
-                if (list_thumnail)
-                {
-                    var ba = MyFiles.GetThumbnailByteArray(f, LIST_THUMBNAIL_WIDTH, LIST_THUMBNAIL_HEIGHT, 1);
-                    newRow.SetField(col_thumbnail, ba);
-                }
-
-                var filename = System.IO.Path.GetFileName(f);
-                newRow.SetField(col_filename, filename);
-                newRow.SetField(col_path, f);
-
-                var info = DirItem.GetInfoFromFilename(filename);
-                newRow.SetField(col_name, info.Name);
-                newRow.SetField(col_rating, info.Rating);
-
-                newRow.SetField(col_page_total, info.PageTotal);
-                newRow.SetField(col_page_now, 0);
-                newRow.SetField(col_percent, 0);
-
-                dt.Rows.Add(newRow);
-            }
-
-            return dt;
+            string[] patterns = { ".zip" };
+            var zipfiles = MyFiles.GetAllFiles(path, patterns);
+            Dgv.Initialize(zipfiles, this.DirListDGV, list_thumbnail);
         }
 
         private void StartDgvRow_(DataGridViewRow row)
         {
-            var idx = this.DirListDGV.Columns[LIST_DGV_ZIP_CLM_PATH].Index;
+            var fullpath = Dgv.GetPath(this.DirListDGV, row);
+            StartFilePath(fullpath);
 
-            var filepath = (string)row.Cells[idx].Value;
-            StartFilePath(filepath);
+            UpdateDgv(fullpath);
+        }
+
+        private void UpdateDgv(string fullpath)
+        {
+            var di = mDirList.GetDirItem(fullpath);
+            if (di != null)
+            {
+                var row_idx = GetRowIdx();
+
+                var faved = false;
+                if (faved)
+                {
+                    Dgv.SetColumnValue(DirListDGV, row_idx, DGV_COL_IDX_STAR, "test");
+                }
+
+                var pn = (di.PageNo + 1);
+                var percent = pn * 100 / di.TotalPageNo;
+
+                Dgv.SetColumnValue(DirListDGV, row_idx, DGV_COL_IDX_PAGE_NOW, pn.ToString());
+                Dgv.SetColumnValue(DirListDGV, row_idx, DGV_COL_IDX_PERCENT, percent.ToString());
+
+                Dgv.SetThumbnail(DirListDGV, row_idx, fullpath);
+            }
         }
 
         private void dataGridView1_RowEnter(object sender, DataGridViewCellEventArgs e)
@@ -862,6 +753,18 @@ namespace PictureManagerApp
                 //Console.Error.WriteLine(r.Index);
             }
         }
+
+        private int GetRowIdx()
+        {
+            var row_idx = Dgv.GetRowIdx(DirListDGV);
+            return row_idx;
+        }
+
+        private void SetColumnValue(int row_idx, int col_idx, string chara)
+        {
+            Dgv.SetColumnValue(DirListDGV, row_idx, col_idx, chara);
+        }
+
 
         private void AddTwtDir(string screen_name)
         {
@@ -962,28 +865,9 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_test_Click(object sender, EventArgs e)
         {
-            DataTable dt2 = (DataTable)DirListDGV.DataSource;
-            DataRow dr2 = dt2.Rows[DirListDGV.CurrentRow.Index];
-            var row_idx = DirListDGV.CurrentRow.Index;
-
-            var bm = DirListDGV.BindingContext[DirListDGV.DataSource, DirListDGV.DataMember];
-            var drv = (DataRowView)bm.Current;
-            var dr = drv.Row;
-
+            var row_idx = GetRowIdx();
             DirListDGV.Rows[row_idx].Selected = true;
-
-            var row = DirListDGV.Rows[row_idx];
-            //row.SetField(cl, "★");
-
-            var datasource = (DataTable)this.DirListDGV.DataSource;
-            //var cl = datasource.Columns[4];
-            //datasource.Rows[0].SetField(cl, "★");
-            var cl = datasource.Columns[1];
-
-            string val = datasource.Rows[row_idx].Field<string>(cl);
-
-            datasource.Rows[row_idx].SetField(cl, "★");
-
+            SetColumnValue(row_idx, DGV_COL_IDX_STAR, "★");
         }
 
         private void ToolStripMenuItem_SameHashFile_Click(object sender, EventArgs e)
@@ -997,7 +881,7 @@ namespace PictureManagerApp
         {
             Log.trc("[S]");
 
-            mTsvRowList = new TsvRowList(@"D:\download\del_list.tsv");
+            mTsvRowList = PictureModel.MakeTsvRowList();//new TsvRowList(@"D:\download\del_list.tsv");
 
             HashSet<long> pxvids = new();
             HashSet<string> screen_names = new();
@@ -1023,6 +907,7 @@ namespace PictureManagerApp
                 }
                 else
                 {
+                    Log.warning($"不明:'{filename}'");
                 }
             }
 

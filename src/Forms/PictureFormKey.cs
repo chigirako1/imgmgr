@@ -24,6 +24,9 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.Space] = KeyDownFunc_SlideShow;//KeyDownFunc_SelectToggle;
 
             KeyFuncTbl[Keys.Delete] = KeyDownFunc_Del;
+
+            KeyFuncTbl[Keys.Tab] = KeyDownFunc_Tab;
+
             KeyFuncTbl[Keys.F] = KeyDownFunc_Fav;
 
             //KeyFuncTbl[Keys.F1] = ;used
@@ -46,6 +49,15 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.PageUp] = KeyDownFunc_PageUp;
             KeyFuncTbl[Keys.PageDown] = KeyDownFunc_PageDown;
 
+
+            KeyFuncTbl[Keys.Left] = KeyDownFunc_Prev;
+            KeyFuncTbl[Keys.Right] = KeyDownFunc_Next;
+            KeyFuncTbl[Keys.Up] = KeyDownFunc_Up;
+            KeyFuncTbl[Keys.Down] = KeyDownFunc_Down;
+
+            KeyFuncTbl[Keys.Home] = KeyDownFunc_Home;
+            KeyFuncTbl[Keys.End] = KeyDownFunc_End;
+
             switch (mModel.ThumbViewType)
             {
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY:
@@ -58,17 +70,14 @@ namespace PictureManagerApp
                     KeyFuncTbl[Keys.Home] = KeyDownFunc_List_Home;
                     KeyFuncTbl[Keys.End] = KeyDownFunc_List_End;
                     break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MANGA:
+                    KeyFuncTbl[Keys.Left] = KeyDownFunc_Next;
+                    KeyFuncTbl[Keys.Right] = KeyDownFunc_Prev;
+                    break;
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_TILE:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
                 default:
-                    KeyFuncTbl[Keys.Left] = KeyDownFunc_Prev;
-                    KeyFuncTbl[Keys.Right] = KeyDownFunc_Next;
-                    KeyFuncTbl[Keys.Up] = KeyDownFunc_Up;
-                    KeyFuncTbl[Keys.Down] = KeyDownFunc_Down;
-
-                    KeyFuncTbl[Keys.Home] = KeyDownFunc_Home;
-                    KeyFuncTbl[Keys.End] = KeyDownFunc_End;
 
                     break;
             }
@@ -229,6 +238,23 @@ namespace PictureManagerApp
             return true;
         }
 
+        private bool KeyDownFunc_Tab(object sender, KeyEventArgs e)
+        {
+            if (e.Shift)
+            {
+                mModel.PrevDirTopImage();
+            }
+            else if (e.Control)
+            {
+            }
+            else
+            {
+                //mModel.MovePos(POS_MOVE_TYPE.MOVE_NEXT_DIR);
+                mModel.NextDirImage();
+            }
+            return true;
+        }
+
         private bool KeyDownFunc_Fav(object sender, KeyEventArgs e)
         {
             DoAction(ACTION_TYPE.ACTION_ADD_FAV_LIST);
@@ -303,11 +329,13 @@ namespace PictureManagerApp
 
         private bool KeyDownFunc_RotLeft(object sender, KeyEventArgs e)
         {
+            //TODO
             return true;
         }
 
         private bool KeyDownFunc_RotRight(object sender, KeyEventArgs e)
         {
+            //TODO
             return true;
         }
 

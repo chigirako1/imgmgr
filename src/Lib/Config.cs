@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PictureManagerApp.src.Model;
+using System;
 using System.Collections.Generic;
 using System.Configuration;
 using System.Drawing;
@@ -14,7 +15,7 @@ namespace PictureManagerApp.src.Lib
         private readonly string KEY_LAST_PATH = "dir_path";
         private readonly string KEY_DEL_LIST = "del_list";
 
-        public string FileName { get; set; }
+        public string TEST_ELEM { get; set; }
         public string DelListSavePos { get; set; }
         public string LastPath { get; set; }
 
@@ -23,7 +24,7 @@ namespace PictureManagerApp.src.Lib
             var config = GetCfg();
             try
             {
-                FileName = config.AppSettings.Settings[KEY_TEST].Value;
+                TEST_ELEM = config.AppSettings.Settings[KEY_TEST].Value;
                 if (config.AppSettings.Settings[KEY_LAST_PATH] != null)
                 {
                     LastPath = config.AppSettings.Settings[KEY_LAST_PATH].Value;
@@ -35,7 +36,7 @@ namespace PictureManagerApp.src.Lib
             catch (System.Exception e)
             {
                 Log.trc(e.ToString());
-                FileName = "a";
+                TEST_ELEM = "a";
             }
         }
 
@@ -44,9 +45,9 @@ namespace PictureManagerApp.src.Lib
             var config = GetCfg();
             try
             {
-                if (config.AppSettings.Settings[KEY_TEST].Value != FileName)
+                if (config.AppSettings.Settings[KEY_TEST].Value != TEST_ELEM)
                 {
-                    config.AppSettings.Settings[KEY_TEST].Value = FileName;// + "a";
+                    config.AppSettings.Settings[KEY_TEST].Value = TEST_ELEM;
                 }
             }
             catch (System.Exception e)
@@ -58,6 +59,13 @@ namespace PictureManagerApp.src.Lib
 
         public void SavePath(string path)
         {
+            var list = PictureModel.GetDirPathList();
+            if (list.Contains(path))
+            {
+                Log.trc($"規定のパスは保存しない。'{path}'");
+                return;
+            }
+
             var config = GetCfg();
             //try
             {

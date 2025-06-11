@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection;
 using System.Security.Policy;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
@@ -94,12 +95,15 @@ namespace PictureManagerApp.src.Model
     public enum THUMBNAIL_VIEW_TYPE
     {
         THUMBNAIL_VIEW_TILE,        //並べる
-        THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
-        THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる
-        THUMBNAIL_VIEW_NEXT,        //次の画像をでっかく表示
+        THUMBNAIL_VIEW_MANGA,       //漫画用。２画像並べて表示。左に進む（TBD.進行方向は別にしたほうが良さそう
+
+        THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる(実装中
 
         THUMBNAIL_VIEW_MAX,
 
+        //???
+        THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
+        THUMBNAIL_VIEW_NEXT,        //次の画像をでっかく表示
         THUMBNAIL_VIEW_DIRECTORY,   //同一フォルダを一画面に全部
 
         THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_TILE,
@@ -132,6 +136,8 @@ namespace PictureManagerApp.src.Model
     public class PictureModel
     {
         private string mPath;
+        internal string GetPath() => mPath;
+        private string mDstRootPath;
         //private SORT_TYPE mSortType;
         private FileList mFileList;
         private DATA_SOURCE_TYPE mDataSrcType;
@@ -146,8 +152,32 @@ namespace PictureManagerApp.src.Model
         private int mMaxFileSize = 0;
         private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
 
+        private const string USB_MEMORY_DIR_PATH = @"work\r18";
+        private static readonly string[] CMBBOX_DIR_PATHS = [
+            @"D:\download\PxDl-",
+            @"D:\download\PxDl",
+            @"D:\download\PxDl-0trash",
+            @"D:\download\PxDl--0trash",
+
+            @"D:\dl\AnkPixiv\Twitter",
+            @"D:\dl\AnkPixiv\Twitter-",
+            @"D:\dl\AnkPixiv\Twitter-0trash",
+            @"D:\dl\AnkPixiv\Twitter--0trash",
+            @"D:\dl\AnkPixiv\Nijie",
+            @"D:\dl\AnkPixiv\Nijie-0trash",
+
+            @"D:\r18\dlPic\pxv",
+            @"D:\r18\dlPic\twitter",
+            @"D:\r18\dlPic\Nijie\nje",
+
+#if DEBUG
+            @"D:\download\PxDl-\!pic_infos!.tsv"
+#endif
+        ];
+
         private static readonly string FILELIST_FILENAME = "!filelist!.txt";
-        private static readonly string DEL_LIST_TXT_PATH = @"D:\download\del_list.tsv";
+        private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
+        private static readonly string DEL_LIST_TXT_PATH = @"D:\download\" + DEL_LIST_TXT_FILENAME;
         //private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
         private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
         private string mSeachWord = "";
@@ -175,7 +205,7 @@ namespace PictureManagerApp.src.Model
 
         //private TsvRowList mRowList;
 
-        public static long GetPxvIdFromPath(string filename)
+        internal static long GetPxvIdFromPath(string filename)
         {
             var pxvid = Pxv.GetPxvID(filename);
             if (pxvid == 0)
@@ -196,6 +226,47 @@ namespace PictureManagerApp.src.Model
             return pxvid;
         }
 
+        internal static TsvRowList MakeTsvRowList()
+        {
+            return new TsvRowList(DEL_LIST_TXT_PATH);
+        }
+        
+        internal static List<string> GetDirPathList()
+        {
+            var list = new List<string>();
+
+            var cdir = System.Environment.CurrentDirectory;
+            //var dri = System.IO.Path.GetDirectoryName(cdir);
+            var root_path = Path.GetPathRoot(cdir);
+            var extmem_path = System.IO.Path.Combine(root_path, USB_MEMORY_DIR_PATH);
+
+            if (Directory.Exists(extmem_path))
+            {
+                var dirs = Directory.EnumerateDirectories(extmem_path);
+                foreach (var dir in dirs.OrderBy(x => x))
+                {
+                    list.Add(dir);
+                }
+            }
+            else
+            {
+                foreach (string path in CMBBOX_DIR_PATHS)
+                {
+                    if (Directory.Exists(path))
+                    {
+                        list.Add(path);
+                    }
+#if DEBUG
+                    else if (System.IO.File.Exists(path))
+                    {
+                        list.Add(path);
+                    }
+#endif
+                }
+            }
+
+            return list;
+        }
 
         //---------------------------------------------------------------------
         // 
@@ -294,6 +365,11 @@ namespace PictureManagerApp.src.Model
                 ThumbViewType = THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DEFAULT;
             }
             Log.trc($"ThumbViewType={ThumbViewType}");
+        }
+
+        internal void SetDstRootPath(string dstPath)
+        {
+            mDstRootPath = dstPath;
         }
 
         //---------------------------------------------------------------------
@@ -515,8 +591,20 @@ namespace PictureManagerApp.src.Model
                 }
             }
 
-            var group = true;
-            if (group && mFileList.Count > 100)
+            var group = false;
+            if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV)
+            {
+                if (mFileList.Count > 100)
+                {
+                    group = true;
+                }
+            }
+            else
+            {
+                group = false;
+            }
+
+            if (group)
             {
                 var dirs = mFileList.GetDirs();
 
@@ -1001,6 +1089,12 @@ namespace PictureManagerApp.src.Model
             Update();
         }
 
+        public void PrevDirTopImage()
+        {
+            PrevDirImage();//暫定
+        }
+
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -1040,7 +1134,16 @@ namespace PictureManagerApp.src.Model
         private int GetNextDiffDirFileIdx()
         {
             var targetIdx = mIdx;
-            string dirname = mFileList[mIdx].DirectoryName;
+            var fi = mFileList[mIdx];
+            string dirname;
+            if (fi.IsGroupEntry)
+            {
+                dirname = fi.FilePath;
+            }
+            else
+            {
+                dirname = fi.DirectoryName;
+            }
 
             var bak = mIdx;
             var idx = mIdx;
@@ -1147,8 +1250,16 @@ namespace PictureManagerApp.src.Model
                 return;
             }*/
 
-
-            string dirname = mFileList[mIdx].DirectoryName;
+            string dirname;
+            var fi = mFileList[mIdx];
+            if (fi.IsGroupEntry)
+            {
+                dirname = fi.FilePath;
+            }
+            else
+            {
+                dirname = fi.DirectoryName;
+            }
 
             var bak = mIdx;
             var idx = mIdx;
@@ -1244,6 +1355,8 @@ namespace PictureManagerApp.src.Model
             }
         }
 
+        public string GetRootPath() => mPath;
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -1260,6 +1373,20 @@ namespace PictureManagerApp.src.Model
         public string GetCurrentFilePath() => mFileList[mIdx].FilePath;
 
         public int GetCurrentFileIndex() => (mIdx + 1);
+
+        public void SetCurrentFileIndex(int idx)
+        {
+            if (idx < 0 || idx > mFileList.Count)
+            {
+                throw new ArgumentOutOfRangeException(nameof(idx));
+            }
+            mIdx = idx;
+        }
+
+        public (int, int) GetIndex()
+        {
+            return (mIdx + 1, mFileList.Count);
+        }
 
         public string GetPictureInfoText(bool simple = false)
         {
@@ -1453,10 +1580,20 @@ namespace PictureManagerApp.src.Model
         {
             if (FilterType == FILTER_TYPE.FILTER_HASH)
             {
-                mFileList.RegisterTweetDB();
+                //不要？mFileList.RegisterTweetDB();
             }
 
-            mFileList.Batch(mPath);
+            string dst_root_path;
+            if (mDstRootPath != null)
+            {
+                dst_root_path = mDstRootPath;
+            }
+            else
+            {
+                dst_root_path = mPath;
+            }
+
+            mFileList.Batch(dst_root_path);
             mMarkCount = 0;
         }
 
@@ -1465,14 +1602,26 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void toggleMark()
         {
-            mFileList[mIdx].Mark = !mFileList[mIdx].Mark;
-            if (mFileList[mIdx].Mark)
+            var item = mFileList[mIdx];
+            if (item.IsGroupEntry)
             {
-                mMarkCount++;
+                item.toggleMark();
+
+                mMarkCount = mFileList.MarkCount();
             }
             else
             {
-                mMarkCount--;
+                //item.Mark = !item.Mark;
+                item.toggleMark();
+
+                if (item.Mark)
+                {
+                    mMarkCount++;
+                }
+                else
+                {
+                    mMarkCount--;
+                }
             }
         }
 
@@ -1504,7 +1653,11 @@ namespace PictureManagerApp.src.Model
                 fi.Mark = true;
                 mMarkCount++;
             } while (bak != idx);
+        }
 
+        internal void UnmarkAll()
+        {
+            mFileList.UnmarkAll();
         }
 
         //---------------------------------------------------------------------
@@ -1531,6 +1684,17 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        public void UpdateListFile(bool desktop)
+        {
+            var path = DEL_LIST_TXT_FILENAME;//@"del_list.tsv";
+            if (desktop)
+            {
+                var desktop_path = MyFiles.GetDesktopPath();//System.Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+                path = MyFiles.PathCombine(desktop_path, path);
+            }
+            UpdateListFile(path);
+        }
+
         public void UpdateListFile(string tsv_filepath)
         {
             var filename = tsv_filepath;

@@ -51,10 +51,18 @@ namespace PictureManagerApp.src.Model
         {
             if (this.image == null)
             {
-                var imgs = GetGroupImages();
+                var imgs = GetGroupImages();//TODO: 数が多いときは減らす？
                 this.image = ImageModule.CreateCompositedImage(imgs, width, height);
             }
             return this.image;
+        }
+
+        override internal void toggleMark()
+        {
+            foreach (var file in files)
+            {
+                file.toggleMark();
+            }
         }
     }
 }

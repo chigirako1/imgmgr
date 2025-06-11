@@ -12,6 +12,11 @@ namespace PictureManagerApp.src.Lib
 {
     static class MyFiles
     {
+        internal static string GetDesktopPath()
+        {
+            return System.Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
+        }
+        
         public static string PathCombine(string a, string b)
         {
             return System.IO.Path.Combine(a, b);

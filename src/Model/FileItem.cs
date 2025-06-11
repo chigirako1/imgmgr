@@ -28,6 +28,8 @@ namespace PictureManagerApp.src.Model
         public bool Mark {
             set; get;
         }
+
+        virtual internal void toggleMark() => Mark = !Mark;
         public bool Removed { set; get; }
         public bool IsZipEntry { private set; get; }
         public bool IsGroupEntry { private set; get; }
@@ -541,6 +543,34 @@ namespace PictureManagerApp.src.Model
             string line = $"{FilePath}\t{FileSize}\t{ImageSize.Width}\t{ImageSize.Height}\t{FileHash}";
 
             return line;
+        }
+
+        public string GetTitle()
+        {
+            var title = "";
+
+            var pxv = true;
+            if (pxv)
+            {
+                title = PxvArtwork.GetPxvArtworkTitleFromPath(FilePath);
+            }
+
+            return title;
+        }
+
+        public int GetArtworkID()
+        {
+            var pxv = true;
+            if (pxv)
+            {
+                var (_, _, artwork_id) = PxvArtwork.GetPxvArtworkInfoFromPath(FilePath);
+                return artwork_id;
+            }
+            else
+            {
+
+            }
+            return 0;
         }
     }
 }

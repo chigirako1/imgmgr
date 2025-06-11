@@ -26,6 +26,15 @@ namespace PictureManagerApp.src.Lib
         IMG_DISP_MAG_MAX
     }
 
+    public enum IMAGE_DISPLAY_ALIGNMENT_TYPE
+    {
+        IMAGE_DISPLAY__ALIGNMENT_CENTER,
+        IMAGE_DISPLAY__ALIGNMENT_RIGHT,
+        IMAGE_DISPLAY__ALIGNMENT_LEFT,
+
+        IMAGE_DISPLAY__ALIGNMENT_MAX,
+    }
+
     public struct DrawDimension
     {
         public static int PER = 10000;
@@ -221,7 +230,7 @@ namespace PictureManagerApp.src.Lib
             var drawImg = new Bitmap(canvasW, canvasH);
             using (var g = Graphics.FromImage(drawImg))
             { 
-                var ia = new System.Drawing.Imaging.ImageAttributes();
+                //var ia = new System.Drawing.Imaging.ImageAttributes();
 
                 int x = 0;
                 int y = 0;
@@ -234,6 +243,7 @@ namespace PictureManagerApp.src.Lib
                 // 描画
                 foreach (var img in imgs)
                 {
+                    //左から右、上から下に描画
                     DrawImage(g, x, y, w, h, img, IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_OPTIMIZE_MAX);
                     x += w;
 
@@ -246,6 +256,31 @@ namespace PictureManagerApp.src.Lib
             }
 
             return drawImg;
+        }
+
+        //---------------------------------------------------------------------
+        // |2|1|　横に2枚の画像（２←１）を並べたImage生成
+        //---------------------------------------------------------------------
+        public static Image GetOneImage(Image img1, Image img2, int canvasW, int canvasH)
+        {
+            var newImg = new Bitmap(canvasW, canvasH);
+            using (var g = Graphics.FromImage(newImg))
+            {
+
+                int x = canvasW / 2;//右側から描画
+                int y = 0;
+                int w = canvasW / 2;
+                int h = canvasH;
+
+                var mag = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN;
+                // 描画
+                DrawImage(g, x, y, w, h, img1, mag, IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_LEFT);
+
+                x = 0;
+                DrawImage(g, x, y, w, h, img2, mag, IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_RIGHT);
+            }
+
+            return newImg;
         }
 
         public static (int, int) CalcThumbnailImageSize(int numOfImg, int canvasW, int canvasH)
@@ -279,14 +314,29 @@ namespace PictureManagerApp.src.Lib
             int w,
             int h,
             Image img,
-            IMAGE_DISPLAY_MAGNIFICATION_TYPE mag = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND
+            IMAGE_DISPLAY_MAGNIFICATION_TYPE mag = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND,
+            IMAGE_DISPLAY_ALIGNMENT_TYPE alignment = IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_CENTER
             )
         {
-            DrawDimension dim = getDispParam(w, h, img.Width, img.Height, mag);
+            var dim = getDispParam(w, h, img.Width, img.Height, mag, alignment);
+            DrawImage_Draw(g, x, y, w, h, img, dim);
+            return dim;
+        }
+
+        public static void DrawImage_Draw(
+            Graphics g,
+            int x,
+            int y,
+            int w,
+            int h,
+            Image img,
+            DrawDimension dim
+            )
+        {
             var dstRect = new Rectangle(
-                dim.dst_x1 + x, 
-                dim.dst_y1 + y, 
-                dim.dst_x2 - dim.dst_x1, 
+                dim.dst_x1 + x,
+                dim.dst_y1 + y,
+                dim.dst_x2 - dim.dst_x1,
                 dim.dst_y2 - dim.dst_y1);
             var hoge = true;
             //hoge = false;
@@ -315,7 +365,6 @@ namespace PictureManagerApp.src.Lib
                     img.Height,
                     GraphicsUnit.Pixel);
             }
-            return dim;
         }
 
         //---------------------------------------------------------------------
@@ -390,12 +439,14 @@ namespace PictureManagerApp.src.Lib
             int scrnH,
             int imgW,
             int imgH,
-            IMAGE_DISPLAY_MAGNIFICATION_TYPE magType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND
+            IMAGE_DISPLAY_MAGNIFICATION_TYPE magType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND,
+            IMAGE_DISPLAY_ALIGNMENT_TYPE alignment = IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_CENTER
             )
         {
             int ratio = GetDispRatio(scrnW, scrnH, imgW, imgH, magType);
 
             DrawDimension d;
+            d.ratio = ratio;
 
             // 画面に表示するサイズ
             d.width = imgW * ratio / DrawDimension.PER;
@@ -405,9 +456,23 @@ namespace PictureManagerApp.src.Lib
             {
                 //画面の幅に収まっている
 
-                //幅に対してセンタリング
-                d.dst_x1 = (scrnW - d.width) / 2;
-                d.dst_x2 = d.dst_x1 + d.width;
+                switch (alignment)
+                {
+                    case IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_LEFT:
+                        d.dst_x1 = 0;
+                        d.dst_x2 = d.dst_x1 + d.width;
+                        break;
+                    case IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_RIGHT:
+                        d.dst_x1 = (scrnW - d.width);
+                        d.dst_x2 = d.dst_x1 + d.width;
+                        break;
+                    case IMAGE_DISPLAY_ALIGNMENT_TYPE.IMAGE_DISPLAY__ALIGNMENT_CENTER:
+                    default:
+                        //幅に対してセンタリング
+                        d.dst_x1 = (scrnW - d.width) / 2;
+                        d.dst_x2 = d.dst_x1 + d.width;
+                        break;
+                 }
 
                 //元画像の表示位置・幅
                 d.src_x1 = 0;
@@ -476,7 +541,6 @@ namespace PictureManagerApp.src.Lib
                 }
             }
 
-            d.ratio = ratio;
             return d;
         }
         //---------------------------------------------------------------------

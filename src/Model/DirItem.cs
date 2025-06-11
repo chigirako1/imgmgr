@@ -26,9 +26,14 @@ namespace PictureManagerApp.src.Model
             IMPORTANCE_MAX,
         }
 
-        private string Path;
-        private int TotalPageNo;
-        private int PageNo;
+        internal string Path { private set; get; }
+        public int TotalPageNo { set;  get; }
+        private int _page_no;
+        public int PageNo
+        {
+            get => _page_no;
+            set => _page_no = value - 1;
+        }
         private IMPORTANCE_TYPE Importance;
         //private Image Thumbnail;
 
@@ -36,7 +41,7 @@ namespace PictureManagerApp.src.Model
         {
             Path = path;
             TotalPageNo = 0;
-            PageNo = 0;
+            PageNo = 1;
             Importance = IMPORTANCE_TYPE.IMPORTANCE_NORMAL;
 
             Log.trc($"{TotalPageNo}{PageNo}{Importance}");
