@@ -194,7 +194,7 @@ namespace PictureManagerApp.src.Model
                 }
             }
             mFileList.RemoveAll(p => p.Removed);
-            Log.log($"cnt={cnt}");
+            Log.log($"移動したファイルの数:{cnt}");
         }
 
         public void Swap(int idx1, int idx2)

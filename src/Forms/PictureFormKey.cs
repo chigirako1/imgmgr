@@ -7,6 +7,7 @@ using System.Windows.Forms;
 
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
+using static PictureManagerApp.src.Model.FileList;
 
 
 namespace PictureManagerApp
@@ -78,7 +79,11 @@ namespace PictureManagerApp
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_NEXT:
                 default:
-
+                    if (mModel.IsZip())//めんどくさい。。。
+                    {
+                        KeyFuncTbl[Keys.Up] = KeyDownFunc_PrevGroup;
+                        KeyFuncTbl[Keys.Down] = KeyDownFunc_NextGroup;
+                    }
                     break;
             }
 
@@ -255,6 +260,20 @@ namespace PictureManagerApp
             return true;
         }
 
+        private bool KeyDownFunc_NextGroup(object sender, KeyEventArgs e)
+        {
+            mModel.NextDirImage();
+
+            return true;
+        }
+
+        private bool KeyDownFunc_PrevGroup(object sender, KeyEventArgs e)
+        {
+            mModel.PrevDirTopImage();
+
+            return true;
+        }
+
         private bool KeyDownFunc_Fav(object sender, KeyEventArgs e)
         {
             DoAction(ACTION_TYPE.ACTION_ADD_FAV_LIST);
@@ -329,13 +348,16 @@ namespace PictureManagerApp
 
         private bool KeyDownFunc_RotLeft(object sender, KeyEventArgs e)
         {
-            //TODO
+            //TODO:トグル
+            mModel.ROT_TYPE = DISP_ROT_TYPE.DISP_ROT_R270;
             return true;
         }
 
         private bool KeyDownFunc_RotRight(object sender, KeyEventArgs e)
         {
-            //TODO
+            //TODO　トグル
+
+            mModel.ROT_TYPE = DISP_ROT_TYPE.DISP_ROT_R090; 
             return true;
         }
 

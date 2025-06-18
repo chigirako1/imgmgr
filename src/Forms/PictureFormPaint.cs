@@ -152,13 +152,31 @@ namespace PictureManagerApp
                 alphaPercent = mAlphaPercent;
             }
 
-            //画像描画
+
             var magType = mMagType;
+            Image img;
+
+            switch (mModel.ROT_TYPE)
+            {
+                case DISP_ROT_TYPE.DISP_ROT_R090:
+                    img = ImageModule.RotateImage(mCurrentImg, true);
+                    break;
+                case DISP_ROT_TYPE.DISP_ROT_R270:
+                    img = ImageModule.RotateImage(mCurrentImg, false);
+                    break;
+                case DISP_ROT_TYPE.DISP_ROT_R180:
+                case DISP_ROT_TYPE.DISP_ROT_NONE:
+                default:
+                    img = mCurrentImg;
+                    break;
+            }
+
+            //画像描画
             var d = ImageModule.DrawCompositedImage(
                 g,
                 pictureBox.Width,
                 pictureBox.Height,
-                mCurrentImg,
+                img,//mCurrentImg,
                 mPrevImg,
                 alphaPercent,
                 magType);
@@ -285,6 +303,9 @@ namespace PictureManagerApp
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                     rightPicBox_Paint_overview(e);
                     break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_GROUP:
+                    //rightPicBox_Paint_group(e);
+                    //break;
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY:
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_TILE:
                 default:

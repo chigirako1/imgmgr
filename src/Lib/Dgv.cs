@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.SQLite;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -10,7 +11,7 @@ using System.Windows.Forms;
 
 namespace PictureManagerApp.src.Lib
 {
-    internal class Dgv
+    internal static class Dgv
     {
         private const int LIST_THUMBNAIL_WIDTH = 64;
         private const int LIST_THUMBNAIL_HEIGHT = 64;
@@ -29,12 +30,7 @@ namespace PictureManagerApp.src.Lib
         //private bool list_thumnail = true;
         //private bool list_thumnail = false;
 
-        private Dgv()
-        {
-
-        }
-
-        public static void Initialize(IEnumerable<string> zipfiles, DataGridView dgv, bool list_thumbnail)
+        public static void InitiZipList(IEnumerable<string> zipfiles, DataGridView dgv, bool list_thumbnail)
         {
             dgv.AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.AllCells;
             dgv.AllowUserToAddRows = false;
@@ -181,5 +177,46 @@ namespace PictureManagerApp.src.Lib
             var ba = MyFiles.GetThumbnailByteArray(zippath, width, height, 1);
             datasource.Rows[row_idx].SetField(cl, ba);
         }
+
+        public static void InitPxvDGV(DataTable dt)
+        {
+            var dbPath = Sqlite.GetSqliteFilePath();
+
+            using (var con = new SQLiteConnection("Data Source=" + dbPath))
+            {
+                con.Open();
+
+                var tblname = "artists";
+                var colname = "id, pxvid, pxvname, feature, rating, filenum, status";
+                var where_p = "";
+                where_p += $" status IN ({GetSqlCond()})";
+                where_p += " AND feature = 'AI'";
+                //where_p += " AND rating >= 100";
+                where_p += " ORDER BY rating DESC";
+                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p);
+                adapter.Fill(dt);
+            }
+        }
+
+        private static string GetSqlCond()
+        {
+            string[] list = {
+                "退会",
+                "停止",//凍結？
+
+                "長期更新なし",
+                "半年以上更新なし",
+                "彼岸",
+                "別アカウントに移行",//
+                "作品ゼロ",
+                //"一部消えた",
+                "ほぼ消えた",
+            };
+
+            var list2 = list.Select(x => $"'{x}'").ToArray();
+
+            return System.String.Join(",", list2);
+        }
+
     }
 }

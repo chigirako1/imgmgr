@@ -97,6 +97,7 @@ namespace PictureManagerApp.src.Model
         THUMBNAIL_VIEW_TILE,        //並べる
         THUMBNAIL_VIEW_MANGA,       //漫画用。２画像並べて表示。左に進む（TBD.進行方向は別にしたほうが良さそう
 
+        THUMBNAIL_VIEW_GROUP,       //(実装中
         THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる(実装中
 
         THUMBNAIL_VIEW_MAX,
@@ -135,23 +136,7 @@ namespace PictureManagerApp.src.Model
 
     public class PictureModel
     {
-        private string mPath;
-        internal string GetPath() => mPath;
-        private string mDstRootPath;
-        //private SORT_TYPE mSortType;
-        private FileList mFileList;
-        private DATA_SOURCE_TYPE mDataSrcType;
-
-        private int mIdx = -1;
-        private DateTime? mDtFrom;
-        private DateTime? mDtTo;
-        private FILTER_TYPE FilterType = FILTER_TYPE.FILTER_NONE;
-
-        private Size? mMaxPicSize = null;
-        private int mMinFileSize = 0;
-        private int mMaxFileSize = 0;
-        private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
-
+        //定数とか
         private const string USB_MEMORY_DIR_PATH = @"work\r18";
         private static readonly string[] CMBBOX_DIR_PATHS = [
             @"D:\download\PxDl-",
@@ -179,16 +164,48 @@ namespace PictureManagerApp.src.Model
         private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
         private static readonly string DEL_LIST_TXT_PATH = @"D:\download\" + DEL_LIST_TXT_FILENAME;
         //private static readonly string DEL_LIST_TXT_FILENAME = @"del_list.tsv";
-        private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
-        private string mSeachWord = "";
-
-        private string DelListPath;
 
         private static readonly string PIC_INFOS_FILENAME = @"!pic_infos!.tsv";
         private static readonly string PIC_COMPARE_FILENAME = @"!pic_compare!.tsv";
 
         private static readonly string STR_METHOD_DEL = "DEL";
         private static readonly string STR_METHOD_FAV = "FAV";
+
+
+        private string mPath;
+        internal string GetPath() => mPath;
+        private string mDstRootPath;
+        //private SORT_TYPE mSortType;
+        private FileList mFileList;
+        private DATA_SOURCE_TYPE mDataSrcType;
+
+        private int mIdx = -1;
+        private DateTime? mDtFrom;
+        private DateTime? mDtTo;
+        private FILTER_TYPE FilterType = FILTER_TYPE.FILTER_NONE;
+
+        private Size? mMaxPicSize = null;
+        private int mMinFileSize = 0;
+        private int mMaxFileSize = 0;
+        private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
+        private DISP_ROT_TYPE _rot_type = DISP_ROT_TYPE.DISP_ROT_NONE;
+        public DISP_ROT_TYPE ROT_TYPE
+        {
+            set
+            {
+                _rot_type = value;
+            }
+            get
+            {
+                return _rot_type;
+            }
+        }
+
+        private string mExtList = ".jpg,.jpeg,.png,.gif,.bmp";
+        private string mSeachWord = "";
+
+        private string DelListPath;
+
 
         public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
         public int mMarkCount {
@@ -646,7 +663,7 @@ namespace PictureManagerApp.src.Model
         private void AddRelativeFile(string f)
         {
             var tmp = f.Replace(mSeachWord, "");
-            Log.log($"rel:{tmp}/{mSeachWord}");
+            Log.log($"ファイル名:'{tmp}'/置換語:'{mSeachWord}'");
             if (File.Exists(tmp))
             {
                 var tmpfi = new FileItem(tmp);

@@ -653,49 +653,12 @@ namespace PictureManagerApp
             }
         }
 
-        private static string GetSqlCond()
-        {
-            string[] list = {
-                "退会",
-                "停止",//凍結？
-
-                "長期更新なし",
-                "半年以上更新なし",
-                "彼岸",
-                "別アカウントに移行",//
-                "作品ゼロ",
-                //"一部消えた",
-                "ほぼ消えた",
-            };
-
-            var list2 = list.Select(x => $"'{x}'").ToArray();
-
-            return System.String.Join(",", list2);
-        }
-
         private void InitPxvDGV()
         {
-            var dbPath = Sqlite.GetSqliteFilePath();
+            this.mPxvDatatable = new DataTable();
 
-            using (var con = new SQLiteConnection("Data Source=" + dbPath))
-            {
-                con.Open();
-
-                this.mPxvDatatable = new DataTable();
-
-                var tblname = "artists";
-                var colname = "id, pxvid, pxvname, feature, rating, filenum, status";
-                var where_p = "";
-                //where_p += " status = '停止'";
-                where_p += $" status IN ({GetSqlCond()})";
-                where_p += " AND feature = 'AI'";
-                //where_p += " AND rating >= 100";
-                where_p += " ORDER BY rating DESC";
-                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p);
-                adapter.Fill(this.mPxvDatatable);
-
-                this.DgvPxv.DataSource = this.mPxvDatatable;
-            }
+            Dgv.InitPxvDGV(this.mPxvDatatable);
+            this.DgvPxv.DataSource = this.mPxvDatatable;
         }
 
         private void InitZipListDGV(string path)
@@ -708,7 +671,7 @@ namespace PictureManagerApp
 
             string[] patterns = { ".zip" };
             var zipfiles = MyFiles.GetAllFiles(path, patterns);
-            Dgv.Initialize(zipfiles, this.DirListDGV, list_thumbnail);
+            Dgv.InitiZipList(zipfiles, this.DirListDGV, list_thumbnail);
         }
 
         private void StartDgvRow_(DataGridViewRow row)

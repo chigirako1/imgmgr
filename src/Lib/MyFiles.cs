@@ -39,15 +39,15 @@ namespace PictureManagerApp.src.Lib
         public static void move(string path, string rootpath, string appendStr)
         {
             Log.trc("------>");
-            Log.log($"path='{path}'");
+            Log.log($"移動ファイル='{path}'");
 
             System.IO.FileInfo fi = new(path);
 
             string p = Path.GetRelativePath(rootpath, path);
-            Log.log($"p='{p}'");
+            Log.log($"relative path='{p}'");
 
             string moveToPath = Path.Combine(rootpath + appendStr, p);
-            Log.log($"moveToPath='{moveToPath}'");
+            Log.log($"移動先='{moveToPath}'");
 
             string dirname = Path.GetDirectoryName(moveToPath);
             if (!File.Exists(dirname))

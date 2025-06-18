@@ -149,6 +149,37 @@ namespace PictureManagerApp.src.Lib
             return transImg;
         }
 
+        /// <summary>
+        /// 指定されたImageを90度右に回転させた新しいImageを返します。
+        /// </summary>
+        /// <param name="image">回転させたいImageオブジェクト。</param>
+        /// <returns>90度右に回転した新しいImageオブジェクト。</returns>
+        /// <exception cref="ArgumentNullException">imageがnullの場合にスローされます。</exception>
+        public static Image RotateImage(Image image, bool right)
+        {
+            if (image == null)
+            {
+                throw new ArgumentNullException(nameof(image));
+            }
+
+            // 元の画像を直接変更しないように、クローンを作成します。
+            Image rotatedImage = (Image)image.Clone();
+
+            RotateFlipType rot;
+            if (right)
+            {
+                 rot = RotateFlipType.Rotate90FlipNone;
+            }
+            else
+            {
+                rot = RotateFlipType.Rotate270FlipNone;
+            }
+
+            rotatedImage.RotateFlip(rot);
+
+            return rotatedImage;
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
