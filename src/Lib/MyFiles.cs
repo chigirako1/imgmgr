@@ -93,12 +93,17 @@ namespace PictureManagerApp.src.Lib
         public static List<string> GetZipEntryList(string zippath)
         {
             var encode = "utf-8";
-            //encode = "sjis";
             //encode = "shift_jis";
+            //encode = "sjis";
+
+            //TODO: よくわからないが日本語が文字化けする
+
+            var enc = System.Text.Encoding.GetEncoding(encode);
             //using (var archive = ZipFile.OpenRead(path))
             using (ZipArchive archive = ZipFile.Open(zippath,
                 ZipArchiveMode.Read,
-                System.Text.Encoding.GetEncoding(encode)))
+                enc)
+                )
             {
                 foreach (var e in archive.Entries)
                 {

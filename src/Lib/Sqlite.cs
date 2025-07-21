@@ -146,6 +146,21 @@ namespace PictureManagerApp.src.Lib
             }
         }
 
+        public static void UpdatePxvArtistDelInfo(long pxvid, string del_info)
+        {
+            using (var cn = GetSQLiteConnection())
+            {
+                cn.Open();
+                using (var cmd = new SQLiteCommand(cn))
+                {
+                    cmd.CommandText = $"UPDATE artists set del_info = '{del_info}' WHERE pxvid = {pxvid}";
+                    var changedline = cmd.ExecuteNonQuery();
+                    Log.trc($"変更した行の数:{changedline}");
+                }
+                cn.Close();
+            }
+        }
+
         public static List<PxvArtist> GetPxvArtists(string where_phrase)
         {
             var pxv_artists = new List<PxvArtist>();

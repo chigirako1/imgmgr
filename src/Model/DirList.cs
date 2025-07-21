@@ -129,7 +129,8 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                throw new InvalidOperationException();//tekitou
+                Log.err($"[Update]:{path}");
+                //throw new InvalidOperationException();//tekitou
             }
         }
 

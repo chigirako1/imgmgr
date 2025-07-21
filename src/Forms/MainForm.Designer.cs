@@ -48,6 +48,7 @@
             chkBox_to = new System.Windows.Forms.CheckBox();
             chkBox_from = new System.Windows.Forms.CheckBox();
             tabPage_Pic = new System.Windows.Forms.TabPage();
+            label6 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
             radioBtn_PicOrinet_Long = new System.Windows.Forms.RadioButton();
@@ -57,6 +58,7 @@
             radioBtn_PicOrinet_PR = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_All = new System.Windows.Forms.RadioButton();
             numUD_Height = new System.Windows.Forms.NumericUpDown();
+            numUD_Pixel = new System.Windows.Forms.NumericUpDown();
             numUD_Width = new System.Windows.Forms.NumericUpDown();
             tabPage_FileList = new System.Windows.Forms.TabPage();
             txtBox_FileList = new System.Windows.Forms.TextBox();
@@ -85,6 +87,7 @@
             ToolStripMenuItem_test = new System.Windows.Forms.ToolStripMenuItem();
             btnOpenExplorer = new System.Windows.Forms.Button();
             btnGroupListStart = new System.Windows.Forms.Button();
+            ToolStripMenuItem_FileDel = new System.Windows.Forms.ToolStripMenuItem();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -93,6 +96,7 @@
             tabPage_Pic.SuspendLayout();
             grpBox_PicOrient.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_Height).BeginInit();
+            ((System.ComponentModel.ISupportInitialize)numUD_Pixel).BeginInit();
             ((System.ComponentModel.ISupportInitialize)numUD_Width).BeginInit();
             tabPage_FileList.SuspendLayout();
             tabPage_zipList.SuspendLayout();
@@ -194,6 +198,7 @@
             numUD_MinFilesize.Name = "numUD_MinFilesize";
             numUD_MinFilesize.Size = new System.Drawing.Size(120, 30);
             numUD_MinFilesize.TabIndex = 9;
+            numUD_MinFilesize.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label4
             // 
@@ -213,6 +218,7 @@
             numUD_MaxFilesize.Name = "numUD_MaxFilesize";
             numUD_MaxFilesize.Size = new System.Drawing.Size(120, 30);
             numUD_MaxFilesize.TabIndex = 7;
+            numUD_MaxFilesize.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // label3
             // 
@@ -315,9 +321,11 @@
             // 
             // tabPage_Pic
             // 
+            tabPage_Pic.Controls.Add(label6);
             tabPage_Pic.Controls.Add(label2);
             tabPage_Pic.Controls.Add(grpBox_PicOrient);
             tabPage_Pic.Controls.Add(numUD_Height);
+            tabPage_Pic.Controls.Add(numUD_Pixel);
             tabPage_Pic.Controls.Add(numUD_Width);
             tabPage_Pic.Location = new System.Drawing.Point(4, 32);
             tabPage_Pic.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
@@ -327,6 +335,16 @@
             tabPage_Pic.TabIndex = 1;
             tabPage_Pic.Text = "pic";
             tabPage_Pic.UseVisualStyleBackColor = true;
+            // 
+            // label6
+            // 
+            label6.AutoSize = true;
+            label6.Location = new System.Drawing.Point(94, 135);
+            label6.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
+            label6.Name = "label6";
+            label6.Size = new System.Drawing.Size(126, 23);
+            label6.TabIndex = 4;
+            label6.Text = "Maximum pixel";
             // 
             // label2
             // 
@@ -431,6 +449,17 @@
             numUD_Height.Name = "numUD_Height";
             numUD_Height.Size = new System.Drawing.Size(120, 30);
             numUD_Height.TabIndex = 1;
+            numUD_Height.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
+            // 
+            // numUD_Pixel
+            // 
+            numUD_Pixel.Location = new System.Drawing.Point(246, 133);
+            numUD_Pixel.Margin = new System.Windows.Forms.Padding(2);
+            numUD_Pixel.Maximum = new decimal(new int[] { 9999, 0, 0, 0 });
+            numUD_Pixel.Name = "numUD_Pixel";
+            numUD_Pixel.Size = new System.Drawing.Size(120, 30);
+            numUD_Pixel.TabIndex = 0;
+            numUD_Pixel.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // numUD_Width
             // 
@@ -440,6 +469,7 @@
             numUD_Width.Name = "numUD_Width";
             numUD_Width.Size = new System.Drawing.Size(120, 30);
             numUD_Width.TabIndex = 0;
+            numUD_Width.TextAlign = System.Windows.Forms.HorizontalAlignment.Right;
             // 
             // tabPage_FileList
             // 
@@ -673,14 +703,14 @@
             // 
             // contextMenuStrip1
             // 
-            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_test });
+            contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_test, ToolStripMenuItem_FileDel });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new System.Drawing.Size(109, 32);
+            contextMenuStrip1.Size = new System.Drawing.Size(181, 82);
             // 
             // ToolStripMenuItem_test
             // 
             ToolStripMenuItem_test.Name = "ToolStripMenuItem_test";
-            ToolStripMenuItem_test.Size = new System.Drawing.Size(108, 28);
+            ToolStripMenuItem_test.Size = new System.Drawing.Size(180, 28);
             ToolStripMenuItem_test.Text = "test";
             ToolStripMenuItem_test.Click += ToolStripMenuItem_test_Click;
             // 
@@ -706,6 +736,13 @@
             btnGroupListStart.Text = "グループリスト開始";
             btnGroupListStart.UseVisualStyleBackColor = true;
             btnGroupListStart.Click += btnGroupListStart_Click;
+            // 
+            // ToolStripMenuItem_FileDel
+            // 
+            ToolStripMenuItem_FileDel.Name = "ToolStripMenuItem_FileDel";
+            ToolStripMenuItem_FileDel.Size = new System.Drawing.Size(180, 28);
+            ToolStripMenuItem_FileDel.Text = "ファイル削除";
+            ToolStripMenuItem_FileDel.Click += ToolStripMenuItem_FileDel_Click;
             // 
             // MainForm
             // 
@@ -744,6 +781,7 @@
             grpBox_PicOrient.ResumeLayout(false);
             grpBox_PicOrient.PerformLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_Height).EndInit();
+            ((System.ComponentModel.ISupportInitialize)numUD_Pixel).EndInit();
             ((System.ComponentModel.ISupportInitialize)numUD_Width).EndInit();
             tabPage_FileList.ResumeLayout(false);
             tabPage_FileList.PerformLayout();
@@ -817,6 +855,9 @@
         private System.Windows.Forms.Button btnGroupListStart;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Square;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Long;
+        private System.Windows.Forms.Label label6;
+        private System.Windows.Forms.NumericUpDown numUD_Pixel;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_FileDel;
     }
 }
 

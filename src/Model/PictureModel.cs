@@ -7,6 +7,7 @@ using System.IO;
 using System.IO.Compression;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.Intrinsics.X86;
 using System.Security.Policy;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
@@ -97,21 +98,25 @@ namespace PictureManagerApp.src.Model
         THUMBNAIL_VIEW_TILE,        //並べる
         THUMBNAIL_VIEW_MANGA,       //漫画用。２画像並べて表示。左に進む（TBD.進行方向は別にしたほうが良さそう
 
-        THUMBNAIL_VIEW_GROUP,       //(実装中
         THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる(実装中
+
+        THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
 
         THUMBNAIL_VIEW_MAX,
 
+
+        //以下は除外
+
+        THUMBNAIL_VIEW_GROUP,       //(実装中
+
         //???
-        THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
         THUMBNAIL_VIEW_NEXT,        //次の画像をでっかく表示
         THUMBNAIL_VIEW_DIRECTORY,   //同一フォルダを一画面に全部
 
-        THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_TILE,
 
         THUMBNAIL_VIEW_NO_MAIN_SPLIT,
 
-        //以下は除外
+        THUMBNAIL_VIEW_DEFAULT = THUMBNAIL_VIEW_TILE,
     }
 
     public enum DISP_ROT_TYPE
@@ -136,8 +141,11 @@ namespace PictureManagerApp.src.Model
 
     public class PictureModel
     {
-        //定数とか
-        private const string USB_MEMORY_DIR_PATH = @"work\r18";
+        //定数
+
+        private const int GROUP_FILE_NUM = 300;
+
+        private const string EXT_MEMORY_DIR_PATH = @"work\r18";
         private static readonly string[] CMBBOX_DIR_PATHS = [
             @"D:\download\PxDl-",
             @"D:\download\PxDl",
@@ -156,7 +164,8 @@ namespace PictureManagerApp.src.Model
             @"D:\r18\dlPic\Nijie\nje",
 
 #if DEBUG
-            @"D:\download\PxDl-\!pic_infos!.tsv"
+            @"D:\download\PxDl-\!pic_infos!.tsv",
+            @"D:\dl\AnkPixiv\Twitter-\!pic_infos!.tsv",
 #endif
         ];
 
@@ -185,6 +194,7 @@ namespace PictureManagerApp.src.Model
         private FILTER_TYPE FilterType = FILTER_TYPE.FILTER_NONE;
 
         private Size? mMaxPicSize = null;
+        private int? mMaxPixelCnt = null;
         private int mMinFileSize = 0;
         private int mMaxFileSize = 0;
         private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
@@ -255,7 +265,7 @@ namespace PictureManagerApp.src.Model
             var cdir = System.Environment.CurrentDirectory;
             //var dri = System.IO.Path.GetDirectoryName(cdir);
             var root_path = Path.GetPathRoot(cdir);
-            var extmem_path = System.IO.Path.Combine(root_path, USB_MEMORY_DIR_PATH);
+            var extmem_path = System.IO.Path.Combine(root_path, EXT_MEMORY_DIR_PATH);
 
             if (Directory.Exists(extmem_path))
             {
@@ -340,6 +350,13 @@ namespace PictureManagerApp.src.Model
             Log.log($"max pic size={size}");
             mMaxPicSize = size;
         }
+
+        public void SetMaxPixelCount(int pixel)
+        {
+            Log.log($"max pixel count={pixel}");
+            mMaxPixelCnt = pixel;
+        }
+        
 
         public void SetMinFileSize(int minfilesize)
         {
@@ -445,6 +462,18 @@ namespace PictureManagerApp.src.Model
             }
         }
 
+        public bool HasInvalidFile()
+        {
+            foreach (var fi in mFileList.FileItems)
+            {
+                if (fi.InvalidFile)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
         private DATA_SOURCE_TYPE GetSourceType(string path)
         {
             DATA_SOURCE_TYPE result;
@@ -474,26 +503,7 @@ namespace PictureManagerApp.src.Model
 
             if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
             {
-                BuildFileList_Dir();
-
-                if (FilterType == FILTER_TYPE.FILTER_HASH)
-                {
-                    var ofilepath = Path.Combine(mPath, PIC_INFOS_FILENAME);
-                    mFileList.SavePicsInfo(ofilepath);
-
-                    bool update_db;
-                    if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
-                    {
-                        update_db = true;
-                    }
-                    else
-                    {
-                        update_db = false;
-                    }
-
-                    mFileList.multipleFileOnly(update_db);
-                    mMarkCount = mFileList.MarkCount();
-                }
+                BuildFileList_Directory();
             }
             else if (Path.GetExtension(path) == ".zip")
             {
@@ -501,34 +511,65 @@ namespace PictureManagerApp.src.Model
             }
             else if (Path.GetExtension(path) == ".tsv")
             {
-                mPath = Path.GetDirectoryName(path);
-                //mDataSrcType = GetSourceType(path);
-
                 BuildFileList_Tsv(path);
-
-                if (FilterType == FILTER_TYPE.FILTER_HASH)
-                {
-                    bool update_db;
-                    if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
-                    {
-                        update_db = true;
-                    }
-                    else
-                    {
-                        update_db = false;
-                    }
-
-                    mFileList.multipleFileOnly(update_db);
-                    mMarkCount = mFileList.MarkCount();
-                }
             }
             else
             {
-                Log.warning($"'{path}'不正");
+                Log.err($"'{path}'不正");
             }
 
             Log.trc("[E]");
         }
+
+        public void BuildFileList_Directory()
+        {
+            var add_group = false;
+            BuildFileList_Dir(add_group);
+
+            if (FilterType == FILTER_TYPE.FILTER_HASH)
+            {
+                var ofilepath = Path.Combine(mPath, PIC_INFOS_FILENAME);
+                mFileList.SavePicsInfo(ofilepath);
+
+                bool update_db;
+                if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
+                {
+                    update_db = true;
+                }
+                else
+                {
+                    update_db = false;
+                }
+
+                mFileList.multipleFileOnly(update_db);
+                mMarkCount = mFileList.MarkCount();
+            }
+        }
+
+        public void BuildFileList_Tsv(string path)
+        {
+            mPath = Path.GetDirectoryName(path);
+            //mDataSrcType = GetSourceType(path);
+
+            BuildFileList_Tsv_Core(path);
+
+            if (FilterType == FILTER_TYPE.FILTER_HASH)
+            {
+                bool update_db;
+                if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
+                {
+                    update_db = true;
+                }
+                else
+                {
+                    update_db = false;
+                }
+
+                mFileList.multipleFileOnly(update_db);
+                mMarkCount = mFileList.MarkCount();
+            }
+        }
+
 
         private IEnumerable<string> GetFileList(string path, string extlist, string search_word)
         {
@@ -548,7 +589,7 @@ namespace PictureManagerApp.src.Model
             return files;
         }
 
-        private void BuildFileList_Dir()
+        private void BuildFileList_Dir(bool add_group)
         {
             var files = GetFileList(mPath, mExtList, mSeachWord);
 
@@ -573,8 +614,13 @@ namespace PictureManagerApp.src.Model
                         {
                             computeHash = true;
 
-                            //ついでに画像サイズも設定しておく？
-                            fi.GetImage();
+                            //TODO: ついでに画像サイズも設定しておく？
+                            var img = fi.GetImage();
+
+                            if (img == null)
+                            {
+
+                            }
                         }
                         else
                         {
@@ -597,21 +643,28 @@ namespace PictureManagerApp.src.Model
                 cnt++;
                 if (cnt % 1000 == 0)
                 {
-                    sw.Stop();
-                    var ts_elapsed = sw.Elapsed;
-                    Log.trc($"途中経過：{ts_elapsed}");
-
                     var dupCnt = mFileList.GetDupCount();
 
                     Log.log($"#{cnt}/{total}({cnt * 100 / total}%) 重複={dupCnt}\t({mFileList.Count})");
+
+                    sw.Stop();
+                    var ts_elapsed = sw.Elapsed;
+                    Log.trc($"");
+                    Log.trc($"途中経過：{ts_elapsed}");
+
                     sw.Start();
+                }
+                else if (cnt % 100 == 0)
+                {
+                    //Console.Error.Write(".");
+                    System.Diagnostics.Debug.Write(".");
                 }
             }
 
             var group = false;
-            if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV)
+            if (add_group && mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV)
             {
-                if (mFileList.Count > 100)
+                if (mFileList.Count > GROUP_FILE_NUM)
                 {
                     group = true;
                 }
@@ -726,7 +779,9 @@ namespace PictureManagerApp.src.Model
 
         private bool IsTargetPic(FileItem fi)
         {
-            if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrient))
+            if (fi.isSpecifiedSizeImage(mMaxPicSize) &&
+                //fi.isSpecifiedPixelCount(mMaxPixelCnt) &&  ???
+                fi.isSpecifiedPicOrinet(mTargetPicOrient))
             {
                 return true;
             }
@@ -735,6 +790,8 @@ namespace PictureManagerApp.src.Model
 
         private void BuildFileList_Zip()
         {
+            //ZipEncodingChecker.DisplayZipEntryEncodings(mPath);
+
             var filelist = MyFiles.GetZipEntryList(mPath);
 
             mFileList.ZipList = true;
@@ -749,11 +806,11 @@ namespace PictureManagerApp.src.Model
             }
         }
 
-        private void BuildFileList_Tsv(string path)
+        private void BuildFileList_Tsv_Core(string tsv_file_path)
         {
             var line_cnt = 0;
             var missing_file_cnt = 0;
-            var table = new Table(path);
+            var table = new Table(tsv_file_path);
             foreach (var line in table)
             {
                 line_cnt++;
@@ -789,7 +846,7 @@ namespace PictureManagerApp.src.Model
                         continue;
                     }
 
-                    System.IO.FileInfo fi = new(path);
+                    System.IO.FileInfo fi = new(picpath);
                     if (fi.Length != filesize)
                     {
                         Log.warning($"ファイルサイズが変更されています '{picpath}'({filesize} => {fi.Length})");
@@ -817,7 +874,10 @@ namespace PictureManagerApp.src.Model
                 }
             }
 
-            Log.trc($"{line_cnt}行中{missing_file_cnt}ファイルが存在しませんでした。({line_cnt - missing_file_cnt})");
+            if (missing_file_cnt > 0)
+            {
+                Log.trc($"{line_cnt}行中{missing_file_cnt}ファイルが存在しませんでした。({line_cnt - missing_file_cnt})");
+            }
         }
 
         //---------------------------------------------------------------------
@@ -981,6 +1041,40 @@ namespace PictureManagerApp.src.Model
             {
                 Next();
             }
+        }
+
+        public void PrevPage()
+        {
+            Prev();
+        }
+
+        public void NextPage()
+        {
+            var fitem1 = GetCurrentFileItem();
+            var fitem2 = GetCurrentFileItemByRelativeIndex(1);
+
+            var size1 = fitem1.GetImageSize();
+            var size2 = fitem2.GetImageSize();
+
+            if (PictureModel.IsMihiraki(size1, size2))
+            {
+                mIdx += 2;
+            }
+            else
+            {
+                mIdx++;
+            }
+                
+            if (mIdx >= mFileList.Count)
+            {
+                mIdx = 0;
+            }
+            Update();
+        }
+
+        public static bool IsMihiraki(Size size1, Size size2)
+        {
+            return (size1.Width < size1.Height && size2.Width < size2.Height);
         }
 
         //---------------------------------------------------------------------
@@ -1395,6 +1489,7 @@ namespace PictureManagerApp.src.Model
         {
             if (idx < 0 || idx > mFileList.Count)
             {
+                Log.err($"idx={idx}");
                 throw new ArgumentOutOfRangeException(nameof(idx));
             }
             mIdx = idx;
@@ -1405,6 +1500,32 @@ namespace PictureManagerApp.src.Model
             return (mIdx + 1, mFileList.Count);
         }
 
+        public int GetAbsIdx(int relativeIndex)
+        {
+            int idx = mIdx + relativeIndex;
+            if (idx >= 0)
+            {
+                idx = idx % mFileList.Count;
+            }
+
+            return idx;
+        }
+
+        public FileItem GetCurrentFileItemByRelativeIndex(int relativeIndex)
+        {
+            var i = GetAbsIdx(relativeIndex);
+
+            return mFileList[i];
+        }
+
+        public bool IsLastNow()
+        {
+            return (mIdx >= mFileList.Count - 1);
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public string GetPictureInfoText(bool simple = false)
         {
             string txt;
@@ -1452,13 +1573,8 @@ namespace PictureManagerApp.src.Model
             }
             else
             {
-                txt = String.Format("DB情報:【{0}】{1}|{2}<{3}({4})>{5}",
-                    pxv.Rating,
-                    pxv.R18,
-                    pxv.Status,
-                    pxv.PxvName,
-                    pxv.PxvID,
-                    pxv.Warnings
+                txt = String.Format(
+                    $"DB情報:【{pxv.Rating}】{pxv.R18}|{pxv.Status}|{pxv.Warnings}|{pxv.DelInfo}|<{pxv.PxvName}({pxv.PxvID})>"
                  );
             }
             return txt;
@@ -1477,30 +1593,6 @@ namespace PictureManagerApp.src.Model
             }
         }
 
-        public int GetAbsIdx(int relativeIndex)
-        {
-            int idx = mIdx + relativeIndex;
-            if (idx >= 0)
-            {
-                idx = idx % mFileList.Count;
-            }
-
-            return idx;
-        }
-
-        public FileItem GetCurrentFileItemByRelativeIndex(int relativeIndex)
-        {
-            var i = GetAbsIdx(relativeIndex);
-
-            return mFileList[i];
-        }
-
-        /*
-        public Image GetImageByRelativeNo(int relativeNo)
-        {
-            var fitem = GetCurrentFileItemByRelativeIndex(relativeNo);
-            return fitem.GetImage();
-        }*/
 
         public bool IsDiffDirNext(FileItem fitem, int relativeIndex)
         {
@@ -1593,7 +1685,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public void Batch()
+        public int Batch()
         {
             if (FilterType == FILTER_TYPE.FILTER_HASH)
             {
@@ -1610,8 +1702,9 @@ namespace PictureManagerApp.src.Model
                 dst_root_path = mPath;
             }
 
-            mFileList.Batch(dst_root_path);
+            var cnt = mFileList.Batch(dst_root_path);
             mMarkCount = 0;
+            return cnt;
         }
 
         //---------------------------------------------------------------------
@@ -1675,6 +1768,11 @@ namespace PictureManagerApp.src.Model
         internal void UnmarkAll()
         {
             mFileList.UnmarkAll();
+        }
+
+        public void MarkSameHashFiles()
+        {
+            mFileList.MarkSameHashFiles();
         }
 
         //---------------------------------------------------------------------

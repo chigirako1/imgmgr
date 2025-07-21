@@ -107,7 +107,8 @@ namespace PictureManagerApp.src.Model
                 if (FileHashCnt.ContainsKey(hash))
                 {
                     FileHashCnt[hash]++;
-                    Log.log($"重複ファイル #{FileHashCnt.Count(pair => pair.Value >= 2)}='{fitem.FilePath}'");
+                    System.Diagnostics.Debug.WriteLine("");
+                    Log.log($"重複ファイル #{FileHashCnt.Count(pair => pair.Value >= 2)}='{fitem.FilePath}'({fitem.FileSizeDisp})");
                 }
                 else
                 {
@@ -178,7 +179,7 @@ namespace PictureManagerApp.src.Model
             return flist;
         }
 
-        public void Batch(string rootpath)
+        public int Batch(string rootpath)
         {
             int cnt = 0;
             foreach (var fitem in mFileList)
@@ -195,6 +196,7 @@ namespace PictureManagerApp.src.Model
             }
             mFileList.RemoveAll(p => p.Removed);
             Log.log($"移動したファイルの数:{cnt}");
+            return cnt;
         }
 
         public void Swap(int idx1, int idx2)
@@ -202,7 +204,7 @@ namespace PictureManagerApp.src.Model
             (mFileList[idx1], mFileList[idx2]) = (mFileList[idx2], mFileList[idx1]);
         }
 
-        public void multipleFileOnly(bool update_db = false)
+        public void multipleFileOnly(bool update_db)
         {
             mFileList.RemoveAll(IsSingle);
 
@@ -211,6 +213,7 @@ namespace PictureManagerApp.src.Model
             var hash_save = "";
             var filesize = 0L;
             var tweet_id_save = 0L;
+            var parent_dir_save = "";
             foreach (var fitem in mFileList)
             {
                 var hash = fitem.GetFileHash();
@@ -218,7 +221,14 @@ namespace PictureManagerApp.src.Model
                 {
                     if (filesize == fitem.FileSize)
                     {
-                        fitem.Mark = true;
+                        if (!update_db && fitem.DirectoryName == parent_dir_save)
+                        {
+                            //pxvで同一ディレクトリの場合はマークしない
+                        }
+                        else
+                        {
+                            fitem.Mark = true;
+                        }
 
                         if (update_db)
                         {
@@ -227,7 +237,7 @@ namespace PictureManagerApp.src.Model
                             {
                                 //同一のtweet idの場合は単純なDLミスなのでDB登録しない
                                 // do nothing
-                                Log.log($"単なる重複DL'{fitem.FilePath}'/{ti.TweetID}/@{ti.ScreenName}");
+                                Log.log($"単なる重複DL:'{fitem.FilePath}'/{ti.TweetID}/@{ti.ScreenName}");
                             }
                             else if (ti.TweetID != 0)
                             {
@@ -259,10 +269,32 @@ namespace PictureManagerApp.src.Model
                 }
                 hash_save = hash;
                 filesize = fitem.FileSize;
+                parent_dir_save = fitem.DirectoryName;
             }
         }
 
-        private  bool IsSingle(FileItem fitem)
+        public void MarkSameHashFiles()
+        {
+            FileItem fitem_save = null;
+            var hash_save = "";
+            var parent_dir_save = "";
+            foreach (var fitem in mFileList)
+            {
+                var hash = fitem.GetFileHash();
+                if (hash == hash_save)
+                {
+                    fitem_save.Mark = true;
+                }
+                else
+                {
+                }
+                fitem_save = fitem;
+                hash_save = hash;
+                parent_dir_save = fitem.DirectoryName;
+            }
+        }
+
+        private bool IsSingle(FileItem fitem)
         {
             if (fitem.IsGroupEntry)
             {
@@ -309,6 +341,12 @@ namespace PictureManagerApp.src.Model
             var not_slct = 0L;
             foreach (var fitem in mFileList)
             {
+                if (fitem.FileSize == 0)
+                {
+                    Log.log("filesize=0");
+                    throw new InvalidOperationException();
+                }
+
                 total += fitem.FileSize;
                 if (fitem.Mark)
                 {
@@ -320,9 +358,20 @@ namespace PictureManagerApp.src.Model
                 }
             }
 
-            string str = $"total({mFileList.Count})=\t{MyFiles.FormatFileSize(total)}" + Environment.NewLine + 
-                $"選択中({MarkCount()})=\t{MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)" + Environment.NewLine+
-                $"非選択({mFileList.Count - MarkCount()})=\t{MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)";
+            long tmp;
+            if  (slct > not_slct)
+            {
+                tmp = slct * 100 / not_slct;
+            }
+            else
+            {
+                tmp = not_slct * 100 / slct;
+            }
+
+            string str = $"total({mFileList.Count})=\t{MyFiles.FormatFileSize(total)}" + Environment.NewLine +
+                $"選択中({MarkCount()})=\t{MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)" + Environment.NewLine +
+                $"非選択({mFileList.Count - MarkCount()})=\t{MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)" + Environment.NewLine +
+                $"{tmp}%";
             Log.log(str);
 
             return str;

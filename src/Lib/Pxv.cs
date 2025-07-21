@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
 namespace PictureManagerApp.src.Lib
@@ -18,7 +19,13 @@ namespace PictureManagerApp.src.Lib
 
         public static string[] GetPxvDirList()
         {
-            return System.IO.File.ReadAllLines(PXV_ARCHIVE_DIR_TXT_FILEPATH);
+            var path = PXV_ARCHIVE_DIR_TXT_FILEPATH;
+            if (File.Exists(path))
+            {
+                return System.IO.File.ReadAllLines(path);
+            }
+            var s = new string[0];
+            return s;
         }
 
         static Pxv()

@@ -2,6 +2,7 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
 using System.Data.SQLite;
 using System.IO;
 using System.Linq;
@@ -40,7 +41,9 @@ namespace PictureManagerApp.src.Lib
                 dgv.RowTemplate.MinimumHeight = LIST_THUMBNAIL_HEIGHT;
             }
 
-            dgv.ReadOnly = true;                      //読取専用
+            //dgv.ReadOnly = true;                      //読取専用
+            //dgv.EditMode = DataGridViewEditMode.EditOnKeystroke;
+
             dgv.AllowUserToDeleteRows = false;        //行削除禁止
             dgv.AllowUserToAddRows = false;           //行挿入禁止
             
@@ -64,6 +67,7 @@ namespace PictureManagerApp.src.Lib
             dgv.Columns[LIST_DGV_ZIP_CLM_PAGE_TOTAL].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             dgv.Columns[LIST_DGV_ZIP_CLM_PERCENT].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
             dgv.Columns[LIST_DGV_ZIP_CLM_RATING].DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleRight;
+
         }
 
         static private DataTable GetDataTable(IEnumerable<string> zipfiles, bool list_thumbnail)
@@ -88,6 +92,14 @@ namespace PictureManagerApp.src.Lib
 
             var col_filename = dt.Columns.Add(LIST_DGV_ZIP_CLM_FILENAME);
             var col_path = dt.Columns.Add(LIST_DGV_ZIP_CLM_PATH);
+
+
+            //var objColumn = new DataColumn("Checkbox", Type.GetType("Bool"));
+            var objColumn = new DataColumn("Checkbox", typeof(bool));
+            dt.Columns.Add(objColumn);
+            //var column = new DataGridViewCheckBoxColumn();
+            //dt.Columns.Add(column);
+
 
             int i = 0;
             foreach (var f in zipfiles.OrderBy(x => x))
@@ -154,7 +166,7 @@ namespace PictureManagerApp.src.Lib
             datasource.Rows[row_idx].SetField(cl, chara);
         }
 
-        static public void SetThumbnail(DataGridView dgv, int row_idx, string zippath)
+        static public void SetThumbnail(DataGridView dgv, int row_idx, string zippath, int pic_idx = 1)
         {
             var datasource = (DataTable)dgv.DataSource;
             var cl = datasource.Columns[5];
@@ -174,7 +186,8 @@ namespace PictureManagerApp.src.Lib
                 height = LIST_THUMBNAIL_HEIGHT / 2;
             }
 
-            var ba = MyFiles.GetThumbnailByteArray(zippath, width, height, 1);
+            var idx = pic_idx;
+            var ba = MyFiles.GetThumbnailByteArray(zippath, width, height, idx);
             datasource.Rows[row_idx].SetField(cl, ba);
         }
 

@@ -11,7 +11,7 @@ namespace PictureManagerApp.src.Model
 {
     public class GroupItem : FileItem
     {
-        private List<FileItem> files = new();
+        private List<FileItem> Files = new();
         private Image image;
 
         public GroupItem(string path, string zipPath = "") : base(path, zipPath)
@@ -21,7 +21,7 @@ namespace PictureManagerApp.src.Model
 
         public override Image GetImage()
         {
-            var img = ImageModule.GetGroupThumbnailImage(800, 800, $"{files.Count()}");
+            var img = ImageModule.GetGroupThumbnailImage(800, 800, $"{Files.Count()}");
             ImageSize.Width = img.Width;
             ImageSize.Height = img.Height;
             return img;
@@ -29,18 +29,18 @@ namespace PictureManagerApp.src.Model
 
         public void AddFileItem(FileItem fi)
         {
-            files.Add(fi);
+            Files.Add(fi);
         }
 
         public int MemberCount()
         {
-            return files.Count;
+            return Files.Count;
         }
 
         public List<Image> GetGroupImages()
         {
             var Images = new List<Image>();
-            foreach (var file in files)
+            foreach (var file in Files)
             {
                 Images.Add(file.GetImage());
             }
@@ -59,7 +59,7 @@ namespace PictureManagerApp.src.Model
 
         override internal void toggleMark()
         {
-            foreach (var file in files)
+            foreach (var file in Files)
             {
                 file.toggleMark();
             }

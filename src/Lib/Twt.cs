@@ -30,7 +30,13 @@ namespace PictureManagerApp.src.Lib
 
         public static string[] GetTwtDirList()
         {
-            return System.IO.File.ReadAllLines(TWT_ARCHIVE_DIR_TWT_FILEPATH);
+            var path = TWT_ARCHIVE_DIR_TWT_FILEPATH;
+            if (File.Exists(path))
+            {
+                return System.IO.File.ReadAllLines(path);
+            }
+            var s = new string[0];
+            return s;
         }
 
         static Twt()

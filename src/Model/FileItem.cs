@@ -3,6 +3,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Reflection.Emit;
 using System.Security.Policy;
 using System.Xml.Linq;
 using PictureManagerApp.src.Lib;
@@ -33,8 +34,10 @@ namespace PictureManagerApp.src.Model
         public bool Removed { set; get; }
         public bool IsZipEntry { private set; get; }
         public bool IsGroupEntry { private set; get; }
+        public bool InvalidFile { private set; get; }
 
         public long FileSize { set; get; }
+        public string FileSizeDisp => MyFiles.FormatFileSize(FileSize);
         public long CompressedLength { set; get; }
         public DateTime LastWriteTime { set; get; }
 
@@ -362,6 +365,21 @@ namespace PictureManagerApp.src.Model
         }
 
 
+        public bool isSpecifiedPixelCount(int? pixel_count)
+        {
+            if (pixel_count.HasValue)
+            {
+                if (ImageSize.Width * ImageSize.Height <= pixel_count)
+                {
+                    return true;
+                }
+
+                return false;
+            }
+
+            return true;
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -455,6 +473,7 @@ namespace PictureManagerApp.src.Model
                 ImageSize.Height = img.Height;
             } catch {
                 Log.err($"GetImageFromFile fail. '{this.FilePath}'");
+                InvalidFile = true;
                 img = null;
                 ImageSize.Width = 0;
                 ImageSize.Height = 0;
@@ -531,7 +550,15 @@ namespace PictureManagerApp.src.Model
 
             if (mZipPath == "")
             {
-                FileHash = MyFiles.ComputeFileHash(mPath);
+                try
+                {
+                    FileHash = MyFiles.ComputeFileHash(mPath);
+                }
+                catch (Exception e)
+                {
+                    Log.err($"ハッシュ値取得失敗：{e.Message}");
+                    return null;
+                }
                 return FileHash;
             }
 

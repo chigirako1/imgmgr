@@ -72,6 +72,10 @@ namespace PictureManagerApp
                     KeyFuncTbl[Keys.End] = KeyDownFunc_List_End;
                     break;
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MANGA:
+                    //左に進む（右綴じ）TODO:左綴じ対応？
+                    KeyFuncTbl[Keys.Down] = KeyDownFunc_Manga_NextPage;
+                    KeyFuncTbl[Keys.Up] = KeyDownFunc_Manga_PrevPage;
+
                     KeyFuncTbl[Keys.Left] = KeyDownFunc_Next;
                     KeyFuncTbl[Keys.Right] = KeyDownFunc_Prev;
                     break;
@@ -148,6 +152,20 @@ namespace PictureManagerApp
             {
                 //同一ディレクトリの末尾に移動
                 mModel.MoveToDirEndImage();
+            }
+            return true;
+        }
+
+        private bool KeyDownFunc_Manga_PrevPage(object sender, KeyEventArgs e)
+        {
+            mModel.PrevPage();
+            return true;
+        }
+
+        private bool KeyDownFunc_Manga_NextPage(object sender, KeyEventArgs e)
+        {
+            {
+                mModel.NextPage();
             }
             return true;
         }
@@ -329,7 +347,7 @@ namespace PictureManagerApp
 
         private void PictureForm_KeyDown(object sender, KeyEventArgs e)
         {
-            Log.trc($"[S]:{e.KeyCode}");
+            //Log.trc($"[S]:{e.KeyCode}");
             if (KeyFuncTbl.TryGetValue(e.KeyCode, out KeyDownFunc value))
             {
                 if (value(sender, e))
@@ -337,7 +355,7 @@ namespace PictureManagerApp
                     UpdatePicture();
                 }
             }
-            Log.trc($"[E]");
+            //Log.trc($"[E]");
         }
 
         private bool KeyDownFunc_SlideShow(object sender, KeyEventArgs e)

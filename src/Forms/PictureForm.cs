@@ -486,7 +486,12 @@ namespace PictureManagerApp
                 MessageBoxDefaultButton.Button1);
             if (result == DialogResult.Yes)
             {
-                mModel.Batch();
+                var del_cnt = mModel.Batch();
+
+                MessageBox.Show($"{del_cnt}ファイル削除しました。",
+                    "ファイル削除",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
             }
             if (result != DialogResult.Cancel)
             {
@@ -596,6 +601,7 @@ namespace PictureManagerApp
             SetStatusBar_ImageSize(img);
             SetStatusBar_ImageRatio(img);
             SetStatusBar_SelectedItemCount();
+            SetStatusBar_DispMode();
         }
 
         private void SetStatusBar_ProgressBar()
@@ -660,6 +666,11 @@ namespace PictureManagerApp
         private void SetStatusBar_SelectedItemCount()
         {
             StatusLbl_MarkCnt.Text = $"{mModel.mMarkCount}選択中";//mModel.mMarkCount.ToString();
+        }
+
+        private void SetStatusBar_DispMode()
+        {
+            StatusLbl_DispMode.Text = mModel.ThumbViewType.ToString();
         }
 
         //---------------------------------------------------------------------
@@ -977,7 +988,6 @@ namespace PictureManagerApp
 
         private void ToolStripMenuItem_SelImg_Click(object sender, EventArgs e)
         {
-
             if (mModel.mMarkCount == 0)
             {
                 MessageBox.Show("no selected file",
@@ -1053,7 +1063,11 @@ namespace PictureManagerApp
             var msg = $"{pxv.Rating}\n{pxv.R18}\n{pxv.Feature}";
             MessageBox.Show(msg, caption);
 
-            string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "rating", pxv.Rating.ToString(), -1, -1);
+            //string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "rating", pxv.Rating.ToString(), -1, -1);
+            var prompt = "数値を入力してください";
+            var title = "rating";
+            var value = pxv.Rating.ToString();
+            var str = Util.InputBox(prompt, title, value);
             try
             {
                 long numVal = Int32.Parse(str);
@@ -1067,6 +1081,34 @@ namespace PictureManagerApp
             {
                 Console.WriteLine("{0}: Overflow", str);
             }
+        }
+
+        private void ToolStripMenuItem_DB_Edit_Click(object sender, EventArgs e)
+        {
+            var fitem = mModel.GetCurrentFileItem();
+            var pxv = new PxvArtist(fitem.FilePath);
+
+            var prompt = "削除情報を入力してください";
+            var title = "削除情報";
+            var value = pxv.DelInfo;
+            var inputval = Util.InputBox(prompt, title, value);
+            try
+            {
+                Sqlite.UpdatePxvArtistDelInfo(pxv.PxvID, inputval);
+            }
+            catch (FormatException)
+            {
+                Console.WriteLine("{0}: Bad Format", inputval);
+            }
+            catch (OverflowException)
+            {
+                Console.WriteLine("{0}: Overflow", inputval);
+            }
+        }
+
+        private void t()
+        {
+
         }
 
         private void ToolStripMenuItem_OpenFiler_Click(object sender, EventArgs e)
@@ -1175,7 +1217,7 @@ namespace PictureManagerApp
         {
             //スライドショーの更新間隔(ms)を設定
             //string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "ms", mSlideMs.ToString(), -1, -1);
-            string str = Util.InputBox("数値を入力してください", "ms", mSlideMs.ToString());
+            var str = Util.InputBox("数値を入力してください", "ms", mSlideMs.ToString());
             if (str != "")
             {
                 var numVal = Int32.Parse(str);
@@ -1350,5 +1392,21 @@ namespace PictureManagerApp
         {
 
         }
+
+        private void ToolStripMenuItem_SelectSameHashValFile_Click(object sender, EventArgs e)
+        {
+            mModel.MarkSameHashFiles();
+        }
+
+        private void contextMenuStrip_pic_Opening(object sender, System.ComponentModel.CancelEventArgs e)
+        {
+
+        }
+
+        private void ToolStripMenuItem_rating_down_Click(object sender, EventArgs e)
+        {
+
+        }
+
     }
 }

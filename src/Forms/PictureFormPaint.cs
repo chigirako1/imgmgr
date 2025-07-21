@@ -1,17 +1,23 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Windows.Forms;
 
 using PictureManagerApp.src.Lib;
 using PictureManagerApp.src.Model;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
-//using static System.Net.Mime.MediaTypeNames;
 
 namespace PictureManagerApp
 {
     public partial class PictureForm : Form
     {
+        //---------------------------------------------------------------------
+        // const
+        //---------------------------------------------------------------------
+
+        private const int SMALL_PIXEL_NUMBER = 600 * 960;
+
         private const string FONT_NAME = "Yu Gotic UI";// MS ゴシック";
         private const int FONT_SIZE = 20;
         private const int FONT_SPACE = 3;
@@ -31,6 +37,12 @@ namespace PictureManagerApp
         private static readonly Brush BG_BRUSH = Brushes.Black;
         private static readonly Color COLOR_MARK = Color.Red;
 
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
+        private Brush _BgBrush = BG_BRUSH;
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -42,27 +54,23 @@ namespace PictureManagerApp
             {
                 PictureBox_Paint_Group(sender, e, (GroupItem)fitem);
             }
-            else if (mModel.ThumbViewType == THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MANGA)
-            {
-                PictureBox_Paint_Manga(sender, e);
-            }
             else
             {
-                PictureBox_Paint_OnePic(sender, e, fitem);
-                //rightPicBox_Paint_thumbnail(e, true);
+                switch (mModel.ThumbViewType)
+                {
+                    case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_MANGA:
+                        PictureBox_Paint_Manga(sender, e);
+                        break;
+                    default:
+                        PictureBox_Paint_OnePic(sender, e, fitem);
+                        //rightPicBox_Paint_thumbnail(e, true);
+                        break;
+                }
             }
         }
 
-        private void PictureBox_Paint_Group(object sender, PaintEventArgs e, GroupItem gitem)
+        private void DrawPicInfo(Graphics g, GroupItem gitem)
         {
-            Graphics g = e.Graphics;
-            g.FillRectangle(BRUSH_0, 0, 0, pictureBox.Width, pictureBox.Height);
-
-            //var imgs = gitem.GetGroupImages();
-            //var img = ImageModule.CreateCompositedImage(imgs, pictureBox.Width, pictureBox.Height);
-            var img = gitem.GetGroupImage(pictureBox.Width, pictureBox.Height);
-            g.DrawImage(img, 0, 0);
-
             var fsize = FONT_SIZE;
             var inc = FONT_SPACE;
             var x = 0;
@@ -81,6 +89,19 @@ namespace PictureManagerApp
                 g.DrawString(txt, fnt, txtbrush, x, y);
                 y += fsize + inc;
             }
+        }
+
+        private void PictureBox_Paint_Group(object sender, PaintEventArgs e, GroupItem gitem)
+        {
+            Graphics g = e.Graphics;
+            g.FillRectangle(BRUSH_0, 0, 0, pictureBox.Width, pictureBox.Height);
+
+            //var imgs = gitem.GetGroupImages();
+            //var img = ImageModule.CreateCompositedImage(imgs, pictureBox.Width, pictureBox.Height);
+            var img = gitem.GetGroupImage(pictureBox.Width, pictureBox.Height);
+            g.DrawImage(img, 0, 0);
+
+            DrawPicInfo(g, gitem);
 
             g.DrawRectangle(PEN_COLOR_FRAME, 0, 0, pictureBox.Width, pictureBox.Height);
         }
@@ -88,32 +109,61 @@ namespace PictureManagerApp
         private void PictureBox_Paint_Manga(object sender, PaintEventArgs e)
         {
             Graphics g = e.Graphics;
-            g.FillRectangle(BG_BRUSH, 0, 0, pictureBox.Width, pictureBox.Height);
+            g.FillRectangle(_BgBrush, 0, 0, pictureBox.Width, pictureBox.Height);
 
             var fitem1 = mModel.GetCurrentFileItem();
             var fitem2 = mModel.GetCurrentFileItemByRelativeIndex(1);
-
+            var img1 = fitem1.GetImage();
             var img2 = fitem2.GetImage();
-            var size1 = fitem1.GetImageSize();
-            var size2 = fitem2.GetImageSize();
-            if (size1.Width < size1.Height && size2.Width < size2.Height)
-            {   //縦長画像
+            bool mihiraki;
 
-                //画像描画
-                var img = ImageModule.GetOneImage(fitem1.GetImage(), img2, pictureBox.Width, pictureBox.Height);
-                g.DrawImage(img, 0, 0);
+            if (mModel.IsLastNow())
+            {
+                mihiraki = false;
+
+                var triangle = GetTriangleLB(0, 0, pictureBox.Width, pictureBox.Height);
+                g.FillPath(BRUSH_0, triangle);
             }
             else
-            {   //横長の場合は一枚のみ表示
-                ImageModule.DrawImage(
-                    g, 0, 0, pictureBox.Width, pictureBox.Height,
-                    fitem1.GetImage(),
-                    IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN);
+            {
+                var size1 = fitem1.GetImageSize();
+                var size2 = fitem2.GetImageSize();
+                if (PictureModel.IsMihiraki(size1, size2))
+                {   //縦長画像2枚
+                    mihiraki = true;
+                }
+                else
+                {   //横長の場合は一枚のみ表示
+                    mihiraki = false;
+                }
             }
 
+            if (mihiraki)
+            {
+                var img = ImageModule.GetOneImage(img1, img2, pictureBox.Width, pictureBox.Height);
+                //画像描画
+                g.DrawImage(img, 0, 0);
+                DrawPageNo(g, pictureBox.Width, pictureBox.Height);
+            }
+            else
+            {
+                ImageModule.DrawImage(
+                    g,
+                    0, 0, pictureBox.Width, pictureBox.Height,
+                    img1,
+                    IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN);
+                DrawPageNo(g, pictureBox.Width, pictureBox.Height);
+            }
+
+            DrawProgressBar(g);
+        }
+
+        private void DrawProgressBar(Graphics g)
+        {
             // 進捗プログレスバー的な
-            var (p1, p2) = GetProgressPoint();
-            g.DrawLine(PEN_COLOR_PROGRESS, p1, p2);
+            //左に進む
+            var (p1, p2) = GetProgressPointRtoL();
+            g.DrawLine(PEN_COLOR_PROGRESS, p2, p1);
         }
 
         private void FillBG(Graphics g, FileItem fitem)
@@ -129,7 +179,7 @@ namespace PictureManagerApp
             }
             else
             {
-                bgbrush = BG_BRUSH;
+                bgbrush = _BgBrush;
             }
             g.FillRectangle(bgbrush, 0, 0, pictureBox.Width, pictureBox.Height);
         }
@@ -143,46 +193,50 @@ namespace PictureManagerApp
             if (mCurrentImg == null)
             {
                 Log.err("!!! image not found !!!");
-                return;
-            }
 
-            int alphaPercent = 100;
-            if (mTransitionEffect)
+                //TODO: 異常画像情報の表示
+                DrawString(g, "invalid", 0, 0);
+            }
+            else
             {
-                alphaPercent = mAlphaPercent;
+                int alphaPercent = 100;
+                if (mTransitionEffect)
+                {
+                    alphaPercent = mAlphaPercent;
+                }
+
+                var magType = mMagType;
+                Image img;
+
+                switch (mModel.ROT_TYPE)
+                {
+                    case DISP_ROT_TYPE.DISP_ROT_R090:
+                        img = ImageModule.RotateImage(mCurrentImg, true);
+                        break;
+                    case DISP_ROT_TYPE.DISP_ROT_R270:
+                        img = ImageModule.RotateImage(mCurrentImg, false);
+                        break;
+                    case DISP_ROT_TYPE.DISP_ROT_R180:
+                    case DISP_ROT_TYPE.DISP_ROT_NONE:
+                    default:
+                        img = mCurrentImg;
+                        break;
+                }
+
+                //画像描画
+                var d = ImageModule.DrawCompositedImage(
+                    g,
+                    pictureBox.Width,
+                    pictureBox.Height,
+                    img,//mCurrentImg,
+                    mPrevImg,
+                    alphaPercent,
+                    magType);
+
+                // 画像情報描画
+                PictureBox_PaintTxt(g, d, fitem);
             }
 
-
-            var magType = mMagType;
-            Image img;
-
-            switch (mModel.ROT_TYPE)
-            {
-                case DISP_ROT_TYPE.DISP_ROT_R090:
-                    img = ImageModule.RotateImage(mCurrentImg, true);
-                    break;
-                case DISP_ROT_TYPE.DISP_ROT_R270:
-                    img = ImageModule.RotateImage(mCurrentImg, false);
-                    break;
-                case DISP_ROT_TYPE.DISP_ROT_R180:
-                case DISP_ROT_TYPE.DISP_ROT_NONE:
-                default:
-                    img = mCurrentImg;
-                    break;
-            }
-
-            //画像描画
-            var d = ImageModule.DrawCompositedImage(
-                g,
-                pictureBox.Width,
-                pictureBox.Height,
-                img,//mCurrentImg,
-                mPrevImg,
-                alphaPercent,
-                magType);
-
-            // 画像情報描画
-            PictureBox_PaintTxt(g, d, fitem);
 
             // 進捗プログレスバー的な
             var (p1, p2) = GetProgressPoint();
@@ -191,14 +245,31 @@ namespace PictureManagerApp
 
         private (Point, Point) GetProgressPoint()
         {
-            var unit = 10000;
-            var (now, total) = mModel.GetIndex();
-            var width = pictureBox.Width * (now * unit / total) / unit;
+            var width = GetProgressPointWidth();
             var y = pictureBox.Height - PEN_PROGRESS_WIDTH;
 
             var p1 = new Point(0, y);
             var p2 = new Point(width, y);
             return (p1, p2);
+        }
+
+        private (Point, Point) GetProgressPointRtoL()
+        {
+            var width = GetProgressPointWidth();
+            var y = pictureBox.Height - PEN_PROGRESS_WIDTH;
+
+            var p1 = new Point(pictureBox.Width, y);
+            var p2 = new Point(pictureBox.Width - width, y);
+            return (p1, p2);
+        }
+
+        private int GetProgressPointWidth()
+        {
+            var unit = 10000;
+            var (now, total) = mModel.GetIndex();
+            var width = pictureBox.Width * (now * unit / total) / unit;
+
+            return width;
         }
 
         private void PictureBox_PaintTxt(Graphics g, DrawDimension d, FileItem fitem)
@@ -314,13 +385,8 @@ namespace PictureManagerApp
             }
         }
 
-        private void rightPicBox_Paint_thumbnail(PaintEventArgs e, bool main = false)
+        private Size GetSize(bool main)
         {
-            var g = e.Graphics;
-
-            int col = ThumbnailCols;
-            int row = ThumbnailRows;
-
             Size tsize;
             if (main)
             {
@@ -331,6 +397,18 @@ namespace PictureManagerApp
             {
                 tsize = GetThumbnailSize();
             }
+            return tsize;
+        }
+
+
+        private void rightPicBox_Paint_thumbnail(PaintEventArgs e, bool main = false)
+        {
+            var g = e.Graphics;
+
+            int col = ThumbnailCols;
+            int row = ThumbnailRows;
+
+            var tsize = GetSize(main);
             int thumWidth = tsize.Width;
             int thumHeight = tsize.Height;
 
@@ -357,21 +435,7 @@ namespace PictureManagerApp
                 if (idx == 0)
                 {
                     //先頭ファイルの目印
-                    var t = false;
-                    if (t)
-                    {
-                        g.FillRectangle(BRUSH_0, x, y, thumWidth / 2, thumHeight);
-                    }
-                    else
-                    {
-                        var triangle = new System.Drawing.Drawing2D.GraphicsPath();
-                        Point p1 = new Point(x, y);
-                        Point p2 = new Point(x, y + thumHeight);
-                        Point p3 = new Point(x + thumWidth, y);
-                        triangle.AddPolygon(new Point[] { p1, p2, p3 });
-
-                        e.Graphics.FillPath(BRUSH_0, triangle);
-                    }
+                    DrawTopMark(g, x, y, thumWidth, thumHeight);
                 }
 
                 if (thumbImg != null)
@@ -384,7 +448,7 @@ namespace PictureManagerApp
                                           thumHeight,
                                           thumbImg);
 
-                    if (imgsize.Width * imgsize.Height < 600 * 960)
+                    if (imgsize.Width * imgsize.Height < SMALL_PIXEL_NUMBER)
                     {
                         int fsize = FONT_SIZE;
                         var fnt = new Font(FONT_NAME, fsize);
@@ -392,6 +456,11 @@ namespace PictureManagerApp
                         var txtbrush = Brushes.Red;
                         g.DrawString(txt, fnt, txtbrush, x, y);
                     }
+                }
+                else if (fitem.InvalidFile)
+                {
+                    var txt = "invalid";
+                    DrawString2(g, txt, x, y, Brushes.Red);
                 }
 
                 if (fitem.Mark)
@@ -411,27 +480,68 @@ namespace PictureManagerApp
 
             if (mModel.PictureTotalNumber > dispNum)
             {
-                var w_ = 120;
-                var h_ = 30;
-                var x_ = RightPicBox.Width - w_;
-                var y_ = RightPicBox.Height - h_;
-
-                var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
-                g.FillRectangle(opaqueBrush, x_, y_, w_, h_);
-
-                var idx = mModel.GetAbsIdx(dispNum - 1) + 1;
-                //var idx = mModel.GetAbsIdx(0);
-                var current_page_no = Math.Ceiling((decimal)idx / dispNum);// + 1;
-                var total_page = Math.Ceiling((decimal)mModel.PictureTotalNumber / dispNum);
-
-                int fsize = FONT_SIZE;
-                var fnt = new Font(FONT_NAME, fsize);
-                //string txt = string.Format($"{idx * 100 / mModel.PictureTotalNumber}%");
-                string txt = string.Format($"{current_page_no}/{total_page}({idx * 100 / mModel.PictureTotalNumber}%)");
-                var txtbrush = Brushes.White;
-                g.DrawString(txt, fnt, txtbrush, x_, y_);
+                DrawPercent(g, dispNum);
             }
         }
+
+        private void DrawTopMark(Graphics g, int x, int y, int thumWidth, int thumHeight)
+        {
+            var t = false;
+            if (t)
+            {
+                g.FillRectangle(BRUSH_0, x, y, thumWidth / 2, thumHeight);
+            }
+            else
+            {
+                var triangle = GetTriangle(x, y, thumWidth, thumHeight);
+                g.FillPath(BRUSH_0, triangle);
+            }
+
+        }
+
+        private void DrawPercent(Graphics g, int dispNum)
+        {
+            var w_ = 120;
+            var h_ = 30;
+            var x_ = RightPicBox.Width - w_;
+            var y_ = RightPicBox.Height - h_;
+
+            var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
+            g.FillRectangle(opaqueBrush, x_, y_, w_, h_);
+
+            var idx = mModel.GetAbsIdx(dispNum - 1) + 1;
+            //var idx = mModel.GetAbsIdx(0);
+            var current_page_no = Math.Ceiling((decimal)idx / dispNum);// + 1;
+            var total_page = Math.Ceiling((decimal)mModel.PictureTotalNumber / dispNum);
+
+            int fsize = FONT_SIZE;
+            var fnt = new Font(FONT_NAME, fsize);
+            //string txt = string.Format($"{idx * 100 / mModel.PictureTotalNumber}%");
+            string txt = string.Format($"{current_page_no}/{total_page}({idx * 100 / mModel.PictureTotalNumber}%)");
+            var txtbrush = Brushes.White;
+            g.DrawString(txt, fnt, txtbrush, x_, y_);
+        }
+
+        private GraphicsPath GetTriangle(int x, int y, int w, int h)
+        {
+            var triangle = new System.Drawing.Drawing2D.GraphicsPath();
+            Point p1 = new Point(x, y);
+            Point p2 = new Point(x, y + h);
+            Point p3 = new Point(x + w, y);
+            triangle.AddPolygon(new Point[] { p1, p2, p3 });
+            return triangle;
+        }
+
+        private GraphicsPath GetTriangleLB(int x, int y, int w, int h)
+        {
+            var triangle = new System.Drawing.Drawing2D.GraphicsPath();
+            Point p1 = new Point(x, y);
+            Point p2 = new Point(x, y + h);
+            Point p3 = new Point(x + w, y + h);
+            triangle.AddPolygon(new Point[] { p1, p2, p3 });
+            return triangle;
+        }
+
 
         private void rightPicBox_Paint_overview(PaintEventArgs e)
         {
@@ -440,6 +550,11 @@ namespace PictureManagerApp
             int col = 6;// ThumbnailCols;
             int row = 6;// ThumbnailRows;
 
+            rightPicBox_Paint_overview_core(g, col, row);
+        }
+
+        private void rightPicBox_Paint_overview_core(Graphics g, int col, int row)
+        { 
             var tsize = GetThumbnailSize(col, row);
             int thumWidth = tsize.Width;
             int thumHeight = tsize.Height;
@@ -459,13 +574,8 @@ namespace PictureManagerApp
                 if (idx == 0)
                 {
                     //先頭ファイルの目印
-                    var triangle = new System.Drawing.Drawing2D.GraphicsPath();
-                    Point p1 = new Point(x, y);
-                    Point p2 = new Point(x, y + thumHeight);
-                    Point p3 = new Point(x + thumWidth, y);
-                    triangle.AddPolygon(new Point[] { p1, p2, p3 });
-
-                    e.Graphics.FillPath(BRUSH_0, triangle);
+                    var triangle = GetTriangle(x, y, thumWidth, thumHeight);
+                    g.FillPath(BRUSH_0, triangle);
                 }
 
                 if (thumbImg != null)
@@ -478,13 +588,11 @@ namespace PictureManagerApp
                                           thumHeight,
                                           thumbImg);
 
-                    if (imgsize.Width * imgsize.Height < 600 * 960)
+                    if (imgsize.Width * imgsize.Height < SMALL_PIXEL_NUMBER)
                     {
-                        int fsize = FONT_SIZE;
-                        var fnt = new Font(FONT_NAME, fsize);
                         string txt = string.Format("small({0,4}x{1,4})[{2,4}x{3,4}]", imgsize.Width, imgsize.Height, thumWidth, thumHeight);
                         var txtbrush = Brushes.Red;
-                        g.DrawString(txt, fnt, txtbrush, x, y);
+                        DrawString2(g, txt, x, y, txtbrush);
                     }
                 }
 
@@ -674,7 +782,7 @@ namespace PictureManagerApp
             }
             else
             {
-                bgbrush = BG_BRUSH;
+                bgbrush = _BgBrush;
             }
             g.FillRectangle(bgbrush, x, y, thumWidth, thumHeight);
         }
@@ -682,9 +790,49 @@ namespace PictureManagerApp
         private void DrawString(Graphics g, string txt, int x, int y)
         {
             int fsize = FONT_SIZE;
+            using (var fnt = new Font(FONT_NAME, fsize))
+            {
+                var txtbrush = FONT_COLOR;
+                //g.DrawString(txt, fnt, txtbrush, x, y + fsize);
+                g.DrawString(txt, fnt, txtbrush, x, y);
+            }
+        }
+
+        private void DrawString2(Graphics g, string txt, int x, int y, Brush txtbrush)
+        {
+            int fsize = FONT_SIZE;
             var fnt = new Font(FONT_NAME, fsize);
-            var txtbrush = FONT_COLOR;
-            g.DrawString(txt, fnt, txtbrush, x, y + fsize);
+            g.DrawString(txt, fnt, txtbrush, x, y);
+        }
+
+        private void DrawStringRB(Graphics g, string txt, int canvasWidth, int canvasHeight)
+        {
+            int fsize = FONT_SIZE;
+            using (var fnt = new Font(FONT_NAME, fsize))
+            {
+                SizeF textSize = g.MeasureString(txt, fnt);
+                int widthInPixels = (int)Math.Ceiling(textSize.Width);
+                int heightInPixels = (int)Math.Ceiling(textSize.Height);
+
+                int x = canvasWidth - widthInPixels;
+                int y = canvasHeight - heightInPixels;
+
+                var txtbrush = FONT_COLOR;
+                g.DrawString(txt, fnt, txtbrush, x, y);
+            }
+        }
+
+        private void DrawPageNo(Graphics g, int canvasWidth, int canvasHeight)
+        {
+            var (now, total) = mModel.GetIndex();
+            var txt = $"{now}/{total}";
+
+            if (now == total)
+            {
+                txt += "終";
+            }
+
+            DrawStringRB(g, txt, canvasWidth, canvasHeight);
         }
     }
 }

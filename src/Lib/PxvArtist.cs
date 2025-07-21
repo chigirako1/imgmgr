@@ -20,6 +20,7 @@ namespace PictureManagerApp.src.Lib
 
         public string Warnings { set; get; }
 
+        public string DelInfo { set; get; }
 
         public PxvArtist()
         {
@@ -50,6 +51,10 @@ namespace PictureManagerApp.src.Lib
             if (reader["warnings"] != DBNull.Value)
             {
                 Warnings = (string)reader["warnings"];
+            }
+            if (reader["warnings"] != DBNull.Value)
+            {
+                DelInfo = (string)reader["del_info"];
             }
         }
     }

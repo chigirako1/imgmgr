@@ -22,9 +22,9 @@ namespace PictureManagerApp
 {
     public partial class MainForm : Form
     {
-        private const int MAX_PIC_WIDTH = 1200 / 2;
+        private const int MAX_PIC_WIDTH = 1600 / 2;//1200 / 2;
         private const int MAX_PIC_HEIGHT = 1920 / 2;
-        private const int MAX_FILE_SIZE = 165;//140;//kb
+        private const int MAX_FILE_SIZE = 0;//165;//140;//kb
 
         private const int DGV_COL_IDX_STAR = 1;
         private const int DGV_COL_IDX_PAGE_NOW = 3;
@@ -112,7 +112,10 @@ namespace PictureManagerApp
             var cfgPath = this.Config.LastPath;
             if (cfgPath != null)
             {
-                cmbBoxPath.Items.Add(cfgPath);
+                if (Directory.Exists(cfgPath))
+                {
+                    cmbBoxPath.Items.Add(cfgPath);
+                }
             }
 
             var list = PictureModel.GetDirPathList();
@@ -235,13 +238,33 @@ namespace PictureManagerApp
                     }
                     else
                     {
-                        model.SetCurrentFileIndex(di.PageNo);
+                        try
+                        {
+                            model.SetCurrentFileIndex(di.PageNo);
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.log($"{ex}/{di.PageNo}");
+                            MessageBox.Show(ex.ToString(),
+                                "エラー",
+                                MessageBoxButtons.OK,
+                                MessageBoxIcon.Error);
+                        }
                     }
                 }
                 else
                 {
                     model.BuildFileListFromText(txtBox_FileList.Text, pathStr);
                 }
+
+                if (model.HasInvalidFile())
+                {
+                    MessageBox.Show("不正なファイルが含まれています",
+                        "エラー",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
+
 
                 var picForm = new PictureForm();
                 picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
@@ -361,6 +384,12 @@ namespace PictureManagerApp
                 Size size = new(width, height);
 
                 model.SetMaxPicSize(size);
+            }
+
+            var pixel = (int)numUD_Pixel.Value;
+            if (pixel != 0)
+            {
+                model.SetMaxPixelCount(pixel);
             }
 
             if (radioBtn_PicOrinet_All.Checked)
@@ -701,7 +730,7 @@ namespace PictureManagerApp
                 Dgv.SetColumnValue(DirListDGV, row_idx, DGV_COL_IDX_PAGE_NOW, pn.ToString());
                 Dgv.SetColumnValue(DirListDGV, row_idx, DGV_COL_IDX_PERCENT, percent.ToString());
 
-                Dgv.SetThumbnail(DirListDGV, row_idx, fullpath);
+                Dgv.SetThumbnail(DirListDGV, row_idx, fullpath, pn - 1);
             }
         }
 
@@ -826,6 +855,28 @@ namespace PictureManagerApp
             finally { }
         }
 
+        private void ToolStripMenuItem_FileDel_Click(object sender, EventArgs e)
+        {
+            //var row_idx = GetRowIdx();
+            var idx = DirListDGV.CurrentCell.RowIndex;
+            var row = DirListDGV.Rows[idx];
+            var fullpath = Dgv.GetPath(this.DirListDGV, row);
+
+
+
+            var msg = $"ファイルを削除しますか？'{fullpath}'";
+            var title = "ファイル削除?" + Path.GetFileName(fullpath);
+            var result = MessageBox.Show(msg,
+                        title,
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Question,
+                        MessageBoxDefaultButton.Button1);
+            if (result == DialogResult.Yes)
+            {
+                Log.log(msg);
+            }
+        }
+
         private void ToolStripMenuItem_test_Click(object sender, EventArgs e)
         {
             var row_idx = GetRowIdx();
@@ -844,7 +895,20 @@ namespace PictureManagerApp
         {
             Log.trc("[S]");
 
-            mTsvRowList = PictureModel.MakeTsvRowList();//new TsvRowList(@"D:\download\del_list.tsv");
+            try
+            {
+                mTsvRowList = PictureModel.MakeTsvRowList();//new TsvRowList(@"D:\download\del_list.tsv");
+            }
+            catch (Exception ex)
+            {
+                Log.log($"{ex}");
+                MessageBox.Show(ex.ToString(),
+                    "tsv エラー",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+                return;
+            }
+
 
             HashSet<long> pxvids = new();
             HashSet<string> screen_names = new();
@@ -906,5 +970,6 @@ namespace PictureManagerApp
             picForm.SetModel(model);
             picForm.ShowDialog();
         }
+
     }
 }

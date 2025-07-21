@@ -31,16 +31,19 @@ namespace PictureManagerApp.src.Lib
         public static void warning(string s)
         {
             Console.Error.WriteLine(s);
+            System.Diagnostics.Debug.WriteLine(s);
         }
 
         public static void err(string s)
         {
             Console.Error.WriteLine(s);
+            System.Diagnostics.Debug.WriteLine(s);
         }
 
         public static void fatal(string s)
         {
             Console.Error.WriteLine(s);
+            System.Diagnostics.Debug.WriteLine(s);
         }
 
         public static void dbg(string s)
