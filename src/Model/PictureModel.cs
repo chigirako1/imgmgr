@@ -55,6 +55,7 @@ namespace PictureManagerApp.src.Model
         PIC_ORINET_LANDSCAPE_ONLY,
         PIC_ORINET_SQUARE,
         PIC_ORINET_LONG,
+        PIC_ORINET_CUSTOM,
 
         PIC_ORINET_MAX
     }
@@ -413,6 +414,7 @@ namespace PictureManagerApp.src.Model
         {
             Log.log($"[S] root=#{rootPath}");
             mPath = rootPath;
+            var no_file_cnt = 0;
 
             string[] filelistarray = filelist.Split(
                             Environment.NewLine,
@@ -431,13 +433,14 @@ namespace PictureManagerApp.src.Model
                 if (!File.Exists(pathtmp))
                 {
                     Log.warning($"存在しないファイルを無視します #{pathtmp}");
+                    no_file_cnt++;
                     continue;
                 }
                 var fi = new FileItem(pathtmp);
                 mFileList.Add(fi);
             }
 
-            Log.trc("[E]");
+            Log.trc($"[E] 存在しないファイル={no_file_cnt} files");
         }
 
         public void SetFileList(FileList filelist)
@@ -715,6 +718,8 @@ namespace PictureManagerApp.src.Model
 
         private void AddRelativeFile(string f)
         {
+            //TODO: ファイルサイズを比較し、ファイルサイズが大きい方を選択する？？？
+
             var tmp = f.Replace(mSeachWord, "");
             Log.log($"ファイル名:'{tmp}'/置換語:'{mSeachWord}'");
             if (File.Exists(tmp))
@@ -839,10 +844,15 @@ namespace PictureManagerApp.src.Model
 
                 try
                 {
+                    if (mSeachWord != "" && picpath.Contains(mSeachWord) == false)
+                    {
+                        continue;
+                    }
+
                     if (!File.Exists(picpath))
                     {
                         missing_file_cnt++;
-                        Log.warning($"存在しないファイルを無視します '{picpath}'(#{missing_file_cnt})");
+                        //Log.warning($"存在しないファイルを無視します '{picpath}'(#{missing_file_cnt})");
                         continue;
                     }
 
@@ -876,7 +886,8 @@ namespace PictureManagerApp.src.Model
 
             if (missing_file_cnt > 0)
             {
-                Log.trc($"{line_cnt}行中{missing_file_cnt}ファイルが存在しませんでした。({line_cnt - missing_file_cnt})");
+                var percent = missing_file_cnt * 100 / line_cnt;
+                Log.trc($"{line_cnt}行中{missing_file_cnt}ファイル({percent}%)が存在しませんでした。(存在={line_cnt - missing_file_cnt})");
             }
         }
 
@@ -1082,7 +1093,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void Up()
         {
-            Log.trc($"[S]{mIdx}");
+            Log.trc($"[S] mIdx={mIdx}");
             mIdx -= UpDownCount;
             if (mIdx < 0)
             {
@@ -1094,7 +1105,7 @@ namespace PictureManagerApp.src.Model
             }
 
             Update();
-            Log.trc($"[E]{mIdx}");
+            Log.trc($"[E] mIdx={mIdx}");
         }
 
         //---------------------------------------------------------------------
@@ -1102,7 +1113,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void Down()
         {
-            Log.trc($"[S]{mIdx}");
+            Log.trc($"[S] mIdx={mIdx}");
             mIdx += UpDownCount;
             if (mIdx >= mFileList.Count)
             {
@@ -1113,7 +1124,7 @@ namespace PictureManagerApp.src.Model
                 }
             }
             Update();
-            Log.trc($"[E]{mIdx}");
+            Log.trc($"[E] mIdx={mIdx}");
         }
 
         //---------------------------------------------------------------------
@@ -1121,7 +1132,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void PageUp()
         {
-            Log.trc($"[S]{mIdx}");
+            Log.trc($"[S] mIdx={mIdx}");
             mIdx -= PageCount;
             if (mIdx < 0)
             {
@@ -1133,7 +1144,7 @@ namespace PictureManagerApp.src.Model
             }
 
             Update();
-            Log.trc($"[E]{mIdx}");
+            Log.trc($"[E] mIdx={mIdx}");
         }
 
         //---------------------------------------------------------------------
@@ -1141,7 +1152,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public void PageDown()
         {
-            Log.trc($"[S]{mIdx}");
+            Log.trc($"[S] mIdx={mIdx}");
             mIdx += PageCount;
             if (mIdx >= mFileList.Count)
             {
@@ -1153,7 +1164,7 @@ namespace PictureManagerApp.src.Model
             }
 
             Update();
-            Log.trc($"[E]{mIdx}");
+            Log.trc($"[E] mIdx={mIdx}");
         }
 
         //---------------------------------------------------------------------
@@ -1490,7 +1501,8 @@ namespace PictureManagerApp.src.Model
             if (idx < 0 || idx > mFileList.Count)
             {
                 Log.err($"idx={idx}");
-                throw new ArgumentOutOfRangeException(nameof(idx));
+                //throw new ArgumentOutOfRangeException(nameof(idx));
+                mIdx = 0;
             }
             mIdx = idx;
         }

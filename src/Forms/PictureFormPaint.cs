@@ -501,7 +501,7 @@ namespace PictureManagerApp
 
         private void DrawPercent(Graphics g, int dispNum)
         {
-            var w_ = 120;
+            var w_ = 150;
             var h_ = 30;
             var x_ = RightPicBox.Width - w_;
             var y_ = RightPicBox.Height - h_;
@@ -801,8 +801,10 @@ namespace PictureManagerApp
         private void DrawString2(Graphics g, string txt, int x, int y, Brush txtbrush)
         {
             int fsize = FONT_SIZE;
-            var fnt = new Font(FONT_NAME, fsize);
-            g.DrawString(txt, fnt, txtbrush, x, y);
+            using (var fnt = new Font(FONT_NAME, fsize))
+            {
+                g.DrawString(txt, fnt, txtbrush, x, y);
+            }
         }
 
         private void DrawStringRB(Graphics g, string txt, int canvasWidth, int canvasHeight)

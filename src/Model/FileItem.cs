@@ -24,8 +24,9 @@ namespace PictureManagerApp.src.Model
         private Image mThumbnail;
 
         //private string FileHash = null;//"";
-        public string FileHash { private set; get; } = null;
+        private string FileHash { set; get; } = null;
 
+        public string DestinationStr { private set; get; } = "";
         public bool Mark {
             set; get;
         }
@@ -351,8 +352,14 @@ namespace PictureManagerApp.src.Model
                     break;
                 case PIC_ORIENT_TYPE.PIC_ORINET_LONG:
                     float rat = img_w * 100 / img_h;
-                    //まあアスペクト比ソートでいいかも
                     if (rat > 200)//TODO:
+                    {
+                        return true;
+                    }
+                    break;
+                case PIC_ORIENT_TYPE.PIC_ORINET_CUSTOM:
+                    float rat2 = GetAspectRatio();
+                    if (9 < rat2 * 16 && rat2 * 16 < 11)
                     {
                         return true;
                     }

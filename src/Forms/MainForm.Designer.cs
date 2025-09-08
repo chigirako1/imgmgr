@@ -85,9 +85,10 @@
             ヘルプHToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             contextMenuStrip1 = new System.Windows.Forms.ContextMenuStrip(components);
             ToolStripMenuItem_test = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_FileDel = new System.Windows.Forms.ToolStripMenuItem();
             btnOpenExplorer = new System.Windows.Forms.Button();
             btnGroupListStart = new System.Windows.Forms.Button();
-            ToolStripMenuItem_FileDel = new System.Windows.Forms.ToolStripMenuItem();
+            radioBtn_PicOrinet_Custom = new System.Windows.Forms.RadioButton();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -358,6 +359,7 @@
             // 
             // grpBox_PicOrient
             // 
+            grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_Custom);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_Long);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_Square);
             grpBox_PicOrient.Controls.Add(radioBtn_PicOrinet_LS_only);
@@ -705,14 +707,21 @@
             // 
             contextMenuStrip1.Items.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_test, ToolStripMenuItem_FileDel });
             contextMenuStrip1.Name = "contextMenuStrip1";
-            contextMenuStrip1.Size = new System.Drawing.Size(181, 82);
+            contextMenuStrip1.Size = new System.Drawing.Size(163, 60);
             // 
             // ToolStripMenuItem_test
             // 
             ToolStripMenuItem_test.Name = "ToolStripMenuItem_test";
-            ToolStripMenuItem_test.Size = new System.Drawing.Size(180, 28);
+            ToolStripMenuItem_test.Size = new System.Drawing.Size(162, 28);
             ToolStripMenuItem_test.Text = "test";
             ToolStripMenuItem_test.Click += ToolStripMenuItem_test_Click;
+            // 
+            // ToolStripMenuItem_FileDel
+            // 
+            ToolStripMenuItem_FileDel.Name = "ToolStripMenuItem_FileDel";
+            ToolStripMenuItem_FileDel.Size = new System.Drawing.Size(162, 28);
+            ToolStripMenuItem_FileDel.Text = "ファイル削除";
+            ToolStripMenuItem_FileDel.Click += ToolStripMenuItem_FileDel_Click;
             // 
             // btnOpenExplorer
             // 
@@ -737,12 +746,16 @@
             btnGroupListStart.UseVisualStyleBackColor = true;
             btnGroupListStart.Click += btnGroupListStart_Click;
             // 
-            // ToolStripMenuItem_FileDel
+            // radioBtn_PicOrinet_Custom
             // 
-            ToolStripMenuItem_FileDel.Name = "ToolStripMenuItem_FileDel";
-            ToolStripMenuItem_FileDel.Size = new System.Drawing.Size(180, 28);
-            ToolStripMenuItem_FileDel.Text = "ファイル削除";
-            ToolStripMenuItem_FileDel.Click += ToolStripMenuItem_FileDel_Click;
+            radioBtn_PicOrinet_Custom.AutoSize = true;
+            radioBtn_PicOrinet_Custom.Location = new System.Drawing.Point(37, 230);
+            radioBtn_PicOrinet_Custom.Margin = new System.Windows.Forms.Padding(2);
+            radioBtn_PicOrinet_Custom.Name = "radioBtn_PicOrinet_Custom";
+            radioBtn_PicOrinet_Custom.Size = new System.Drawing.Size(80, 27);
+            radioBtn_PicOrinet_Custom.TabIndex = 1;
+            radioBtn_PicOrinet_Custom.Text = "カスタム";
+            radioBtn_PicOrinet_Custom.UseVisualStyleBackColor = true;
             // 
             // MainForm
             // 
@@ -858,6 +871,7 @@
         private System.Windows.Forms.Label label6;
         private System.Windows.Forms.NumericUpDown numUD_Pixel;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_FileDel;
+        private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Custom;
     }
 }
 

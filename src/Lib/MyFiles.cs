@@ -31,13 +31,15 @@ namespace PictureManagerApp.src.Lib
             return $"{bytes / Math.Pow(unit, exp):F2} {("KMGTPE")[exp - 1]}B";
         }
 
-        public static void moveToTrashDir(string path, string rootpath, string appendStr = "-0trash")
+        public static bool moveToTrashDir(string path, string rootpath, string appendStr = "-0trash")
         {
-            move(path, rootpath, appendStr);
+            return move(path, rootpath, appendStr);
         }
 
-        public static void move(string path, string rootpath, string appendStr)
+        public static bool move(string path, string rootpath, string appendStr)
         {
+            bool result;
+
             Log.trc("------>");
             Log.log($"移動ファイル='{path}'");
 
@@ -58,12 +60,16 @@ namespace PictureManagerApp.src.Lib
             try
             {
                 fi.MoveTo(moveToPath);
+                result = true;
             }
             catch (IOException e)
             {
                 Log.err($"{e}/'{path}'");
+                result = false;
             }
             Log.trc("<------");
+
+            return result;
         }
 
         public static Image GetImageFromZipFile(string zippath, string filepath)

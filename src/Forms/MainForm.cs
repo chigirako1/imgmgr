@@ -416,6 +416,10 @@ namespace PictureManagerApp
             {
                 model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LONG);
             }
+            else if (radioBtn_PicOrinet_Custom.Checked)
+            {
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_CUSTOM);
+            }
         }
 
         private void btnStart_Click(object sender, EventArgs e)

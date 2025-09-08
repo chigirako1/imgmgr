@@ -22,6 +22,9 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.Escape] = KeyDownFunc_Escape;
 
             KeyFuncTbl[Keys.NumPad0] = KeyDownFunc_SelectToggle;
+
+
+
             KeyFuncTbl[Keys.Space] = KeyDownFunc_SlideShow;//KeyDownFunc_SelectToggle;
 
             KeyFuncTbl[Keys.Delete] = KeyDownFunc_Del;
@@ -300,17 +303,24 @@ namespace PictureManagerApp
 
         private bool KeyDownFunc_SelectToggle(object sender, KeyEventArgs e)
         {
-            if (e.Shift)
+            switch (e.KeyCode)
             {
-            }
-            else if (e.Control)
-            {
-                mModel.MarkAllSameDirFiles();
-            }
-            else
-            {
-                mModel.toggleMark();
-                mModel.Next();
+                case Keys.NumPad0:
+                    if (e.Shift)
+                    {
+                    }
+                    else if (e.Control)
+                    {
+                        mModel.MarkAllSameDirFiles();
+                    }
+                    else
+                    {
+                        mModel.toggleMark();
+                        mModel.Next();
+                    }
+                    break;
+                default:
+                    break;
             }
             return true;
         }

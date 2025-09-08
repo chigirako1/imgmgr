@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Text.RegularExpressions;
 using PictureManagerApp.src.Lib;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
@@ -181,7 +182,8 @@ namespace PictureManagerApp.src.Model
 
         public int Batch(string rootpath)
         {
-            int cnt = 0;
+            var fail_list = new List<string>();
+            int cnt = 1;
             foreach (var fitem in mFileList)
             {
                 if (fitem.Mark)
@@ -189,14 +191,33 @@ namespace PictureManagerApp.src.Model
                     //var tweetinfo = Twt.GetTweetInfoFromPath(fitem.FilePath);
                     //Log.log($"@{tweetinfo.ScreenName}/{tweetinfo.TweetID}-{tweetinfo.ImageNo}");
 
-                    MyFiles.moveToTrashDir(fitem.FilePath, rootpath);
-                    fitem.Removed = true;
-                    cnt++;
+                    Log.log($"{cnt}:");
+                    var rmv_sccess = MyFiles.moveToTrashDir(fitem.FilePath, rootpath);
+                    if (rmv_sccess)
+                    {
+                        fitem.Removed = true;
+                        cnt++;
+                    }
+                    else
+                    {
+                        fail_list.Add(fitem.FilePath);
+                    }
+                }
+                else if (fitem.DestinationStr != "")
+                {
+                    var rmv_sccess = MyFiles.moveToTrashDir(fitem.FilePath, rootpath, fitem.DestinationStr);
                 }
             }
-            mFileList.RemoveAll(p => p.Removed);
-            Log.log($"移動したファイルの数:{cnt}");
-            return cnt;
+            var rmv_cnt = mFileList.RemoveAll(p => p.Removed);
+            //Log.log($"移動したファイルの数:{rmv_cnt}/#{cnt - 1}");
+            Log.log($"移動したファイルの数:#{cnt - 1}/{rmv_cnt}");
+
+            foreach (var filename in fail_list)
+            {
+                Log.err($"移動失敗:'{filename}'");
+            }
+
+            return rmv_cnt;
         }
 
         public void Swap(int idx1, int idx2)
@@ -339,12 +360,25 @@ namespace PictureManagerApp.src.Model
             var total = 0L;
             var slct = 0L;
             var not_slct = 0L;
+            var min = long.MaxValue;
+            var max = 0L;
+
             foreach (var fitem in mFileList)
             {
                 if (fitem.FileSize == 0)
                 {
                     Log.log("filesize=0");
                     throw new InvalidOperationException();
+                }
+
+                if (fitem.FileSize > max)
+                {
+                    max = fitem.FileSize;
+                }
+
+                if (fitem.FileSize < min)
+                {
+                    min = fitem.FileSize;
                 }
 
                 total += fitem.FileSize;
@@ -368,10 +402,21 @@ namespace PictureManagerApp.src.Model
                 tmp = not_slct * 100 / slct;
             }
 
-            string str = $"total({mFileList.Count})=\t{MyFiles.FormatFileSize(total)}" + Environment.NewLine +
-                $"選択中({MarkCount()})=\t{MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)" + Environment.NewLine +
-                $"非選択({mFileList.Count - MarkCount()})=\t{MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)" + Environment.NewLine +
-                $"{tmp}%";
+            var avg_slct = slct / MarkCount();
+            var avg_non_slct = not_slct / (mFileList.Count - MarkCount());
+            var texts = new List<string>();
+            texts.Add($"total({mFileList.Count})=\t{MyFiles.FormatFileSize(total)}");
+            texts.Add($"選択中({MarkCount()})=\t{MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)\t平均{MyFiles.FormatFileSize(avg_slct)}");
+            texts.Add($"非選択({mFileList.Count - MarkCount()})=\t{MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)\t平均:{MyFiles.FormatFileSize(avg_non_slct)}");
+            texts.Add($"{tmp}%");
+            texts.Add($"min/max={MyFiles.FormatFileSize(min)}/{MyFiles.FormatFileSize(max)}");
+
+            var strb = new StringBuilder();
+            foreach (var text in texts)
+            {
+                strb.AppendLine(text);
+            }
+            var str = strb.ToString();
             Log.log(str);
 
             return str;

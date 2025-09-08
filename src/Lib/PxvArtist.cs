@@ -52,7 +52,7 @@ namespace PictureManagerApp.src.Lib
             {
                 Warnings = (string)reader["warnings"];
             }
-            if (reader["warnings"] != DBNull.Value)
+            if (reader["del_info"] != DBNull.Value)
             {
                 DelInfo = (string)reader["del_info"];
             }

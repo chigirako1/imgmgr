@@ -83,7 +83,6 @@ namespace PictureManagerApp.src.Lib
         {
             var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
             using (var g = Graphics.FromImage(bmpCanvas))
-            //var g = Graphics.FromImage(bmpCanvas);
             {
                 var d = getDispParam(thumbWidth, thumbHeight, orgImg.Width, orgImg.Height);
                 var dstRect = new Rectangle(
@@ -106,18 +105,22 @@ namespace PictureManagerApp.src.Lib
         public static Image GetGroupThumbnailImage(int thumbWidth, int thumbHeight, string txt)
         {
             var bmpCanvas = new Bitmap(thumbWidth, thumbHeight);
-            Graphics g = Graphics.FromImage(bmpCanvas);
+            using (Graphics g = Graphics.FromImage(bmpCanvas))
+            {
 
-            Brush BRUSH_0 = Brushes.Blue;
-            g.FillRectangle(BRUSH_0, 0, 0, thumbWidth, thumbHeight);
+                Brush BRUSH_0 = Brushes.Blue;
+                g.FillRectangle(BRUSH_0, 0, 0, thumbWidth, thumbHeight);
 
-            var FONT_COLOR = Brushes.Red;
-            var FONT_SIZE = 5;
-            var FONT_NAME = "MS ゴシック";
-            var txtbrush = FONT_COLOR;
-            var fsize = FONT_SIZE;
-            var fnt = new Font(FONT_NAME, fsize);
-            g.DrawString(txt, fnt, txtbrush, 0, 0);
+                var FONT_COLOR = Brushes.Red;
+                var FONT_SIZE = 5;
+                var FONT_NAME = "Yu Gotic UI";//"MS ゴシック";
+                var txtbrush = FONT_COLOR;
+                var fsize = FONT_SIZE;
+                using (var fnt = new Font(FONT_NAME, fsize))
+                {
+                    g.DrawString(txt, fnt, txtbrush, 0, 0);
+                }
+            }
 
             return bmpCanvas;
         }
@@ -127,24 +130,23 @@ namespace PictureManagerApp.src.Lib
         //---------------------------------------------------------------------
         public static Image CreateTranslucentImage(Image img, float alpha)
         {
-            Bitmap transImg = new(img.Width, img.Height);
-            Graphics g = Graphics.FromImage(transImg);
+            var transImg = new Bitmap(img.Width, img.Height);
+            using (Graphics g = Graphics.FromImage(transImg))
+            {
+                System.Drawing.Imaging.ColorMatrix cm = new();
+                cm.Matrix00 = 1;
+                cm.Matrix11 = 1;
+                cm.Matrix22 = 1;
+                cm.Matrix33 = alpha;
+                cm.Matrix44 = 1;
 
-            System.Drawing.Imaging.ColorMatrix cm =
-                new();
-            cm.Matrix00 = 1;
-            cm.Matrix11 = 1;
-            cm.Matrix22 = 1;
-            cm.Matrix33 = alpha;
-            cm.Matrix44 = 1;
-            System.Drawing.Imaging.ImageAttributes ia =
-                new();
-            ia.SetColorMatrix(cm);
-            g.DrawImage(img,
-                new Rectangle(0, 0, img.Width, img.Height),
-                0, 0, img.Width, img.Height, GraphicsUnit.Pixel, ia);
+                System.Drawing.Imaging.ImageAttributes ia = new();
 
-            g.Dispose();
+                ia.SetColorMatrix(cm);
+                g.DrawImage(img,
+                    new Rectangle(0, 0, img.Width, img.Height),
+                    0, 0, img.Width, img.Height, GraphicsUnit.Pixel, ia);
+            }
 
             return transImg;
         }
@@ -175,6 +177,7 @@ namespace PictureManagerApp.src.Lib
                 rot = RotateFlipType.Rotate270FlipNone;
             }
 
+            //BUG: TODO
             rotatedImage.RotateFlip(rot);
 
             return rotatedImage;
@@ -214,41 +217,40 @@ namespace PictureManagerApp.src.Lib
             Image prevImg,
             int alphaPercent)
         {
-            Bitmap drawImg = new(w, h);
-            Graphics g = Graphics.FromImage(drawImg);
-
-            System.Drawing.Imaging.ColorMatrix cm =
-                new();
-            cm.Matrix00 = 1;
-            cm.Matrix11 = 1;
-            cm.Matrix22 = 1;
-            cm.Matrix44 = 1;
-            System.Drawing.Imaging.ImageAttributes ia =
-                new();
-
-            if (prevImg != null)
+            var drawImg = new Bitmap(w, h);
+            using (var g = Graphics.FromImage(drawImg))
             {
-                cm.Matrix33 = (100 - alphaPercent) * 0.01f;
+
+                System.Drawing.Imaging.ColorMatrix cm = new();
+                cm.Matrix00 = 1;
+                cm.Matrix11 = 1;
+                cm.Matrix22 = 1;
+                cm.Matrix44 = 1;
+
+                System.Drawing.Imaging.ImageAttributes ia = new();
+
+                if (prevImg != null)
+                {
+                    cm.Matrix33 = (100 - alphaPercent) * 0.01f;
+                    ia.SetColorMatrix(cm);
+
+                    DrawDimension dp = getDispParam(w, h, prevImg.Width, prevImg.Height);
+
+                    g.DrawImage(prevImg,
+                        new Rectangle(dp.dst_x1, dp.dst_y1, dp.dst_x2 - dp.dst_x1, dp.dst_y2 - dp.dst_y1),
+                        dp.src_x1, dp.src_y1, dp.src_x2 - dp.src_x1, dp.src_y2 - dp.src_y1,
+                        GraphicsUnit.Pixel, ia);
+                }
+
+                cm.Matrix33 = alphaPercent * 0.01f;
                 ia.SetColorMatrix(cm);
 
-                DrawDimension dp = getDispParam(w, h, prevImg.Width, prevImg.Height);
-
-                g.DrawImage(prevImg,
-                    new Rectangle(dp.dst_x1, dp.dst_y1, dp.dst_x2 - dp.dst_x1, dp.dst_y2 - dp.dst_y1),
-                    dp.src_x1, dp.src_y1, dp.src_x2 - dp.src_x1, dp.src_y2 - dp.src_y1,
+                DrawDimension d = getDispParam(w, h, currentImg.Width, currentImg.Height);
+                g.DrawImage(currentImg,
+                    new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1),
+                    0, 0, currentImg.Width, currentImg.Height,
                     GraphicsUnit.Pixel, ia);
             }
-
-            cm.Matrix33 = alphaPercent * 0.01f;
-            ia.SetColorMatrix(cm);
-
-            DrawDimension d = getDispParam(w, h, currentImg.Width, currentImg.Height);
-            g.DrawImage(currentImg,
-                new Rectangle(d.dst_x1, d.dst_y1, d.dst_x2 - d.dst_x1, d.dst_y2 - d.dst_y1),
-                0, 0, currentImg.Width, currentImg.Height,
-                GraphicsUnit.Pixel, ia);
-
-            g.Dispose();
 
             return drawImg;
         }
@@ -637,6 +639,22 @@ namespace PictureManagerApp.src.Lib
             }
 
             return ratio;
+        }
+
+        private static readonly string FONT_NAME = "Yu Gotic UI";
+        private static readonly int FONT_SIZE = 20;
+        public static void DrawStringWithBG(string txt, Graphics g, int x, int y)
+        {
+            var fsize = FONT_SIZE;
+            var fcolor = Brushes.White;
+            using (var fnt = new Font(FONT_NAME, fsize))
+            {
+                var textSize = g.MeasureString(txt, fnt);
+
+                var brush = Brushes.Black;
+                g.FillRectangle(brush, x, y, textSize.Width, textSize.Height);
+                g.DrawString(txt, fnt, fcolor, x, y);
+            }
         }
     }
 }

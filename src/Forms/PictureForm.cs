@@ -33,7 +33,8 @@ namespace PictureManagerApp
 
         //private const int THUMBNAIL_TIMER_PERIOD = 100;//100だと重くなる.
         //private const int THUMBNAIL_TIMER_PERIOD = 111;//111もだめ？
-        private const int THUMBNAIL_TIMER_PERIOD = 100;//122;
+        private const int THUMBNAIL_TIMER_PERIOD = 122;
+        //private const int THUMBNAIL_TIMER_PERIOD = 122;
         //private const int THUMBNAIL_TIMER_PERIOD = 133;
         //private const int THUMBNAIL_TIMER_PERIOD = 140;
 
@@ -475,10 +476,14 @@ namespace PictureManagerApp
                 return false;
             }
 
-            var msg = String.Format("選択したファイル({0})を移動しますか？'{1}'",
-                mModel.mMarkCount.ToString(),
-                ""//model.path
-                );
+
+            //TODO:サムネイル生成を停止しないとバグる気がする
+            //とまらないね？？
+            PauseMakingThumbnail();
+
+
+            var rmv_cand_file_num = mModel.mMarkCount;
+            var msg = String.Format($"選択したファイル({rmv_cand_file_num})を移動しますか？''");
             DialogResult result = MessageBox.Show(msg,
                 "移動？",
                 MessageBoxButtons.YesNoCancel,
@@ -486,14 +491,28 @@ namespace PictureManagerApp
                 MessageBoxDefaultButton.Button1);
             if (result == DialogResult.Yes)
             {
+
+
                 var del_cnt = mModel.Batch();
 
-                MessageBox.Show($"{del_cnt}ファイル削除しました。",
-                    "ファイル削除",
+                MessageBox.Show($"{del_cnt}ファイルを移動しました。",
+                    "ファイル移動",
                     MessageBoxButtons.OK,
-                    MessageBoxIcon.Error);
+                    MessageBoxIcon.Information);
+
+                if (rmv_cand_file_num != del_cnt)
+                {
+                    MessageBox.Show($"移動に失敗したファイルがあります。",
+                        "ファイル移動",
+                        MessageBoxButtons.OK,
+                        MessageBoxIcon.Error);
+                }
             }
-            if (result != DialogResult.Cancel)
+            if (result == DialogResult.Cancel)
+            {
+                RestartMakingThumbnail();
+            }
+            else
             {
                 Close();
             }
@@ -741,6 +760,16 @@ namespace PictureManagerApp
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        private void PauseMakingThumbnail()
+        {
+            mThumbnailTimer.Change(Timeout.Infinite, Timeout.Infinite);
+        }
+
+        private void RestartMakingThumbnail()
+        {
+            mThumbnailTimer.Change(0, mThumbMs);
+        }
+
         private void TimerTickThumbnail(object state)
         {
             //Log.trc("[S]");
