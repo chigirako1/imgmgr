@@ -55,6 +55,11 @@ namespace PictureManagerApp.src.Lib
 #endif
         }
 
+        public static void print(string str)
+        {
+            System.Diagnostics.Debug.Write(str);
+        }
+
         private static void puts(string str)
         {
             System.Diagnostics.Debug.WriteLine(str);

@@ -33,6 +33,7 @@
             startBtn = new System.Windows.Forms.Button();
             tabControl = new System.Windows.Forms.TabControl();
             tabPageAttr = new System.Windows.Forms.TabPage();
+            btnFileSizeChg = new System.Windows.Forms.Button();
             btnPicSizeToggle = new System.Windows.Forms.Button();
             label5 = new System.Windows.Forms.Label();
             numUD_MinFilesize = new System.Windows.Forms.NumericUpDown();
@@ -51,6 +52,7 @@
             label6 = new System.Windows.Forms.Label();
             label2 = new System.Windows.Forms.Label();
             grpBox_PicOrient = new System.Windows.Forms.GroupBox();
+            radioBtn_PicOrinet_Custom = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_Long = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_Square = new System.Windows.Forms.RadioButton();
             radioBtn_PicOrinet_LS_only = new System.Windows.Forms.RadioButton();
@@ -88,7 +90,7 @@
             ToolStripMenuItem_FileDel = new System.Windows.Forms.ToolStripMenuItem();
             btnOpenExplorer = new System.Windows.Forms.Button();
             btnGroupListStart = new System.Windows.Forms.Button();
-            radioBtn_PicOrinet_Custom = new System.Windows.Forms.RadioButton();
+            btnPathCopy = new System.Windows.Forms.Button();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -152,6 +154,7 @@
             // 
             // tabPageAttr
             // 
+            tabPageAttr.Controls.Add(btnFileSizeChg);
             tabPageAttr.Controls.Add(btnPicSizeToggle);
             tabPageAttr.Controls.Add(label5);
             tabPageAttr.Controls.Add(numUD_MinFilesize);
@@ -170,9 +173,20 @@
             tabPageAttr.Text = "file";
             tabPageAttr.UseVisualStyleBackColor = true;
             // 
+            // btnFileSizeChg
+            // 
+            btnFileSizeChg.Location = new System.Drawing.Point(362, 468);
+            btnFileSizeChg.Margin = new System.Windows.Forms.Padding(2);
+            btnFileSizeChg.Name = "btnFileSizeChg";
+            btnFileSizeChg.Size = new System.Drawing.Size(163, 33);
+            btnFileSizeChg.TabIndex = 11;
+            btnFileSizeChg.Text = "ファイルサイズ+10k";
+            btnFileSizeChg.UseVisualStyleBackColor = true;
+            btnFileSizeChg.Click += btnFileSizeChg_Click;
+            // 
             // btnPicSizeToggle
             // 
-            btnPicSizeToggle.Location = new System.Drawing.Point(362, 448);
+            btnPicSizeToggle.Location = new System.Drawing.Point(362, 431);
             btnPicSizeToggle.Margin = new System.Windows.Forms.Padding(2);
             btnPicSizeToggle.Name = "btnPicSizeToggle";
             btnPicSizeToggle.Size = new System.Drawing.Size(163, 33);
@@ -184,7 +198,7 @@
             // label5
             // 
             label5.AutoSize = true;
-            label5.Location = new System.Drawing.Point(16, 448);
+            label5.Location = new System.Drawing.Point(16, 431);
             label5.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label5.Name = "label5";
             label5.Size = new System.Drawing.Size(159, 23);
@@ -193,7 +207,7 @@
             // 
             // numUD_MinFilesize
             // 
-            numUD_MinFilesize.Location = new System.Drawing.Point(186, 448);
+            numUD_MinFilesize.Location = new System.Drawing.Point(186, 431);
             numUD_MinFilesize.Margin = new System.Windows.Forms.Padding(2);
             numUD_MinFilesize.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
             numUD_MinFilesize.Name = "numUD_MinFilesize";
@@ -204,7 +218,7 @@
             // label4
             // 
             label4.AutoSize = true;
-            label4.Location = new System.Drawing.Point(16, 481);
+            label4.Location = new System.Drawing.Point(16, 464);
             label4.Margin = new System.Windows.Forms.Padding(2, 0, 2, 0);
             label4.Name = "label4";
             label4.Size = new System.Drawing.Size(159, 23);
@@ -213,7 +227,7 @@
             // 
             // numUD_MaxFilesize
             // 
-            numUD_MaxFilesize.Location = new System.Drawing.Point(186, 481);
+            numUD_MaxFilesize.Location = new System.Drawing.Point(186, 464);
             numUD_MaxFilesize.Margin = new System.Windows.Forms.Padding(2);
             numUD_MaxFilesize.Maximum = new decimal(new int[] { 1000000, 0, 0, 0 });
             numUD_MaxFilesize.Name = "numUD_MaxFilesize";
@@ -245,7 +259,7 @@
             chkListBox_Ext.CheckOnClick = true;
             chkListBox_Ext.FormattingEnabled = true;
             chkListBox_Ext.Items.AddRange(new object[] { ".jpg,.jpeg", ".png", ".gif", ".bmp" });
-            chkListBox_Ext.Location = new System.Drawing.Point(16, 313);
+            chkListBox_Ext.Location = new System.Drawing.Point(16, 309);
             chkListBox_Ext.Margin = new System.Windows.Forms.Padding(2);
             chkListBox_Ext.Name = "chkListBox_Ext";
             chkListBox_Ext.Size = new System.Drawing.Size(423, 104);
@@ -374,6 +388,17 @@
             grpBox_PicOrient.TabIndex = 2;
             grpBox_PicOrient.TabStop = false;
             grpBox_PicOrient.Text = "画像の向き";
+            // 
+            // radioBtn_PicOrinet_Custom
+            // 
+            radioBtn_PicOrinet_Custom.AutoSize = true;
+            radioBtn_PicOrinet_Custom.Location = new System.Drawing.Point(37, 230);
+            radioBtn_PicOrinet_Custom.Margin = new System.Windows.Forms.Padding(2);
+            radioBtn_PicOrinet_Custom.Name = "radioBtn_PicOrinet_Custom";
+            radioBtn_PicOrinet_Custom.Size = new System.Drawing.Size(80, 27);
+            radioBtn_PicOrinet_Custom.TabIndex = 1;
+            radioBtn_PicOrinet_Custom.Text = "カスタム";
+            radioBtn_PicOrinet_Custom.UseVisualStyleBackColor = true;
             // 
             // radioBtn_PicOrinet_Long
             // 
@@ -605,7 +630,7 @@
             // 
             // btnAppendSubDir
             // 
-            btnAppendSubDir.Location = new System.Drawing.Point(79, 74);
+            btnAppendSubDir.Location = new System.Drawing.Point(181, 74);
             btnAppendSubDir.Margin = new System.Windows.Forms.Padding(2);
             btnAppendSubDir.Name = "btnAppendSubDir";
             btnAppendSubDir.Size = new System.Drawing.Size(120, 72);
@@ -746,16 +771,16 @@
             btnGroupListStart.UseVisualStyleBackColor = true;
             btnGroupListStart.Click += btnGroupListStart_Click;
             // 
-            // radioBtn_PicOrinet_Custom
+            // btnPathCopy
             // 
-            radioBtn_PicOrinet_Custom.AutoSize = true;
-            radioBtn_PicOrinet_Custom.Location = new System.Drawing.Point(37, 230);
-            radioBtn_PicOrinet_Custom.Margin = new System.Windows.Forms.Padding(2);
-            radioBtn_PicOrinet_Custom.Name = "radioBtn_PicOrinet_Custom";
-            radioBtn_PicOrinet_Custom.Size = new System.Drawing.Size(80, 27);
-            radioBtn_PicOrinet_Custom.TabIndex = 1;
-            radioBtn_PicOrinet_Custom.Text = "カスタム";
-            radioBtn_PicOrinet_Custom.UseVisualStyleBackColor = true;
+            btnPathCopy.Location = new System.Drawing.Point(50, 80);
+            btnPathCopy.Margin = new System.Windows.Forms.Padding(4, 6, 4, 6);
+            btnPathCopy.Name = "btnPathCopy";
+            btnPathCopy.Size = new System.Drawing.Size(112, 42);
+            btnPathCopy.TabIndex = 3;
+            btnPathCopy.Text = "パスをコピー(&C)";
+            btnPathCopy.UseVisualStyleBackColor = true;
+            btnPathCopy.Click += btnPathCopy_Click;
             // 
             // MainForm
             // 
@@ -771,6 +796,7 @@
             Controls.Add(btnAppendSubDir);
             Controls.Add(cmbBoxPath);
             Controls.Add(EndBtn);
+            Controls.Add(btnPathCopy);
             Controls.Add(btnPaste);
             Controls.Add(tabControl);
             Controls.Add(label1);
@@ -872,6 +898,8 @@
         private System.Windows.Forms.NumericUpDown numUD_Pixel;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_FileDel;
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Custom;
+        private System.Windows.Forms.Button btnFileSizeChg;
+        private System.Windows.Forms.Button btnPathCopy;
     }
 }
 

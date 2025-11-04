@@ -202,9 +202,13 @@ namespace PictureManagerApp.src.Lib
                 var tblname = "artists";
                 var colname = "id, pxvid, pxvname, feature, rating, filenum, status";
                 var where_p = "";
-                where_p += $" status IN ({GetSqlCond()})";
-                where_p += " AND feature = 'AI'";
-                //where_p += " AND rating >= 100";
+                var pause = false;
+                if (pause)
+                {
+                    where_p += $" status IN ({GetSqlCond()})";
+                    where_p += " AND ";
+                }
+                where_p += " feature = 'AI'";
                 where_p += " ORDER BY rating DESC";
                 var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p);
                 adapter.Fill(dt);

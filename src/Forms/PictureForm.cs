@@ -41,14 +41,6 @@ namespace PictureManagerApp
         private const int SLIDESHOW_TIMER_PERIOD = 750;
         private const int PAGE_CHG_TIMER_PERIOD = 250;
 
-#if UNDEFINED
-        private int ThumbnailCols = 4;
-        private int ThumbnailRows = 3;
-#else
-        private int ThumbnailCols = 8;
-        private int ThumbnailRows = 5;
-#endif
-
         //=====================================================================
         // delegate
         //=====================================================================
@@ -64,6 +56,15 @@ namespace PictureManagerApp
         private Image mCurrentImg, mPrevImg;
         private IMAGE_DISPLAY_MAGNIFICATION_TYPE mMagType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND;
         private readonly Dictionary<Keys, KeyDownFunc> KeyFuncTbl = [];
+
+#if UNDEFINED
+        private int ThumbnailCols = 4;
+        private int ThumbnailRows = 3;
+#else
+        private int ThumbnailCols = 8;
+        private int ThumbnailRows = 5;
+#endif
+
 
         // transition
         private Boolean mTransitionEffect = false;
@@ -125,6 +126,14 @@ namespace PictureManagerApp
             mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
         }
 
+        private void SetThumb(int c, int  r)
+        {
+            this.ThumbnailCols = c;
+            this.ThumbnailRows = r;
+            mModel.UpDownCount = this.ThumbnailCols;
+            mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
+        }
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
@@ -136,21 +145,24 @@ namespace PictureManagerApp
 
             if (mModel.PictureTotalNumber == 0)
             {
-                MessageBox.Show("no file",
-                    "file 0",
+                var text = "no file";
+                var caption = "ファイルなし";
+                MessageBox.Show(text,
+                    caption,
                     MessageBoxButtons.OK,
                     MessageBoxIcon.Error);
                 this.Close();
-                return;
             }
+            else
+            {
+                InitWindow();
 
-            InitWindow();
+                InitToolBar();
 
-            InitToolBar();
+                InitTimers();
 
-            InitTimers();
-
-            UpdatePicture();
+                UpdatePicture();
+            }
 
             Log.trc($"[E]");
         }
@@ -169,6 +181,7 @@ namespace PictureManagerApp
             var w = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Width;
             var h = System.Windows.Forms.Screen.PrimaryScreen.Bounds.Height;
             Log.trc($"{w}x{h}");
+
             bool landscape = h < w;
 
             if (mModel.IsZip())
@@ -979,19 +992,13 @@ namespace PictureManagerApp
 
         private void X2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            this.ThumbnailCols = 2;
-            this.ThumbnailRows = 2;
-            mModel.UpDownCount = this.ThumbnailCols;
-            mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
+            SetThumb(2,2);
             Refresh();
         }
 
         private void X4ToolStripMenuItem1_Click(object sender, EventArgs e)
         {
-            this.ThumbnailCols = 4;
-            this.ThumbnailRows = 3;
-            mModel.UpDownCount = this.ThumbnailCols;
-            mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
+            SetThumb(4, 3);
             Refresh();
         }
 
@@ -1002,10 +1009,11 @@ namespace PictureManagerApp
             if (result == DialogResult.OK)
             {
                 (int col, int row) = crForm.GetColRow();
-                this.ThumbnailCols = col;
-                this.ThumbnailRows = row;
-                mModel.UpDownCount = this.ThumbnailCols;
-                mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
+                //this.ThumbnailCols = col;
+                //this.ThumbnailRows = row;
+                //mModel.UpDownCount = this.ThumbnailCols;
+                //mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
+                SetThumb(col, row);
 
                 mMagType = crForm.GetMagType();
                 mThumbMs = crForm.GetThumbMs();

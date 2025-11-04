@@ -211,6 +211,17 @@ namespace PictureManagerApp
             var model = new PictureModel();
             setModelParam(model);
 
+            if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift)
+            {
+                model.SetHoge(HOGE_TYPE.HOGE_TAIL);
+                model.SetThumbView(THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST);
+            }
+            else if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                model.SetHoge(HOGE_TYPE.HOGE_HEAD_AND_TAIL);
+                model.SetThumbView(THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST);
+            }
+
             if (filterType != FILTER_TYPE.FILTER_NONE)
             {
                 model.SetFilter(filterType);
@@ -265,9 +276,9 @@ namespace PictureManagerApp
                         MessageBoxIcon.Error);
                 }
 
-
                 var picForm = new PictureForm();
-                picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
+                //picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
+                picForm.Text = $"{pathStr}";
                 picForm.SetModel(model);
                 picForm.ShowDialog();
                 Log.trc($"picForm.ShowDialog() end");
@@ -436,6 +447,14 @@ namespace PictureManagerApp
             cmbBoxPath.Text = txt;
             cmbBoxPath.Items.Add(txt);
             Log.trc("[E]");
+        }
+        private void btnPathCopy_Click(object sender, EventArgs e)
+        {
+            Log.trc("[S]");
+            var txt = cmbBoxPath.Text;
+            Clipboard.SetText(txt);
+            Log.trc("[E]");
+
         }
 
         private void EndBtn_Click(object sender, EventArgs e)
@@ -764,18 +783,19 @@ namespace PictureManagerApp
 
         private void AddTwtDir(string screen_name)
         {
+            var path2 = Twt.GetCurrentDirPath(screen_name);
+            Log.trc($"'{screen_name}' => '{path2}'");
+            if (path2 != "")
+            {
+                cmbBoxPath.Text = path2;
+                cmbBoxPath.Items.Add(path2);
+            }
+
             var path = Twt.GetArchiveDirPath(screen_name);
             Log.trc($"'{screen_name}' => '{path}'");
             if (path != "")
             {
                 cmbBoxPath.Text = path;
-                cmbBoxPath.Items.Add(path);
-            }
-
-            path = Twt.GetCurrentDirPath(screen_name);
-            Log.trc($"'{screen_name}' => '{path}'");
-            if (path != "")
-            {
                 cmbBoxPath.Items.Add(path);
             }
         }
@@ -791,14 +811,16 @@ namespace PictureManagerApp
         }
 
 
-        private void AddPxvDir(long pxv_usr_id)
+        private bool AddPxvDir(long pxv_usr_id)
         {
+            var add = false;
             var path = Pxv.GetArchiveDirPath(pxv_usr_id);
             Log.trc($"'{pxv_usr_id}' => '{path}'");
             if (path != "")
             {
                 cmbBoxPath.Text = path;
                 cmbBoxPath.Items.Add(path);
+                add = true;
             }
 
             path = Pxv.GetCurrentDirPath(pxv_usr_id);
@@ -806,7 +828,9 @@ namespace PictureManagerApp
             if (path != "")
             {
                 cmbBoxPath.Items.Add(path);
+                add = true;
             }
+            return add;
         }
 
         private void DgvPxv_CellMouseDoubleClick(object sender, DataGridViewCellMouseEventArgs e)
@@ -820,7 +844,16 @@ namespace PictureManagerApp
 
             var row = DgvPxv.Rows[e.RowIndex];
             var pxv_usr_id = (long)row.Cells[1].Value;
-            AddPxvDir(pxv_usr_id);
+            var add = AddPxvDir(pxv_usr_id);
+            if (add == false)
+            {
+                var title = "エラー";
+                var msg = "パスが取得できませんでした";
+                var result = MessageBox.Show(msg,
+                    title,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
         }
 
         private void StartFilePath(string filepath)
@@ -866,8 +899,6 @@ namespace PictureManagerApp
             var row = DirListDGV.Rows[idx];
             var fullpath = Dgv.GetPath(this.DirListDGV, row);
 
-
-
             var msg = $"ファイルを削除しますか？'{fullpath}'";
             var title = "ファイル削除?" + Path.GetFileName(fullpath);
             var result = MessageBox.Show(msg,
@@ -877,6 +908,8 @@ namespace PictureManagerApp
                         MessageBoxDefaultButton.Button1);
             if (result == DialogResult.Yes)
             {
+                //TODO:ファイル削除
+
                 Log.log(msg);
             }
         }
@@ -973,6 +1006,12 @@ namespace PictureManagerApp
             picForm.Text = $"{pathStr} [{cmbBoxPath.Items.IndexOf(cmbBoxPath.Text)}/{cmbBoxPath.Items.Count}]";
             picForm.SetModel(model);
             picForm.ShowDialog();
+        }
+
+        private void btnFileSizeChg_Click(object sender, EventArgs e)
+        {
+            numUD_MinFilesize.Value = numUD_MaxFilesize.Value;
+            numUD_MaxFilesize.Value += 10;
         }
 
     }

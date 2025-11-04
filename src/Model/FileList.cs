@@ -220,6 +220,15 @@ namespace PictureManagerApp.src.Model
             return rmv_cnt;
         }
 
+        public void RemoveMiddleFiles()
+        {
+            //mFileList
+            foreach (var fitem in mFileList)
+            {
+
+            }
+        }
+
         public void Swap(int idx1, int idx2)
         {
             (mFileList[idx1], mFileList[idx2]) = (mFileList[idx2], mFileList[idx1]);
@@ -245,6 +254,8 @@ namespace PictureManagerApp.src.Model
                         if (!update_db && fitem.DirectoryName == parent_dir_save)
                         {
                             //pxvで同一ディレクトリの場合はマークしない
+
+                            //TODO: 先の方のファイルをマーク。例"01.jpg"と"05.jpg"なら01をマーク
                         }
                         else
                         {
@@ -360,8 +371,10 @@ namespace PictureManagerApp.src.Model
             var total = 0L;
             var slct = 0L;
             var not_slct = 0L;
-            var min = long.MaxValue;
-            var max = 0L;
+            var slct_min = long.MaxValue;
+            var slct_max = 0L;
+            var not_slct_min = long.MaxValue;
+            var not_slct_max = 0L;
 
             foreach (var fitem in mFileList)
             {
@@ -371,23 +384,31 @@ namespace PictureManagerApp.src.Model
                     throw new InvalidOperationException();
                 }
 
-                if (fitem.FileSize > max)
-                {
-                    max = fitem.FileSize;
-                }
-
-                if (fitem.FileSize < min)
-                {
-                    min = fitem.FileSize;
-                }
-
                 total += fitem.FileSize;
                 if (fitem.Mark)
                 {
+                    if (fitem.FileSize > slct_max)
+                    {
+                        slct_max = fitem.FileSize;
+                    }
+
+                    if (fitem.FileSize < slct_min)
+                    {
+                        slct_min = fitem.FileSize;
+                    }
                     slct += fitem.FileSize;
                 }
                 else
                 {
+                    if (fitem.FileSize > not_slct_max)
+                    {
+                        not_slct_max = fitem.FileSize;
+                    }
+
+                    if (fitem.FileSize < not_slct_min)
+                    {
+                        not_slct_min = fitem.FileSize;
+                    }
                     not_slct += fitem.FileSize;
                 }
             }
@@ -401,15 +422,24 @@ namespace PictureManagerApp.src.Model
             {
                 tmp = not_slct * 100 / slct;
             }
+            tmp = not_slct * 100 / slct;
 
             var avg_slct = slct / MarkCount();
             var avg_non_slct = not_slct / (mFileList.Count - MarkCount());
             var texts = new List<string>();
-            texts.Add($"total({mFileList.Count})=\t{MyFiles.FormatFileSize(total)}");
-            texts.Add($"選択中({MarkCount()})=\t{MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)\t平均{MyFiles.FormatFileSize(avg_slct)}");
-            texts.Add($"非選択({mFileList.Count - MarkCount()})=\t{MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)\t平均:{MyFiles.FormatFileSize(avg_non_slct)}");
-            texts.Add($"{tmp}%");
-            texts.Add($"min/max={MyFiles.FormatFileSize(min)}/{MyFiles.FormatFileSize(max)}");
+            texts.Add($"total({mFileList.Count})={MyFiles.FormatFileSize(total)}");
+            texts.Add($"選択中({MarkCount()})={MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)" +
+                $"{MyFiles.FormatFileSize(avg_slct)}" +
+                $"/{MyFiles.FormatFileSize(slct_max)}" +
+                $"/{MyFiles.FormatFileSize(slct_min)}" 
+                );
+            texts.Add($"非選択({mFileList.Count - MarkCount()})={MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)" +
+                $"{MyFiles.FormatFileSize(avg_non_slct)}" +
+                $"/{MyFiles.FormatFileSize(not_slct_max)}" +
+                $"/{MyFiles.FormatFileSize(not_slct_min)}"
+                );
+            //texts.Add($"{tmp}%");
+            texts.Add($"{MyFiles.FormatFileSize(not_slct)}(非選択中) / {MyFiles.FormatFileSize(slct)}(選択中) = {tmp}%");
 
             var strb = new StringBuilder();
             foreach (var text in texts)
@@ -425,6 +455,8 @@ namespace PictureManagerApp.src.Model
         public void WriteStatTsv(string ofilepath)
         {
             List<string> list = new ();
+            var fs_a = 0l;
+            var fs_b = 0l;
 
             using (var sw = new StreamWriter(ofilepath, false))
             {
@@ -438,11 +470,13 @@ namespace PictureManagerApp.src.Model
                         //list.Add(filename);
                         //list.Add(filename_wo_ext);
                         list.Add(fitem.FileSize.ToString());
+                        fs_a = fitem.FileSize;
                     }
                     else
                     {
                         if (list.Count > 0)
                         {
+                            list.Add($"{fs_b * 100 / fs_a}");
                             var line = string.Join("\t", list);
                             sw.WriteLine(line);
 
@@ -455,7 +489,17 @@ namespace PictureManagerApp.src.Model
                         //list.Add(filename);
                         //list.Add(filename_wo_ext);
                         list.Add(fitem.FileSize.ToString());
+                        fs_b = fitem.FileSize;
                     }
+                }
+
+                if (list.Count > 0)
+                {
+                    list.Add($"{fs_b * 100 / fs_a}");
+                    var line = string.Join("\t", list);
+                    sw.WriteLine(line);
+
+                    list.Clear();
                 }
             }
         }

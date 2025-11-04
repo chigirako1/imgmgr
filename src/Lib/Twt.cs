@@ -33,7 +33,8 @@ namespace PictureManagerApp.src.Lib
             var path = TWT_ARCHIVE_DIR_TWT_FILEPATH;
             if (File.Exists(path))
             {
-                return System.IO.File.ReadAllLines(path);
+                var lines = System.IO.File.ReadAllLines(path);
+                return lines;
             }
             var s = new string[0];
             return s;
@@ -41,8 +42,6 @@ namespace PictureManagerApp.src.Lib
 
         static Twt()
         {
-            //TwtArchivePathDic = new Dictionary<string, string>();
-
             var lines = GetTwtDirList();
             foreach (var line in lines)
             {
@@ -88,9 +87,12 @@ namespace PictureManagerApp.src.Lib
 
         public static string GetScreenNameFromPath(string path)
         {
-
-            //var dirnames = path.Split('/');
-            var dirnames = path.Split(Path.DirectorySeparatorChar);
+            char[] sepa =
+            [
+                '/',
+                Path.DirectorySeparatorChar,
+            ];
+            var dirnames = path.Split(sepa);
             var dirname = dirnames[dirnames.Length - 1];
 
             var screen_name = "";
@@ -122,7 +124,9 @@ namespace PictureManagerApp.src.Lib
         {
             var filename = Path.GetFileName(path);
             var dirname = Path.GetDirectoryName(path);
-            var screenname = Path.GetFileName(dirname);
+
+            //TODO:パスからだとスクリーンネーム取得困難
+            var screenname = Path.GetFileName(dirname);//BUG
 
             TweetInfo tweetinfo = new();
             tweetinfo.ScreenName = screenname;

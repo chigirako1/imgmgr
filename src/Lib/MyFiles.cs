@@ -7,6 +7,7 @@ using System.Drawing;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 using System.Security.Cryptography;
 using System.Text.RegularExpressions;
+using PictureManagerApp.src.Model;
 
 namespace PictureManagerApp.src.Lib
 {
@@ -25,10 +26,103 @@ namespace PictureManagerApp.src.Lib
         public static string FormatFileSize(long bytes)
         {
             var unit = 1024;
-            if (bytes < unit) { return $"{bytes} B"; }
+            if (bytes < unit)
+            {
+                return $"{bytes} B";
+            }
 
             var exp = (int)(Math.Log(bytes) / Math.Log(unit));
             return $"{bytes / Math.Pow(unit, exp):F2} {("KMGTPE")[exp - 1]}B";
+        }
+
+        public static bool IsExt(string path, string ext)
+        {
+            return (Path.GetExtension(path).ToLower() == ext);
+        }
+
+        public static bool IsDirectory(string path)
+        {
+            return File.GetAttributes(path).HasFlag(FileAttributes.Directory);
+        }
+
+        public static IEnumerable<string> GetFileList(string path, string extlist, string search_word)
+        {
+            Log.log($"対象='{path}'/拡張子='{extlist}'/検索ワード='{search_word}'");
+
+            var extensions = extlist.Split(",");
+            var files = MyFiles.GetAllFiles(path, extensions);
+
+            if (search_word != "")
+            {
+                files = files.Where(e => e.Contains(search_word));
+            }
+
+            return files;
+        }
+
+        public static IEnumerable<string> RemoveSpecFiles(IEnumerable<string> files, int hoge)
+        {
+            var groupedFiles = GroupFilesByParentDirectory(files);
+
+            foreach (var key in groupedFiles.Keys.ToList()) // ToList() でコピーを作成し、列挙中に辞書が変更されるのを防ぐ
+            {
+                if (groupedFiles.TryGetValue(key, out var fileList))
+                {
+                    var rem = 0;
+                    var idx = -1;
+                    var cnt = -1;
+                    if (fileList.Count >= 3)
+                    {
+                        rem = fileList.Count / 3;
+                    }
+                    idx = rem;
+
+                    if (rem > 0)
+                    {
+                        if (hoge > 0)
+                        {
+                            //後ろのデータのみ残す
+                            idx = 0;
+                            cnt = fileList.Count - rem;
+                        }
+                        else if (hoge == 0)
+                        {
+                            cnt = fileList.Count - idx - idx;
+                        }
+                        else
+                        {
+                            //TODO
+                        }
+                        fileList.RemoveRange(idx, cnt);
+                    }
+                }
+            }
+
+            var filelist = groupedFiles.Values.SelectMany(fileList => fileList).ToList();
+
+            return filelist;
+        }
+
+        public static Dictionary<string, List<string>> GroupFilesByParentDirectory(IEnumerable<string> filePaths)
+        {
+            if (filePaths == null)
+            {
+                throw new ArgumentNullException(nameof(filePaths));
+            }
+
+            // 有効なファイルパスのみをフィルタリング
+            //var ff = filePaths.Where(p => !string.IsNullOrEmpty(p) && File.Exists(p));
+            var ff = filePaths;
+
+            // 親ディレクトリごとにグループ化
+            var fgroup = ff.GroupBy(p => Path.GetDirectoryName(p))
+                .Where(group => group.Count() >= 3); ;
+
+            var dic = fgroup.ToDictionary(
+                group => group.Key,
+                group => group.ToList());
+
+            return dic;
         }
 
         public static bool moveToTrashDir(string path, string rootpath, string appendStr = "-0trash")
@@ -46,7 +140,7 @@ namespace PictureManagerApp.src.Lib
             System.IO.FileInfo fi = new(path);
 
             string p = Path.GetRelativePath(rootpath, path);
-            Log.log($"relative path='{p}'");
+            //Log.log($"relative path='{p}'");
 
             string moveToPath = Path.Combine(rootpath + appendStr, p);
             Log.log($"移動先='{moveToPath}'");

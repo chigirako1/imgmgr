@@ -6,6 +6,7 @@ using System.Drawing;
 using System.IO;
 using System.IO.Compression;
 using System.Linq;
+using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Policy;
@@ -140,6 +141,16 @@ namespace PictureManagerApp.src.Model
         FILTER_MAX,
     }
 
+    public enum HOGE_TYPE
+    {
+        HOGE_NONE,
+        HOGE_HEAD,
+        HOGE_TAIL,
+        HOGE_HEAD_AND_TAIL,
+
+        HOGE_MAX
+    }
+
     public class PictureModel
     {
         //定数
@@ -153,17 +164,13 @@ namespace PictureManagerApp.src.Model
             @"D:\download\PxDl-0trash",
             @"D:\download\PxDl--0trash",
 
-            @"D:\dl\AnkPixiv\Twitter",
             @"D:\dl\AnkPixiv\Twitter-",
+            @"D:\dl\AnkPixiv\Twitter",
             @"D:\dl\AnkPixiv\Twitter-0trash",
             @"D:\dl\AnkPixiv\Twitter--0trash",
-            @"D:\dl\AnkPixiv\Nijie",
-            @"D:\dl\AnkPixiv\Nijie-0trash",
 
             @"D:\r18\dlPic\pxv",
             @"D:\r18\dlPic\twitter",
-            @"D:\r18\dlPic\Nijie\nje",
-
 #if DEBUG
             @"D:\download\PxDl-\!pic_infos!.tsv",
             @"D:\dl\AnkPixiv\Twitter-\!pic_infos!.tsv",
@@ -216,6 +223,8 @@ namespace PictureManagerApp.src.Model
         private string mSeachWord = "";
 
         private string DelListPath;
+
+        private HOGE_TYPE _Hoge = HOGE_TYPE.HOGE_NONE;
 
 
         public THUMBNAIL_VIEW_TYPE ThumbViewType { private set; get; }
@@ -336,6 +345,12 @@ namespace PictureManagerApp.src.Model
         {
             Log.log($"filter={filter}");
             FilterType = filter;
+        }
+
+        public void SetHoge(HOGE_TYPE hoge)
+        {
+            this._Hoge = hoge;
+            Log.log($"hoge={this._Hoge}");
         }
 
         public void SetDelListPath(string delListPath)
@@ -481,11 +496,11 @@ namespace PictureManagerApp.src.Model
         {
             DATA_SOURCE_TYPE result;
 
-            if (path.Contains("PxDl") || path.Contains("/pxv/"))
+            if (path.Contains("PxDl") || path.Contains(@"\pxv\") || path.Contains("/pxv/"))
             {
                 result = DATA_SOURCE_TYPE.DATA_SOURCE_PXV;
             }
-            else if (path.Contains("Twitter") || path.Contains("/twt/"))
+            else if (path.ToLower().Contains("twitter") || path.Contains("/twt/"))
             {
                 result = DATA_SOURCE_TYPE.DATA_SOURCE_TWT;
             }
@@ -497,6 +512,14 @@ namespace PictureManagerApp.src.Model
             return result;
         }
 
+        /*
+         * フォルダ内のファイルをファイル名でソートしたときの最初と最後のファイルのみを残す
+         */
+        public void RemoveMiddleFiles()
+        {
+            mFileList.RemoveMiddleFiles();
+        }
+
         public void BuildFileList(string path)
         {
             Log.log($"[S]:path={path}");
@@ -504,15 +527,15 @@ namespace PictureManagerApp.src.Model
             mPath = path;
             mDataSrcType = GetSourceType(path);
 
-            if (File.GetAttributes(path).HasFlag(FileAttributes.Directory))
+            if (MyFiles.IsDirectory(path))
             {
                 BuildFileList_Directory();
             }
-            else if (Path.GetExtension(path) == ".zip")
+            else if (MyFiles.IsExt(path, ".zip"))
             {
                 BuildFileList_Zip();
             }
-            else if (Path.GetExtension(path) == ".tsv")
+            else if (MyFiles.IsExt(path, ".tsv"))
             {
                 BuildFileList_Tsv(path);
             }
@@ -526,8 +549,31 @@ namespace PictureManagerApp.src.Model
 
         public void BuildFileList_Directory()
         {
+            var files = MyFiles.GetFileList(mPath, mExtList, mSeachWord);
+
+            if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV && this._Hoge != HOGE_TYPE.HOGE_NONE)
+            {
+                var hoge = 0;
+                switch (this._Hoge)
+                {
+                    case HOGE_TYPE.HOGE_HEAD:
+                        //hoge = -1;//前を残す,未実装
+                        break;
+                    case HOGE_TYPE.HOGE_TAIL:
+                        hoge = 1;//後ろを残す
+                        break;
+                    case HOGE_TYPE.HOGE_HEAD_AND_TAIL:
+                        hoge = 0; //前と後ろを残す
+                        break;
+                    case HOGE_TYPE.HOGE_NONE:
+                    default:
+                        break;
+                }
+                files = MyFiles.RemoveSpecFiles(files, hoge);
+            }
+
             var add_group = false;
-            BuildFileList_Dir(add_group);
+            BuildFileList_Dir(files, add_group);
 
             if (FilterType == FILTER_TYPE.FILTER_HASH)
             {
@@ -573,31 +619,10 @@ namespace PictureManagerApp.src.Model
             }
         }
 
-
-        private IEnumerable<string> GetFileList(string path, string extlist, string search_word)
+        private void BuildFileList_Dir(IEnumerable<string> files, bool add_group)
         {
-            Log.log($"対象='{path}'/拡張子='{extlist}'/検索ワード='{search_word}'");
-
-            var extensions = extlist.Split(",");
-            var files = MyFiles.GetAllFiles(path, extensions);
-            //var fileArray = MyFiles.GetFiles(path);
-            //var files = fileArray.Where(f => extensions.Contains(Path.GetExtension(f).ToLower()));
-            //var files = fileArray.Where(file => extensions.Any(pattern => file.ToLower().EndsWith(pattern)));
-
-            if (search_word != "")
-            {
-                files = files.Where(e => e.Contains(search_word));
-            }
-
-            return files;
-        }
-
-        private void BuildFileList_Dir(bool add_group)
-        {
-            var files = GetFileList(mPath, mExtList, mSeachWord);
-
             var total = files.Count();
-            //Log.log($"ファイル数={total}");
+            Log.log($"ファイル数={total}");
             var cnt = 0;
 
             var sw = new System.Diagnostics.Stopwatch();
@@ -608,7 +633,6 @@ namespace PictureManagerApp.src.Model
                 if (SpecFileP(f))
                 {
                     var fi = new FileItem(f);
-                    //if (fi.isSpecifiedSizeImage(mMaxPicSize) && fi.isSpecifiedPicOrinet(mTargetPicOrient))
                     if (IsTargetPic(fi))
                     {
                         //Log.log($"対象ファイル={f}");
@@ -617,11 +641,14 @@ namespace PictureManagerApp.src.Model
                         {
                             computeHash = true;
 
-                            //TODO: ついでに画像サイズも設定しておく？
                             var img = fi.GetImage();
-
                             if (img == null)
                             {
+
+                            }
+                            else
+                            {
+                                //TODO: ついでに画像サイズも設定しておく？
 
                             }
                         }
@@ -661,6 +688,7 @@ namespace PictureManagerApp.src.Model
                 {
                     //Console.Error.Write(".");
                     System.Diagnostics.Debug.Write(".");
+                    Log.print(".");
                 }
             }
 
@@ -919,6 +947,7 @@ namespace PictureManagerApp.src.Model
             for (cnt = 0; cnt < mFileList.Count; cnt++)
             {
                 FileItem item = mFileList[idx];
+                //TODO: サムネイル再作成要否チェック（w,h)
                 if (item.HasThumbnailImage())
                 {
                 }
@@ -1541,7 +1570,7 @@ namespace PictureManagerApp.src.Model
         public string GetPictureInfoText(bool simple = false)
         {
             string txt;
-            FileItem fi = mFileList[mIdx];
+            var fi = mFileList[mIdx];
             string fpath;
             if (simple)
             {
@@ -1551,9 +1580,14 @@ namespace PictureManagerApp.src.Model
             {
                 fpath = fi.GetRelativePath(WorkingRootPath, true);
             }
-            txt = String.Format("[{0,3}/{1}] {2}", mIdx + 1, mFileList.Count, fpath);
+            txt = String.Format("[{0,4}/{1}] {2} ({3})", mIdx + 1, mFileList.Count, fpath, fi.FileSizeDisp);
 
             return txt;
+        }
+
+        public string GetRelDirName(FileItem fi)
+        {
+            return fi.GetRelativePath(WorkingRootPath, false);
         }
 
         public string GetZipEntryname()

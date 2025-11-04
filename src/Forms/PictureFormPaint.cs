@@ -1,7 +1,9 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Windows.Forms;
 
 using PictureManagerApp.src.Lib;
@@ -67,6 +69,8 @@ namespace PictureManagerApp
                         break;
                 }
             }
+
+            this.Text = mModel.GetPictureInfoText() + " - " + mModel.GetPath();
         }
 
         private void DrawPicInfo(Graphics g, GroupItem gitem)
@@ -657,7 +661,14 @@ namespace PictureManagerApp
                 }
                 //Log.trc($"j={j} offset={offset} absIdx={absIdx}");
 
-                string dirtxt = filelist[0].DirectoryName;
+                var dirtxt = "";
+                var dirname = "";
+                if (filelist.Count > 0)
+                {
+                    dirtxt = filelist[0].DirectoryName;
+                    dirname = mModel.GetRelDirName(filelist[0]);
+                }
+
                 int cnt = 0;
                 //foreach (FileItem fitem in filelist) {
                 for (int i = start_i; i < filelist.Count; i++)
@@ -701,9 +712,11 @@ namespace PictureManagerApp
 
                     //番号描画
                     {
-                        int fsize = FONT_SIZE;
-                        string txt = string.Format($"{i + 1}/{filelist.Count}");
-                        DrawString(g, txt, pixel_x, pixel_y + fsize + fsize);
+                        //var fsize = FONT_SIZE;
+                        //string txt = string.Format($"{i + 1}/{filelist.Count}");
+                        var txt = $"{i + 1}";
+                        //DrawString(g, txt, pixel_x, pixel_y + thumHeight - fsize);
+                        DrawStringRB(g, txt, pixel_x + thumWidth, pixel_y + thumHeight);
                     }
 
                     cnt++;
@@ -728,7 +741,8 @@ namespace PictureManagerApp
                         DrawString(g, "▶", RightPicBox.Size.Width - fsize, pixel_y + (thumHeight / 2));
                     }
                 }
-                DrawString(g, dirtxt, 0, pixel_y);
+
+                DrawString(g, $"[{filelist.Count}]" + dirname, 0, pixel_y);
 
                 //if (offset)
                 offset += offsetoffset;

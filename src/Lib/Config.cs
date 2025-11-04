@@ -14,6 +14,8 @@ namespace PictureManagerApp.src.Lib
         private readonly string KEY_TEST = "test";
         private readonly string KEY_LAST_PATH = "dir_path";
         private readonly string KEY_DEL_LIST = "del_list";
+        //private readonly string KEY_THUMB_N_ROW = "thumb_n_row";
+        //private readonly string KEY_THUMB_N_COL = "thumb_n_col";
 
         public string TEST_ELEM { get; set; }
         public string DelListSavePos { get; set; }
