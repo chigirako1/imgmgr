@@ -211,15 +211,37 @@ namespace PictureManagerApp
             var model = new PictureModel();
             setModelParam(model);
 
-            if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift)
+            if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift && (Control.ModifierKeys & Keys.Control) == Keys.Control)
+            {
+                model.SetHoge(HOGE_TYPE.HOGE_HEAD);
+                model.SetThumbView(THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST);
+
+                MessageBox.Show($"さいしょ",
+                    "さいしょのへんのみ",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
+            }
+            else if ((Control.ModifierKeys & Keys.Shift) == Keys.Shift)
             {
                 model.SetHoge(HOGE_TYPE.HOGE_TAIL);
                 model.SetThumbView(THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST);
+
+                MessageBox.Show($"さいご",
+                    "さいごのへんのみ",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+
             }
             else if ((Control.ModifierKeys & Keys.Control) == Keys.Control)
             {
                 model.SetHoge(HOGE_TYPE.HOGE_HEAD_AND_TAIL);
                 model.SetThumbView(THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST);
+
+                MessageBox.Show($"さいしょとさいご",
+                    "さいしょとさいご",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
             }
 
             if (filterType != FILTER_TYPE.FILTER_NONE)

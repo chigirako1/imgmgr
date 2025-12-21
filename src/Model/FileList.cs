@@ -16,6 +16,7 @@ namespace PictureManagerApp.src.Model
         public enum SORT_TYPE
         {
             SORT_PATH,
+            SORT_PATH2,
             SORT_FILENAME,
             SORT_FILESIZE,
             SORT_IMAGESIZE,
@@ -158,6 +159,11 @@ namespace PictureManagerApp.src.Model
                     comp = new FileItemTitleComparer();
                     break;
                 case SORT_TYPE.SORT_PATH:
+                    comp = new FileItemFilePathNatComparer();
+                    break;
+                case SORT_TYPE.SORT_ARTWORK_ID:
+                    comp = new FileItemIdComparer();
+                    break;
                 default:
                     comp = new FileItemFilePathComparer();
                     break;
@@ -279,6 +285,7 @@ namespace PictureManagerApp.src.Model
                             }
                             else
                             {
+                                //TODO:tweet id取得できてない場合の対応（特殊なファイル名）
                                 Log.trc($"???");
                             }
                             tweet_id_save = ti.TweetID;
@@ -430,13 +437,13 @@ namespace PictureManagerApp.src.Model
             texts.Add($"total({mFileList.Count})={MyFiles.FormatFileSize(total)}");
             texts.Add($"選択中({MarkCount()})={MyFiles.FormatFileSize(slct)}({slct * 100 / total}%)" +
                 $"{MyFiles.FormatFileSize(avg_slct)}" +
-                $"/{MyFiles.FormatFileSize(slct_max)}" +
-                $"/{MyFiles.FormatFileSize(slct_min)}" 
+                $"({MyFiles.FormatFileSize(slct_max)}" +
+                $"/{MyFiles.FormatFileSize(slct_min)})" 
                 );
             texts.Add($"非選択({mFileList.Count - MarkCount()})={MyFiles.FormatFileSize(not_slct)}({not_slct * 100 / total}%)" +
                 $"{MyFiles.FormatFileSize(avg_non_slct)}" +
-                $"/{MyFiles.FormatFileSize(not_slct_max)}" +
-                $"/{MyFiles.FormatFileSize(not_slct_min)}"
+                $"({MyFiles.FormatFileSize(not_slct_max)}" +
+                $"/{MyFiles.FormatFileSize(not_slct_min)})"
                 );
             //texts.Add($"{tmp}%");
             texts.Add($"{MyFiles.FormatFileSize(not_slct)}(非選択中) / {MyFiles.FormatFileSize(slct)}(選択中) = {tmp}%");
@@ -455,8 +462,8 @@ namespace PictureManagerApp.src.Model
         public void WriteStatTsv(string ofilepath)
         {
             List<string> list = new ();
-            var fs_a = 0l;
-            var fs_b = 0l;
+            var fs_a = 0L;
+            var fs_b = 0L;
 
             using (var sw = new StreamWriter(ofilepath, false))
             {
@@ -570,6 +577,24 @@ namespace PictureManagerApp.src.Model
         }
     }
 
+    public sealed class FileItemFilePathNatComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var d1 = Path.GetDirectoryName(a.FilePath) ?? "";
+            var d2 = Path.GetDirectoryName(b.FilePath) ?? "";
+            var dc = String.Compare(d1, d2);
+            if (dc != 0)
+            {
+                return dc;
+            }
+
+            var f1 = Path.GetFileName(a.FilePath) ?? "";
+            var f2 = Path.GetFileName(b.FilePath) ?? "";
+            return String.Compare(f1, f2);
+        }
+    }
+
     public sealed class FileItemNameComparer : IComparer<FileItem>
     {
         public int Compare(FileItem a, FileItem b)
@@ -587,6 +612,24 @@ namespace PictureManagerApp.src.Model
             var title_a = a.GetTitle() + a.FilePath;
             var title_b = b.GetTitle() + b.FilePath;
             return String.Compare(title_a, title_b);
+        }
+    }
+
+    public sealed class FileItemIdComparer : IComparer<FileItem>
+    {
+        public int Compare(FileItem a, FileItem b)
+        {
+            var id_a = a.GetArtworkID();
+            var id_b = b.GetArtworkID();
+            var result = id_a - id_b;
+            if (result != 0)
+            {
+                return result;
+            }
+
+            var p_a = a.FilePath;
+            var p_b = b.FilePath;
+            return String.Compare(p_a, p_b);
         }
     }
 

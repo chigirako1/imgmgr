@@ -98,9 +98,8 @@ namespace PictureManagerApp.src.Model
     public enum THUMBNAIL_VIEW_TYPE
     {
         THUMBNAIL_VIEW_TILE,        //並べる
-        THUMBNAIL_VIEW_MANGA,       //漫画用。２画像並べて表示。左に進む（TBD.進行方向は別にしたほうが良さそう
-
         THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる(実装中
+        THUMBNAIL_VIEW_MANGA,       //漫画用。２画像並べて表示。左に進む（TBD.進行方向は別にしたほうが良さそう
 
         THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
 
@@ -557,7 +556,7 @@ namespace PictureManagerApp.src.Model
                 switch (this._Hoge)
                 {
                     case HOGE_TYPE.HOGE_HEAD:
-                        //hoge = -1;//前を残す,未実装
+                        hoge = -1;//前を残す
                         break;
                     case HOGE_TYPE.HOGE_TAIL:
                         hoge = 1;//後ろを残す
@@ -855,6 +854,13 @@ namespace PictureManagerApp.src.Model
                 var width = int.Parse(values[2]);
                 var height = int.Parse(values[3]);
                 var hash = values[4];
+                */
+
+                /*
+                HOGE_NONE,
+                HOGE_HEAD,
+                HOGE_TAIL,
+                HOGE_HEAD_AND_TAIL,
                 */
 
                 string picpath;
@@ -1521,6 +1527,11 @@ namespace PictureManagerApp.src.Model
             return GetFileItem(mIdx);//mFileList[mIdx];
         }
 
+        public bool IsIndexInvalid()
+        {
+            return (mIdx < mFileList.Count);
+        }
+
         public string GetCurrentFilePath() => mFileList[mIdx].FilePath;
 
         public int GetCurrentFileIndex() => (mIdx + 1);
@@ -1533,7 +1544,10 @@ namespace PictureManagerApp.src.Model
                 //throw new ArgumentOutOfRangeException(nameof(idx));
                 mIdx = 0;
             }
-            mIdx = idx;
+            else
+            {
+                mIdx = idx;
+            }
         }
 
         public (int, int) GetIndex()
@@ -1604,7 +1618,9 @@ namespace PictureManagerApp.src.Model
 
             //TODO: DBから情報を取ってくるようにする
 
-            var str = $"【】{ti.ScreenName}";
+            var name = Sqlite.GetTwtUsername(ti.ScreenName);
+
+            var str = $"【{name}(@{ti.ScreenName})】";
             return str;
         }
 

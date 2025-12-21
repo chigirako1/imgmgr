@@ -28,16 +28,16 @@ namespace PictureManagerApp.src.Lib
             return title;
         }
 
-        static public (DateTime?, string, int) GetPxvArtworkInfoFromPath(string path, string regex_str = @"(\d\d-\d\d-\d\d)\s+(.*)\(\d+\)")
+        static public (DateTime?, string, int) GetPxvArtworkInfoFromPath(string path, string regex_str = @"(\d\d-\d\d-\d\d)\s+(.*)\((\d+)\)")
         {
             Regex rgx = new Regex(regex_str);
             Match m = rgx.Match(path);
-            if (m.Success)
+            if (m.Success && m.Groups.Count == 4)
             {
                 var date = DateTime.Parse(m.Groups[1].Value);
                 var title = m.Groups[2].Value;
                 var artwork_id = int.Parse(m.Groups[3].Value);
-                Log.dbg($"{title}\t{path}\t{date}");
+                //Log.dbg($"{date}\t'{title}'({artwork_id})\t{path}\t");
                 return (date, title, artwork_id);
             }
             else

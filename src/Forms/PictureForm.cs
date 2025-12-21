@@ -161,7 +161,20 @@ namespace PictureManagerApp
 
                 InitTimers();
 
-                UpdatePicture();
+                try
+                {
+                    if (mModel.IsIndexInvalid())
+                    {
+                        mModel.SetCurrentFileIndex(0);
+                    }
+                    UpdatePicture();
+                }
+                catch (System.ArgumentOutOfRangeException ex)
+                {
+                    
+                    Log.trc(ex.Message);
+                }
+                //
             }
 
             Log.trc($"[E]");
@@ -1187,7 +1200,8 @@ namespace PictureManagerApp
                 this.ToolStripMenuItem_Sort_NumPixel,
                 this.ToolStripMenuItem_AspectRatio,
                 this.ToolStripMenuItem_Sort_FileHash,
-                this.toolStripMenuItem_Sort_Title,
+                this.ToolStripMenuItem_Sort_Title,
+                this.ToolStripMenuItem_Sort_ID,
             };
 
             //グループのToolStripMenuItemを列挙する
@@ -1220,9 +1234,13 @@ namespace PictureManagerApp
                     {
                         sort_type = SORT_TYPE.SORT_FILENAME;
                     }
-                    else if (item == this.toolStripMenuItem_Sort_Title)
+                    else if (item == this.ToolStripMenuItem_Sort_Title)
                     {
                         sort_type = SORT_TYPE.SORT_TITLE;
+                    }
+                    else if (item == this.ToolStripMenuItem_Sort_ID)
+                    {
+                        sort_type = SORT_TYPE.SORT_ARTWORK_ID;
                     }
                     else
                     {

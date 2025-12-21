@@ -53,15 +53,17 @@ namespace PictureManagerApp.src.Lib
                 }
             }
 
-
-            var dirs = Directory.EnumerateDirectories(TWT_CURRENT_DIR_TWT_DIR_PATH);
-            foreach (var dir in dirs)
+            if (Directory.Exists(TWT_CURRENT_DIR_TWT_DIR_PATH))
             {
-                var sepa = Path.DirectorySeparatorChar;
-                var dirnames = dir.Split(sepa);
-                var dirname = dirnames[dirnames.Length - 1];
+                var dirs = Directory.EnumerateDirectories(TWT_CURRENT_DIR_TWT_DIR_PATH);
+                foreach (var dir in dirs)
+                {
+                    var sepa = Path.DirectorySeparatorChar;
+                    var dirnames = dir.Split(sepa);
+                    var dirname = dirnames[dirnames.Length - 1];
 
-                TwtCurrentPathDic[dirname] = dir;
+                    TwtCurrentPathDic[dirname] = dir;
+                }
             }
         }
 

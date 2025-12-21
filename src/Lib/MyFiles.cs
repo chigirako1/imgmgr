@@ -73,7 +73,7 @@ namespace PictureManagerApp.src.Lib
                     var cnt = -1;
                     if (fileList.Count >= 3)
                     {
-                        rem = fileList.Count / 3;
+                        rem = Math.Min(fileList.Count / 3, 4);
                     }
                     idx = rem;
 
@@ -92,8 +92,11 @@ namespace PictureManagerApp.src.Lib
                         else
                         {
                             //TODO
+                            //idx = 1;
+                            cnt = fileList.Count - idx;
                         }
                         fileList.RemoveRange(idx, cnt);
+                        //Log.trc($"n={fileList.Count}, idx={idx}, cnt={cnt} ({hoge})");
                     }
                 }
             }

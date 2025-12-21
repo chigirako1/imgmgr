@@ -85,6 +85,39 @@ namespace PictureManagerApp.src.Lib
             return new SQLiteConnection(sqlConnectionSb.ToString());
         }
 
+        public static string GetTwtUsername(string screen_name)
+        {
+            string twtname = "";
+
+            using (var cn = GetSQLiteConnection())
+            {
+                cn.Open();
+                using (var cmd = new SQLiteCommand(cn))
+                {
+                    cmd.CommandText = $"SELECT * FROM twitters WHERE twtid = '{screen_name}'";
+                    using (var reader = cmd.ExecuteReader())
+                    {
+                        try
+                        {
+                            if (reader.Read())
+                            {
+                                twtname = (string)reader["twtname"];
+                            }
+                            else
+                            {
+                                //Log.trc("no read ");
+                            }
+                        }
+                        catch (Exception ex)
+                        {
+                            Log.trc(ex.Message);
+                        }
+                    }
+                }
+            }
+            return twtname;
+        }
+
         public static void GetPxvArtistInfo(int pxvid, PxvArtist pxvartist)
         {
             using (var cn = GetSQLiteConnection())
