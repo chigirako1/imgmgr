@@ -14,16 +14,40 @@ namespace PictureManagerApp
 {
     public partial class PictureForm : Form
     {
+        private readonly Dictionary<Keys, KeyDownFunc> KeyFuncTbl = [];
+        private Dictionary<Keys, uint> NumKeyMap = [];
+
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
+        private void InitNumKeyMap()
+        {
+            NumKeyMap[Keys.NumPad1] = 1;
+            NumKeyMap[Keys.NumPad2] = 2;
+            NumKeyMap[Keys.NumPad3] = 3;
+            NumKeyMap[Keys.NumPad4] = 4;
+            NumKeyMap[Keys.NumPad5] = 5;
+            NumKeyMap[Keys.NumPad6] = 6;
+            NumKeyMap[Keys.NumPad7] = 7;
+            NumKeyMap[Keys.NumPad8] = 8;
+            NumKeyMap[Keys.NumPad9] = 9;
+        }
+
         private void InitKeys()
         {
             KeyFuncTbl[Keys.Escape] = KeyDownFunc_Escape;
 
             KeyFuncTbl[Keys.NumPad0] = KeyDownFunc_SelectToggle;
 
-
+            KeyFuncTbl[Keys.NumPad1] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad2] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad3] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad4] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad5] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad6] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad7] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad8] = KeyDownFunc_SelectToggle;
+            KeyFuncTbl[Keys.NumPad9] = KeyDownFunc_SelectToggle;
 
             KeyFuncTbl[Keys.Space] = KeyDownFunc_SlideShow;//KeyDownFunc_SelectToggle;
 
@@ -53,7 +77,6 @@ namespace PictureManagerApp
             KeyFuncTbl[Keys.PageUp] = KeyDownFunc_PageUp;
             KeyFuncTbl[Keys.PageDown] = KeyDownFunc_PageDown;
 
-
             KeyFuncTbl[Keys.Left] = KeyDownFunc_Prev;
             KeyFuncTbl[Keys.Right] = KeyDownFunc_Next;
             KeyFuncTbl[Keys.Up] = KeyDownFunc_Up;
@@ -65,6 +88,9 @@ namespace PictureManagerApp
             switch (mModel.ThumbViewType)
             {
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY:
+                    KeyFuncTbl[Keys.PageUp] = KeyDownFunc_PrevGroup;
+                    KeyFuncTbl[Keys.PageDown] = KeyDownFunc_NextGroup;
+                    break;
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST:
                     KeyFuncTbl[Keys.Left] = KeyDownFunc_List_Prev;
                     KeyFuncTbl[Keys.Right] = KeyDownFunc_List_Next;
@@ -316,10 +342,33 @@ namespace PictureManagerApp
                     else
                     {
                         mModel.toggleMark();
-                        mModel.Next();
+
+                        if (mModel.ThumbViewType == THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_LIST)
+                        {
+                            //TODO:フォルダ内最後の画像だった場合は次のディレクトリの最後に移動する
+
+
+                            mModel.Next();
+                        }
+                        else
+                        {
+                            mModel.Next();
+                        }
                     }
                     break;
                 default:
+                    if (NumKeyMap.ContainsKey(e.KeyCode))
+                    {
+                        var err = mModel.SetDstStr(NumKeyMap[e.KeyCode]);
+                        if (err)
+                        {
+
+                        }
+                        else
+                        {
+                            mModel.Next();
+                        }
+                    }
                     break;
             }
             return true;

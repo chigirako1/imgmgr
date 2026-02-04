@@ -26,7 +26,7 @@ namespace PictureManagerApp.src.Model
         //private string FileHash = null;//"";
         private string FileHash { set; get; } = null;
 
-        public string DestinationStr { private set; get; } = "";
+        public string DestinationStr {  set; get; } = "";
         public bool Mark {
             set; get;
         }
@@ -301,9 +301,9 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         // 
         //---------------------------------------------------------------------
-        public bool isSpecifiedPicOrinet(PIC_ORIENT_TYPE orient)
+        public bool isSpecifiedPicOrient(PIC_ORIENT_TYPE orient)
         {
-            if (orient == PIC_ORIENT_TYPE.PIC_ORINET_ALL)
+            if (orient == PIC_ORIENT_TYPE.PIC_ORIENT_ALL)
             {
                 return true;
             }
@@ -324,25 +324,25 @@ namespace PictureManagerApp.src.Model
 
             switch (orient)
             {
-                case PIC_ORIENT_TYPE.PIC_ORINET_PORTRAIT:
+                case PIC_ORIENT_TYPE.PIC_ORIENT_PORTRAIT:
                     if (img_w <= img_h)
                     {
                         return true;
                     }
                     break;
-                case PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE:
+                case PIC_ORIENT_TYPE.PIC_ORIENT_LANDSCAPE:
                     if (img_w >= img_h)
                     {
                         return true;
                     }
                     break;
-                case PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE_ONLY:
+                case PIC_ORIENT_TYPE.PIC_ORIENT_LANDSCAPE_ONLY:
                     if (img_w > img_h)
                     {
                         return true;
                     }
                     break;
-                case PIC_ORIENT_TYPE.PIC_ORINET_SQUARE:
+                case PIC_ORIENT_TYPE.PIC_ORIENT_SQUARE:
                     //if (img_w == img_h)
                     var n = Math.Abs(img_w - img_h);
                     if (n < 100)
@@ -350,14 +350,14 @@ namespace PictureManagerApp.src.Model
                         return true;
                     }
                     break;
-                case PIC_ORIENT_TYPE.PIC_ORINET_LONG:
+                case PIC_ORIENT_TYPE.PIC_ORIENT_LONG:
                     float rat = img_w * 100 / img_h;
                     if (rat > 200)//TODO:
                     {
                         return true;
                     }
                     break;
-                case PIC_ORIENT_TYPE.PIC_ORINET_CUSTOM:
+                case PIC_ORIENT_TYPE.PIC_ORIENT_CUSTOM:
                     float rat2 = GetAspectRatio();
                     if (9 < rat2 * 16 && rat2 * 16 < 11)
                     {

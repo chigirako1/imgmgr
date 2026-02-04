@@ -14,12 +14,14 @@ namespace PictureManagerApp.src.Lib
         private readonly string KEY_TEST = "test";
         private readonly string KEY_LAST_PATH = "dir_path";
         private readonly string KEY_DEL_LIST = "del_list";
+        private readonly string KEY_NUMKEY_STR = "numkey_str";
         //private readonly string KEY_THUMB_N_ROW = "thumb_n_row";
         //private readonly string KEY_THUMB_N_COL = "thumb_n_col";
 
         public string TEST_ELEM { get; set; }
         public string DelListSavePos { get; set; }
         public string LastPath { get; set; }
+        public string NumkeyStrings { get; set; }
 
         public void Load()
         {
@@ -34,6 +36,8 @@ namespace PictureManagerApp.src.Lib
                 
                 DelListSavePos = config.AppSettings.Settings[KEY_DEL_LIST].Value;
                 //Log.trc($"del_list={DelListSavePos}");
+
+                NumkeyStrings = config.AppSettings.Settings[KEY_NUMKEY_STR].Value;
             }
             catch (System.Exception e)
             {

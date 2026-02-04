@@ -47,7 +47,7 @@ namespace PictureManagerApp.src.Lib
 
         public static IEnumerable<string> GetFileList(string path, string extlist, string search_word)
         {
-            Log.log($"対象='{path}'/拡張子='{extlist}'/検索ワード='{search_word}'");
+            Log.log($"対象='{path}', 拡張子='{extlist}', 検索ワード='{search_word}'");
 
             var extensions = extlist.Split(",");
             var files = MyFiles.GetAllFiles(path, extensions);
@@ -58,6 +58,43 @@ namespace PictureManagerApp.src.Lib
             }
 
             return files;
+        }
+
+        /// <summary>
+        /// 指定されたファイルパスのリストから合計サイズ（バイト）を計算します。
+        /// </summary>
+        /// <param name="filePaths">ファイルパスのコレクション</param>
+        /// <returns>合計サイズ（バイト）</returns>
+        public static long GetTotalFileSize(IEnumerable<string> filePaths)
+        {
+            long totalSize = 0;
+
+            if (filePaths == null) return 0;
+
+            foreach (var path in filePaths)
+            {
+                try
+                {
+                    // ファイルが存在するか確認
+                    if (File.Exists(path))
+                    {
+                        // FileInfoクラスを使用してサイズを取得
+                        var fi = new System.IO.FileInfo(path);
+                        totalSize += fi.Length;
+                    }
+                    else
+                    {
+                        Console.WriteLine($"警告: ファイルが見つかりません - {path}");
+                    }
+                }
+                catch (Exception ex)
+                {
+                    // アクセス権限がない場合などのエラーハンドリング
+                    Console.WriteLine($"エラー: {path} のサイズ取得中に問題が発生しました。 {ex.Message}");
+                }
+            }
+
+            return totalSize;
         }
 
         public static IEnumerable<string> RemoveSpecFiles(IEnumerable<string> files, int hoge)

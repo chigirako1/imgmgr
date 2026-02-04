@@ -21,6 +21,20 @@ namespace PictureManagerApp.src.Lib
         }
     }
 
+    public struct TwitterUserInfo
+    {
+        public string ScreenName;
+        public string UserName;
+        public long Rating;
+
+        public TwitterUserInfo()
+        {
+            ScreenName = "";
+            UserName = "";
+            Rating = 0;
+        }
+    }
+
     class Twt
     {
         private const string TWT_CURRENT_DIR_TWT_DIR_PATH = @"D:\dl\AnkPixiv\Twitter";
@@ -45,7 +59,7 @@ namespace PictureManagerApp.src.Lib
             var lines = GetTwtDirList();
             foreach (var line in lines)
             {
-                var scrn_name = GetScreenNameFromPath(line);
+                var scrn_name = GetScreenNameFromDirPath(line);
                 if (scrn_name != "")
                 {
                     //TBD:大文字・小文字するようにどっちかに統一する？
@@ -87,16 +101,8 @@ namespace PictureManagerApp.src.Lib
             return "";
         }
 
-        public static string GetScreenNameFromPath(string path)
+        public static string GetScreenNameFromDirName(string dirname)
         {
-            char[] sepa =
-            [
-                '/',
-                Path.DirectorySeparatorChar,
-            ];
-            var dirnames = path.Split(sepa);
-            var dirname = dirnames[dirnames.Length - 1];
-
             var screen_name = "";
             var pattern = @"^([\w_]+)";
             System.Text.RegularExpressions.MatchCollection mc = System.Text.RegularExpressions.Regex.Matches(dirname, pattern);
@@ -109,7 +115,29 @@ namespace PictureManagerApp.src.Lib
             return screen_name;
         }
 
-        public static string GetScreenNameFromDirName(string path)
+        public static string GetScreenNameFromDirPath(string dirpath)
+        {
+            char[] sepa =
+            [
+                '/',
+                Path.DirectorySeparatorChar,
+            ];
+            var dirnames = dirpath.Split(sepa);
+            var dirname = dirnames[dirnames.Length - 1];
+
+            return GetScreenNameFromDirName(dirname);
+        }
+
+        public static string GetScreenNameFromFilepath(string filepath)
+        {
+            var dirname = Path.GetDirectoryName(filepath);
+
+            //TODO:パスからだとスクリーンネーム取得困難
+            var dirname2 = Path.GetFileName(dirname);//BUG
+            return GetScreenNameFromDirName(dirname2);
+        }
+
+        public static string GetScreenNameFromZipName(string path)
         {
             var pattern = @"@(\w+)";
             System.Text.RegularExpressions.MatchCollection mc = System.Text.RegularExpressions.Regex.Matches(path, pattern);
@@ -121,16 +149,11 @@ namespace PictureManagerApp.src.Lib
             return null;
         }
 
-
         public static TweetInfo GetTweetInfoFromPath(string path)
         {
             var filename = Path.GetFileName(path);
-            var dirname = Path.GetDirectoryName(path);
-
-            //TODO:パスからだとスクリーンネーム取得困難
-            var screenname = Path.GetFileName(dirname);//BUG
-
-            TweetInfo tweetinfo = new();
+            var screenname = GetScreenNameFromFilepath(path);
+            var tweetinfo = new TweetInfo();
             tweetinfo.ScreenName = screenname;
 
             var pattern = @"(\d+)\s+(\d+)\s+(\d+-\d+\d+)";

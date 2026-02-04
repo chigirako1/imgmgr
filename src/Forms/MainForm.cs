@@ -17,6 +17,7 @@ using System.Collections.Generic;
 using static PictureManagerApp.src.Lib.TsvRow;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
+using static PictureManagerApp.src.Lib.PicEvalRow;
 
 namespace PictureManagerApp
 {
@@ -30,9 +31,10 @@ namespace PictureManagerApp
         private const int DGV_COL_IDX_PAGE_NOW = 3;
         private const int DGV_COL_IDX_PERCENT = 4;
 
+        
         private static readonly string[] SP_WORDS = [
             "-w2x",
-            "-iv",
+            PictureModel.CONV_IV,//"-iv",
             //"-cnv",
             "",
         ];
@@ -383,6 +385,8 @@ namespace PictureManagerApp
                 var word = cmbBox_FilenameFilter.Text;
                 model.SetSeachWord(word);
             }
+
+            model.InitDstStrings(this.Config.NumkeyStrings);
         }
 
         private void setModelParam_date(PictureModel model)
@@ -427,31 +431,31 @@ namespace PictureManagerApp
 
             if (radioBtn_PicOrinet_All.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_ALL);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_ALL);
             }
             else if (radioBtn_PicOrinet_PR.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_PORTRAIT);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_PORTRAIT);
             }
             else if (radioBtn_PicOrinet_LS.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_LANDSCAPE);
             }
             else if (radioBtn_PicOrinet_LS_only.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LANDSCAPE_ONLY);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_LANDSCAPE_ONLY);
             }
             else if (radioBtn_PicOrinet_Square.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_SQUARE);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_SQUARE);
             }
             else if (radioBtn_PicOrinet_Long.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_LONG);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_LONG);
             }
             else if (radioBtn_PicOrinet_Custom.Checked)
             {
-                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORINET_CUSTOM);
+                model.SetPicOrient(PIC_ORIENT_TYPE.PIC_ORIENT_CUSTOM);
             }
         }
 
@@ -720,7 +724,18 @@ namespace PictureManagerApp
 
                 var tblname = "twitters";
                 var colname = "id, twtid, twtname, rating, drawing_method, filenum, status";
-                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname);
+                var where_phrases = new[] {
+                    "drawing_method = 'AI'",
+                    "rating >= 80",
+                    "filenum >= 100",
+                    "status <> 'TWT巡回'",
+                };
+                var where_phrase = System.String.Join(" AND ", where_phrases);
+                //var where_phrase = "drawing_method = 'AI' AND rating >= 80";
+                var order_phrase = "status DESC, rating DESC, filenum DESC";
+                order_phrase = "filenum DESC, status DESC, rating DESC";
+                var sqlp = Sqlite.BuildSqlPhrase(tblname, colname, where_phrase, order_phrase);
+                var adapter = Sqlite.GetSQLiteDataAdapter(con, sqlp);
                 adapter.Fill(this.mTwtDatatable);
 
                 this.TwtDataGridView.DataSource = this.mTwtDatatable;
@@ -985,7 +1000,7 @@ namespace PictureManagerApp
                 }
                 else if (filename.StartsWith("tw-"))
                 {
-                    var screen_name = Twt.GetScreenNameFromDirName(filename);
+                    var screen_name = Twt.GetScreenNameFromZipName(filename);
                     if (screen_name != null)
                     {
                         screen_names.Add(screen_name);

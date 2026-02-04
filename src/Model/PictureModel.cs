@@ -50,15 +50,15 @@ namespace PictureManagerApp.src.Model
 
     public enum PIC_ORIENT_TYPE
     {
-        PIC_ORINET_ALL,
-        PIC_ORINET_PORTRAIT,
-        PIC_ORINET_LANDSCAPE,
-        PIC_ORINET_LANDSCAPE_ONLY,
-        PIC_ORINET_SQUARE,
-        PIC_ORINET_LONG,
-        PIC_ORINET_CUSTOM,
+        PIC_ORIENT_ALL,
+        PIC_ORIENT_PORTRAIT,
+        PIC_ORIENT_LANDSCAPE,
+        PIC_ORIENT_LANDSCAPE_ONLY,
+        PIC_ORIENT_SQUARE,
+        PIC_ORIENT_LONG,
+        PIC_ORIENT_CUSTOM,
 
-        PIC_ORINET_MAX
+        PIC_ORIENT_MAX
     }
 
     public enum DATA_SOURCE_TYPE
@@ -100,10 +100,12 @@ namespace PictureManagerApp.src.Model
         THUMBNAIL_VIEW_TILE,        //並べる
         THUMBNAIL_VIEW_LIST,        //同一フォルダを横一列に並べる(実装中
         THUMBNAIL_VIEW_MANGA,       //漫画用。２画像並べて表示。左に進む（TBD.進行方向は別にしたほうが良さそう
+        THUMBNAIL_VIEW_DIRECTORY,   //同一フォルダを一画面に全部
+
+        THUMBNAIL_VIEW_MAX,
 
         THUMBNAIL_VIEW_OVERVIEW,    //これはなに？
 
-        THUMBNAIL_VIEW_MAX,
 
 
         //以下は除外
@@ -112,7 +114,6 @@ namespace PictureManagerApp.src.Model
 
         //???
         THUMBNAIL_VIEW_NEXT,        //次の画像をでっかく表示
-        THUMBNAIL_VIEW_DIRECTORY,   //同一フォルダを一画面に全部
 
 
         THUMBNAIL_VIEW_NO_MAIN_SPLIT,
@@ -154,6 +155,7 @@ namespace PictureManagerApp.src.Model
     {
         //定数
 
+        public const string CONV_IV = "-iv";
         private const int GROUP_FILE_NUM = 300;
 
         private const string EXT_MEMORY_DIR_PATH = @"work\r18";
@@ -187,13 +189,13 @@ namespace PictureManagerApp.src.Model
         private static readonly string STR_METHOD_DEL = "DEL";
         private static readonly string STR_METHOD_FAV = "FAV";
 
-
+        //
         private string mPath;
         internal string GetPath() => mPath;
         private string mDstRootPath;
         //private SORT_TYPE mSortType;
         private FileList mFileList;
-        private DATA_SOURCE_TYPE mDataSrcType;
+        public DATA_SOURCE_TYPE mDataSrcType { get; private set;}
 
         private int mIdx = -1;
         private DateTime? mDtFrom;
@@ -204,7 +206,7 @@ namespace PictureManagerApp.src.Model
         private int? mMaxPixelCnt = null;
         private int mMinFileSize = 0;
         private int mMaxFileSize = 0;
-        private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORINET_ALL;
+        private PIC_ORIENT_TYPE mTargetPicOrient = PIC_ORIENT_TYPE.PIC_ORIENT_ALL;
         private DISP_ROT_TYPE _rot_type = DISP_ROT_TYPE.DISP_ROT_NONE;
         public DISP_ROT_TYPE ROT_TYPE
         {
@@ -223,6 +225,8 @@ namespace PictureManagerApp.src.Model
 
         private string DelListPath;
 
+        private string[] mNumkeyStrings = new string[9];
+
         private HOGE_TYPE _Hoge = HOGE_TYPE.HOGE_NONE;
 
 
@@ -238,6 +242,24 @@ namespace PictureManagerApp.src.Model
         }
         public int UpDownCount { set; get; }
         public int PageCount { set; get; }
+
+        public bool NoAtoShori()
+        {
+            if (IsZip())
+                return true;
+
+            if (mFileList.DstStrCount() != 0)
+            {
+                return false;
+            }
+
+            if (mMarkCount != 0)
+            {
+                return false;
+            }
+
+            return true;
+        }
 
         //private TsvRowList mRowList;
 
@@ -387,7 +409,7 @@ namespace PictureManagerApp.src.Model
 
         public void SetPicOrient(PIC_ORIENT_TYPE targetPicOrient)
         {
-            Log.log($"orinet={targetPicOrient}");
+            Log.log($"orient={targetPicOrient}");
             mTargetPicOrient = targetPicOrient;
         }
         
@@ -660,7 +682,7 @@ namespace PictureManagerApp.src.Model
                         //関連するファイルの追加
                         if (mSeachWord != "")
                         {
-                            AddRelativeFile(f);
+                            AddRelativeFile(fi);
                         }
                     }
                     else
@@ -743,18 +765,51 @@ namespace PictureManagerApp.src.Model
             Log.trc($"ファイルリスト構築所要時間：{ts}");
         }
 
-        private void AddRelativeFile(string f)
+        private void SetMark(FileItem fi, bool val)
         {
-            //TODO: ファイルサイズを比較し、ファイルサイズが大きい方を選択する？？？
+            fi.Mark = val;
+            if (val)
+            {
+                mMarkCount++;
+            }
+            else
+            {
+                mMarkCount--;
+            }
+        }
+
+        private void AddRelativeFileSub(FileItem fi, string tmp, bool markBigger)
+        {
+            var tmpfi = new FileItem(tmp);
+
+            if (markBigger && tmpfi.FileSize < fi.FileSize)
+            {
+                SetMark(fi, true);
+                Log.warning($"元のファイルより大きくなっている {tmpfi.FileSize} <=> {fi.FileSize}('{tmpfi.GetFilename()}' <=> '{fi.GetFilename()}')");
+            }
+            else
+            {
+                SetMark(tmpfi, true);
+            }
+            mFileList.Add(tmpfi);
+        }
+
+        private void AddRelativeFile(FileItem fi)
+        {
+            var f = fi.FilePath;
 
             var tmp = f.Replace(mSeachWord, "");
             Log.log($"ファイル名:'{tmp}'/置換語:'{mSeachWord}'");
+
+            bool markBigger = false;
+            if (mSeachWord == CONV_IV)
+            {
+                markBigger = true;
+            }
+
             if (File.Exists(tmp))
             {
-                var tmpfi = new FileItem(tmp);
-                tmpfi.Mark = true;
-                mMarkCount++;
-                mFileList.Add(tmpfi);
+                AddRelativeFileSub(fi, tmp, markBigger);
             }
             else
             {
@@ -813,7 +868,7 @@ namespace PictureManagerApp.src.Model
         {
             if (fi.isSpecifiedSizeImage(mMaxPicSize) &&
                 //fi.isSpecifiedPixelCount(mMaxPixelCnt) &&  ???
-                fi.isSpecifiedPicOrinet(mTargetPicOrient))
+                fi.isSpecifiedPicOrient(mTargetPicOrient))
             {
                 return true;
             }
@@ -930,7 +985,7 @@ namespace PictureManagerApp.src.Model
         //---------------------------------------------------------------------
         public PictureModel DuplicateSelectOnly()
         {
-            PictureModel newObj = new(mFileList);
+            var newObj = new PictureModel(mFileList);
             newObj.mPath = mPath;
             
             return newObj;
@@ -939,6 +994,14 @@ namespace PictureManagerApp.src.Model
         public FileList GetSelectedPic()
         {
             return mFileList.DupSel();
+        }
+
+        public PictureModel GetSameDirImages(string dirpath)
+        {
+            var model = new PictureModel();
+            model.BuildFileList(dirpath);
+
+            return model;
         }
 
         //---------------------------------------------------------------------
@@ -1618,9 +1681,9 @@ namespace PictureManagerApp.src.Model
 
             //TODO: DBから情報を取ってくるようにする
 
-            var name = Sqlite.GetTwtUsername(ti.ScreenName);
+            var twtInfo = Sqlite.GetTwtUserInfo(ti.ScreenName);
 
-            var str = $"【{name}(@{ti.ScreenName})】";
+            var str = $"【{twtInfo.Rating}】{twtInfo.UserName}(@{ti.ScreenName})";
             return str;
         }
 
@@ -1715,7 +1778,8 @@ namespace PictureManagerApp.src.Model
             Log.trc($"endIdx={endIdx}");
 
             List<FileItem> filelist = new List<FileItem>();
-            for (int i = startIdx; i >= 0 && i < endIdx; i++)
+            //for (int i = startIdx; i >= 0 && i < endIdx; i++)
+            for (int i = startIdx; i >= 0 && i <= endIdx; i++)
             {
                 filelist.Add(GetFileItem(i));
             }
@@ -1767,6 +1831,63 @@ namespace PictureManagerApp.src.Model
             var cnt = mFileList.Batch(dst_root_path);
             mMarkCount = 0;
             return cnt;
+        }
+
+        public void InitDstStrings(string numkey_strings)
+        {
+            if (numkey_strings == null)
+            {
+                for (var i = 0; i < 9; i++)
+                {
+                    mNumkeyStrings[i] = i.ToString();
+                }
+            }
+
+            var strs = numkey_strings.Split(":");
+            if (strs.Length < 9)
+            {
+                Log.err("!!!");
+            }
+
+            for (var i = 0; i < 9; i++)
+            {
+                mNumkeyStrings[i] = strs[i];
+            }
+        }
+
+        public string GetDstStr(uint number)
+        {
+            if (number >= 1 && number > 9)
+            {
+                Log.err($"invalid = {number}");
+                return null;
+            }
+            return mNumkeyStrings[number - 1];//number.ToString();
+        }
+
+        public bool SetDstStr(uint number)
+        {
+            var dstStr = GetDstStr(number);
+            if (dstStr == null)
+            {
+                return true;
+            }
+            SetDstStr(dstStr);
+            return false;
+        }
+
+        private void SetDstStr(string dstStr)
+        {
+            var item = mFileList[mIdx];
+            var dststr = "-" + dstStr;
+            if (item.DestinationStr == dststr)
+            {
+                item.DestinationStr = "";
+            }
+            else
+            {
+                item.DestinationStr = dststr;
+            }
         }
 
         //---------------------------------------------------------------------
@@ -2005,7 +2126,7 @@ namespace PictureManagerApp.src.Model
             else if (mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_TWT)
             {
                 //s_twtid = Twt.GetScreenNameFromDirName(mPath);
-                s_twtid = Twt.GetScreenNameFromPath(mPath);
+                s_twtid = Twt.GetScreenNameFromDirPath(mPath);
             }
 
             var m = new TsvRowList(DEL_LIST_TXT_PATH);
@@ -2025,7 +2146,7 @@ namespace PictureManagerApp.src.Model
                 }
                 else if (s_twtid != "" && filename.StartsWith("tw-"))
                 {
-                    var screen_name = Twt.GetScreenNameFromDirName(filename);
+                    var screen_name = Twt.GetScreenNameFromZipName(filename);
                     if (screen_name != null && s_twtid == screen_name)
                     {
                         var twt_info = Twt.GetTweetInfoFromPath(x.EntryName);

@@ -65,15 +65,38 @@ namespace PictureManagerApp.src.Lib
             return sqlite_db_file_path;
         }
 
-        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string tblname, string colname)
+        public static string BuildSqlPhrase(string tblname, string colnames, string where_phrase, string order_phrase)
         {
-            var adapter = new SQLiteDataAdapter($"SELECT {colname} FROM {tblname};", con);
-            return adapter;
+            var sql_phrase = $"SELECT {colnames} FROM {tblname}";
+
+            if (where_phrase != "")
+            {
+                sql_phrase += $" WHERE {where_phrase}";
+            }
+
+            if (order_phrase != "")
+            {
+                sql_phrase += $" ORDER BY {order_phrase}";
+            }
+
+            return sql_phrase + ";";
         }
 
-        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string tblname, string colname, string where_phrase)
+        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string tblname, string colname)
         {
-            var adapter = new SQLiteDataAdapter($"SELECT {colname} FROM {tblname} WHERE {where_phrase};", con);
+            var sql_phrase = $"SELECT {colname} FROM {tblname};";
+            return GetSQLiteDataAdapter(con, sql_phrase);
+        }
+
+        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string tblname, string colname, string where_phrase, string order_phrase)
+        {
+            var sql_phrase = $"SELECT {colname} FROM {tblname} WHERE {where_phrase} ORDER BY {order_phrase};";
+            return GetSQLiteDataAdapter(con, sql_phrase);
+        }
+
+        public static SQLiteDataAdapter GetSQLiteDataAdapter(SQLiteConnection con, string sql_phrase)
+        {
+            var adapter = new SQLiteDataAdapter(sql_phrase, con);
             return adapter;
         }
 
@@ -85,9 +108,9 @@ namespace PictureManagerApp.src.Lib
             return new SQLiteConnection(sqlConnectionSb.ToString());
         }
 
-        public static string GetTwtUsername(string screen_name)
+        public static TwitterUserInfo GetTwtUserInfo(string screen_name)
         {
-            string twtname = "";
+            var twt = new TwitterUserInfo();
 
             using (var cn = GetSQLiteConnection())
             {
@@ -101,7 +124,8 @@ namespace PictureManagerApp.src.Lib
                         {
                             if (reader.Read())
                             {
-                                twtname = (string)reader["twtname"];
+                                twt.UserName = (string)reader["twtname"];
+                                twt.Rating = (long)reader["rating"];
                             }
                             else
                             {
@@ -115,7 +139,7 @@ namespace PictureManagerApp.src.Lib
                     }
                 }
             }
-            return twtname;
+            return twt;
         }
 
         public static void GetPxvArtistInfo(int pxvid, PxvArtist pxvartist)

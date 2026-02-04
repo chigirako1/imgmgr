@@ -1,13 +1,12 @@
-﻿using System;
+﻿using PictureManagerApp.src.Lib;
+using PictureManagerApp.src.Model;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Windows.Forms;
-
-using PictureManagerApp.src.Lib;
-using PictureManagerApp.src.Model;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace PictureManagerApp
@@ -173,7 +172,7 @@ namespace PictureManagerApp
         private void FillBG(Graphics g, FileItem fitem)
         {
             Brush bgbrush;
-            if (fitem.Mark)
+            if (fitem.Mark || fitem.DestinationStr != "")
             {
                 bgbrush = BRUSH_MARK;
             }
@@ -239,6 +238,8 @@ namespace PictureManagerApp
 
                 // 画像情報描画
                 PictureBox_PaintTxt(g, d, fitem);
+
+                PictureBox_DrawNumKey(g, d, fitem);
             }
 
 
@@ -276,6 +277,24 @@ namespace PictureManagerApp
             return width;
         }
 
+        private void PictureBox_DrawNumKey(Graphics g, DrawDimension d, FileItem fitem)
+        {
+            var fsize = FONT_SIZE;
+            var inc = FONT_SPACE;
+            var x = 0;
+            var y = 300;
+            var txtbrush = FONT_COLOR;
+            using (var fnt = new Font(FONT_NAME, fsize))
+            {
+                for (var i = 1U; i <= 9; i++)
+                {
+                    var str = mModel.GetDstStr(i);
+                    g.DrawString(i.ToString() + str, fnt, txtbrush, x, y);
+                    y += fsize + inc;
+                }
+            }
+        }
+
         private void PictureBox_PaintTxt(Graphics g, DrawDimension d, FileItem fitem)
         {
             // テキストの描画
@@ -292,6 +311,12 @@ namespace PictureManagerApp
                 if (DisplayTxt)
                 {
                     txt = mModel.GetPictureInfoText();
+
+                    if (fitem.DestinationStr != "")
+                    {
+                        txt = $"['{fitem.DestinationStr}']" + txt;
+                    }
+
                     if (mSlideshow)
                     {
                         txt = "▶️" + txt;
@@ -362,6 +387,21 @@ namespace PictureManagerApp
             return new Size(p.Width / cols, p.Height / rows);
         }
 
+        private Size GetSize(bool main)
+        {
+            Size tsize;
+            if (main)
+            {
+                var p = pictureBox;
+                tsize = new Size(p.Width / 4, p.Height / 3);
+            }
+            else
+            {
+                tsize = GetThumbnailSize();
+            }
+            return tsize;
+        }
+
         //---------------------------------------------------------------------
         //
         //---------------------------------------------------------------------
@@ -378,30 +418,17 @@ namespace PictureManagerApp
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_OVERVIEW:
                     rightPicBox_Paint_overview(e);
                     break;
-                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_GROUP:
-                    //rightPicBox_Paint_group(e);
-                    //break;
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY:
+                    rightPicBox_Paint_dir(e);
+                    break;
+                case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_GROUP:
+                //rightPicBox_Paint_group(e);
+                //break;
                 case THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_TILE:
                 default:
                     rightPicBox_Paint_thumbnail(e);
                     break;
             }
-        }
-
-        private Size GetSize(bool main)
-        {
-            Size tsize;
-            if (main)
-            {
-                var p = pictureBox;
-                tsize = new Size(p.Width / 4, p.Height / 3);
-            }
-            else
-            {
-                tsize = GetThumbnailSize();
-            }
-            return tsize;
         }
 
 
@@ -471,6 +498,14 @@ namespace PictureManagerApp
                 {
                     var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
                     g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
+                }
+                else if (fitem.DestinationStr != "")
+                {
+                    var opaqueBrush = new SolidBrush(Color.FromArgb(OPA_VAL, COLOR_MARK));
+                    g.FillRectangle(opaqueBrush, x, y, thumWidth, thumHeight);
+
+                    var txt = fitem.DestinationStr;
+                    DrawString(g, txt, x, y);
                 }
 
                 x += thumWidth;
@@ -546,6 +581,39 @@ namespace PictureManagerApp
             return triangle;
         }
 
+        private (int, int) GetSplitNo(int count)
+        {
+            int max = 9;
+
+            int col = Math.Min(max, (int)Math.Sqrt(count));
+            int row = Math.Min(max, (int)Math.Sqrt(count));
+            if (col * row < count)
+            {
+                row++;
+            }
+            if (col * row < count)
+            {
+                col++;
+            }
+
+            return (col, row);
+        }
+
+        private void rightPicBox_Paint_dir(PaintEventArgs e)
+        {
+            var g = e.Graphics;
+            int col;
+            int row;
+
+            var absIdx = mModel.GetAbsIdx(0);
+            int offsetoffset = 0;
+            int currpos = 0;
+            List<FileItem> filelist = mModel.GetSameDirFileItemList(absIdx, ref offsetoffset, out currpos);
+
+            int maxn = filelist.Count;//mModel.PictureTotalNumber;
+            (col, row) = GetSplitNo(maxn);
+            rightPicBox_Paint_overview_core(g, col, row, maxn);
+        }
 
         private void rightPicBox_Paint_overview(PaintEventArgs e)
         {
@@ -554,10 +622,11 @@ namespace PictureManagerApp
             int col = 6;// ThumbnailCols;
             int row = 6;// ThumbnailRows;
 
-            rightPicBox_Paint_overview_core(g, col, row);
+            int maxn = mModel.PictureTotalNumber;
+            rightPicBox_Paint_overview_core(g, col, row, maxn);
         }
 
-        private void rightPicBox_Paint_overview_core(Graphics g, int col, int row)
+        private void rightPicBox_Paint_overview_core(Graphics g, int col, int row, int maxn)
         { 
             var tsize = GetThumbnailSize(col, row);
             int thumWidth = tsize.Width;
@@ -566,7 +635,7 @@ namespace PictureManagerApp
             int x = 0;
             int y = 0;
             var dispNum = col * row;
-            for (int i = 0; i < dispNum && i < mModel.PictureTotalNumber; i++)
+            for (int i = 0; i < dispNum && i < maxn; i++)
             {
                 var idx = mModel.GetAbsIdx(i);
                 var fitem = mModel.GetFileItem(idx);

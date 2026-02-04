@@ -209,8 +209,8 @@ namespace PictureManagerApp.src.Lib
                     where_p += " AND ";
                 }
                 where_p += " feature = 'AI'";
-                where_p += " ORDER BY rating DESC";
-                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p);
+                var order_phrase = " status DESC, rating DESC, filenum DESC";
+                var adapter = Sqlite.GetSQLiteDataAdapter(con, tblname, colname, where_p, order_phrase);
                 adapter.Fill(dt);
             }
         }

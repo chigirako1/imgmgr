@@ -76,6 +76,11 @@ namespace PictureManagerApp.src.Model
             return mFileList.Count(x => x.HasThumbnailImage());
         }
 
+        public int DstStrCount()
+        {
+            return mFileList.Count(x => x.DestinationStr != "");
+        }
+
         public int MarkCount()
         {
             return mFileList.Count(x => x.Mark);
@@ -215,7 +220,6 @@ namespace PictureManagerApp.src.Model
                 }
             }
             var rmv_cnt = mFileList.RemoveAll(p => p.Removed);
-            //Log.log($"移動したファイルの数:{rmv_cnt}/#{cnt - 1}");
             Log.log($"移動したファイルの数:#{cnt - 1}/{rmv_cnt}");
 
             foreach (var filename in fail_list)
@@ -467,6 +471,8 @@ namespace PictureManagerApp.src.Model
 
             using (var sw = new StreamWriter(ofilepath, false))
             {
+                sw.WriteLine("a");
+
                 foreach (var fitem in mFileList)
                 {
                     if (fitem.Mark)
@@ -484,6 +490,8 @@ namespace PictureManagerApp.src.Model
                         if (list.Count > 0)
                         {
                             list.Add($"{fs_b * 100 / fs_a}");
+                            list.Add($"{fs_a - fs_b}");
+
                             var line = string.Join("\t", list);
                             sw.WriteLine(line);
 

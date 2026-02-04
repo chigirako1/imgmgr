@@ -53,17 +53,17 @@ namespace PictureManagerApp.src.Lib
             }
         }
 
-        public static List<(string, long, long)> GetDirPaths(Dictionary<long, PxvArtist> dic)
+        public static List<(string, long, long, string)> GetDirPaths(Dictionary<long, PxvArtist> dic)
         {
             var lines = GetPxvDirList();
-            var dirPaths = new List<(string, long, long)>();
+            var dirPaths = new List<(string, long, long, string)>();
             foreach (var line in lines)
             {
                 var pxvid = GetPxvID(line);
                 if (dic.ContainsKey(pxvid))
                 {
                     var d = dic[pxvid];
-                    dirPaths.Add((line, d.Rating, d.Filenum));
+                    dirPaths.Add((line, d.Rating, d.Filenum, d.Status));
                 }
             }
 
@@ -81,7 +81,8 @@ namespace PictureManagerApp.src.Lib
 
             var dirPaths = GetDirPaths(dic);
             var a = dirPaths
-                .OrderBy(x => -(x.Item2))
+                .OrderBy(x => x.Item4)
+                .ThenBy(x => -(x.Item2))
                 .ThenBy(x => -(x.Item3))
                 .ToList();
             List<string> stringList = a.ConvertAll(t => t.Item1);

@@ -55,7 +55,6 @@ namespace PictureManagerApp
         //private Boolean NextPic = false;
         private Image mCurrentImg, mPrevImg;
         private IMAGE_DISPLAY_MAGNIFICATION_TYPE mMagType = IMAGE_DISPLAY_MAGNIFICATION_TYPE.IMG_DISP_MAG_FIT_SCREEN_NO_EXPAND;
-        private readonly Dictionary<Keys, KeyDownFunc> KeyFuncTbl = [];
 
 #if UNDEFINED
         private int ThumbnailCols = 4;
@@ -104,6 +103,7 @@ namespace PictureManagerApp
             InitializeComponent();
 
             //this.pictureBox.DoubleBuffered = true;
+            InitNumKeyMap();
 
             Log.trc($"[E]");
         }
@@ -126,7 +126,7 @@ namespace PictureManagerApp
             mModel.PageCount = this.ThumbnailCols * this.ThumbnailRows;
         }
 
-        private void SetThumb(int c, int  r)
+        private void SetThumb(int c, int r)
         {
             this.ThumbnailCols = c;
             this.ThumbnailRows = r;
@@ -171,7 +171,7 @@ namespace PictureManagerApp
                 }
                 catch (System.ArgumentOutOfRangeException ex)
                 {
-                    
+
                     Log.trc(ex.Message);
                 }
                 //
@@ -496,7 +496,7 @@ namespace PictureManagerApp
                 }
             }
 
-            if (mModel.mMarkCount == 0 || mModel.IsZip())
+            if (mModel.NoAtoShori())
             {
                 Close();
                 return false;
@@ -517,7 +517,6 @@ namespace PictureManagerApp
                 MessageBoxDefaultButton.Button1);
             if (result == DialogResult.Yes)
             {
-
 
                 var del_cnt = mModel.Batch();
 
@@ -1005,7 +1004,7 @@ namespace PictureManagerApp
 
         private void X2ToolStripMenuItem_Click(object sender, EventArgs e)
         {
-            SetThumb(2,2);
+            SetThumb(2, 2);
             Refresh();
         }
 
@@ -1107,29 +1106,33 @@ namespace PictureManagerApp
         {
             var fitem = mModel.GetCurrentFileItem();
             var path = fitem.FilePath;
-            var pxv = new PxvArtist(path);
 
-            var caption = $"{pxv.PxvName}({pxv.PxvID})";
-            var msg = $"{pxv.Rating}\n{pxv.R18}\n{pxv.Feature}";
-            MessageBox.Show(msg, caption);
 
-            //string str = Microsoft.VisualBasic.Interaction.InputBox("数値を入力してください", "rating", pxv.Rating.ToString(), -1, -1);
-            var prompt = "数値を入力してください";
-            var title = "rating";
-            var value = pxv.Rating.ToString();
-            var str = Util.InputBox(prompt, title, value);
-            try
+            if (mModel.mDataSrcType == DATA_SOURCE_TYPE.DATA_SOURCE_PXV)
             {
-                long numVal = Int32.Parse(str);
-                Sqlite.UpdatePxvArtistRating(pxv.PxvID, numVal);
-            }
-            catch (FormatException)
-            {
-                Console.WriteLine("{0}: Bad Format", str);
-            }
-            catch (OverflowException)
-            {
-                Console.WriteLine("{0}: Overflow", str);
+                var pxv = new PxvArtist(path);
+
+                var caption = $"{pxv.PxvName}({pxv.PxvID})";
+                var msg = $"{pxv.Rating}\n{pxv.R18}\n{pxv.Feature}";
+                MessageBox.Show(msg, caption);
+
+                var prompt = "数値を入力してください";
+                var title = "rating";
+                var value = pxv.Rating.ToString();
+                var str = Util.InputBox(prompt, title, value);
+                try
+                {
+                    long numVal = Int32.Parse(str);
+                    Sqlite.UpdatePxvArtistRating(pxv.PxvID, numVal);
+                }
+                catch (FormatException)
+                {
+                    Console.WriteLine("{0}: Bad Format", str);
+                }
+                catch (OverflowException)
+                {
+                    Console.WriteLine("{0}: Overflow", str);
+                }
             }
         }
 
@@ -1144,7 +1147,10 @@ namespace PictureManagerApp
             var inputval = Util.InputBox(prompt, title, value);
             try
             {
-                Sqlite.UpdatePxvArtistDelInfo(pxv.PxvID, inputval);
+                if (inputval != value)
+                {
+                    Sqlite.UpdatePxvArtistDelInfo(pxv.PxvID, inputval);
+                }
             }
             catch (FormatException)
             {
@@ -1463,5 +1469,17 @@ namespace PictureManagerApp
 
         }
 
+        private void ToolStripMenuItem_AllImages_Click(object sender, EventArgs e)
+        {
+            var fitem = mModel.GetCurrentFileItem();
+            var dirpath = fitem.DirectoryName;
+            var model = mModel.GetSameDirImages(dirpath);
+
+            model.SetThumbView(THUMBNAIL_VIEW_TYPE.THUMBNAIL_VIEW_DIRECTORY);
+
+            var picForm = new PictureForm();
+            picForm.SetModel(model);
+            picForm.ShowDialog();
+        }
     }
 }
