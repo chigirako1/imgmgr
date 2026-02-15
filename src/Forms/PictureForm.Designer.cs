@@ -85,14 +85,16 @@
             ToolStripMenuItem_fwd_one = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_AllImages = new System.Windows.Forms.ToolStripMenuItem();
             ツールToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            選択ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripMenuItem_UnselectAll = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SelImg = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_SelectSameHashValFile = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_slct_NoSameFs = new System.Windows.Forms.ToolStripMenuItem();
+            toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             sQLTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem_tsv = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem_Stat = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
-            選択ToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
-            toolStripMenuItem_UnselectAll = new System.Windows.Forms.ToolStripMenuItem();
-            ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
-            ToolStripMenuItem_SelectSameHashValFile = new System.Windows.Forms.ToolStripMenuItem();
             設定SToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             MenuItem_TransitionEffect = new System.Windows.Forms.ToolStripMenuItem();
             TToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
@@ -103,7 +105,7 @@
             ウィンドウToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             RightPicBox = new System.Windows.Forms.PictureBox();
-            ToolStripMenuItem_SelImg = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_slct_NoSameHash = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             contextMenuStrip_pic.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -361,7 +363,7 @@
             // 
             ToolStripMenuItem_SlideShow.Name = "ToolStripMenuItem_SlideShow";
             ToolStripMenuItem_SlideShow.ShortcutKeys = System.Windows.Forms.Keys.F1;
-            ToolStripMenuItem_SlideShow.Size = new System.Drawing.Size(452, 28);
+            ToolStripMenuItem_SlideShow.Size = new System.Drawing.Size(488, 28);
             ToolStripMenuItem_SlideShow.Text = "スライドショー";
             ToolStripMenuItem_SlideShow.Click += ToolStripMenuItem_SlideShow_Click;
             // 
@@ -369,14 +371,14 @@
             // 
             MenuItem_FullScreen.Name = "MenuItem_FullScreen";
             MenuItem_FullScreen.ShortcutKeys = System.Windows.Forms.Keys.F3;
-            MenuItem_FullScreen.Size = new System.Drawing.Size(452, 28);
+            MenuItem_FullScreen.Size = new System.Drawing.Size(488, 28);
             MenuItem_FullScreen.Text = "全画面表示(&F)";
             MenuItem_FullScreen.Click += MenuItem_FullScreen_Click;
             // 
             // toolStripSeparator7
             // 
             toolStripSeparator7.Name = "toolStripSeparator7";
-            toolStripSeparator7.Size = new System.Drawing.Size(449, 6);
+            toolStripSeparator7.Size = new System.Drawing.Size(485, 6);
             // 
             // ToolStripMenuItem_ThumbnailOn
             // 
@@ -385,7 +387,7 @@
             ToolStripMenuItem_ThumbnailOn.CheckState = System.Windows.Forms.CheckState.Checked;
             ToolStripMenuItem_ThumbnailOn.Name = "ToolStripMenuItem_ThumbnailOn";
             ToolStripMenuItem_ThumbnailOn.ShortcutKeys = System.Windows.Forms.Keys.F4;
-            ToolStripMenuItem_ThumbnailOn.Size = new System.Drawing.Size(452, 28);
+            ToolStripMenuItem_ThumbnailOn.Size = new System.Drawing.Size(488, 28);
             ToolStripMenuItem_ThumbnailOn.Text = "サムネイル表示/非表示切替";
             ToolStripMenuItem_ThumbnailOn.Click += ToolStripMenuItem_ThumbnailOn_Click;
             // 
@@ -393,7 +395,7 @@
             // 
             MenuItem_MagSub.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { MenuItem_MagSub_FitNoMag });
             MenuItem_MagSub.Name = "MenuItem_MagSub";
-            MenuItem_MagSub.Size = new System.Drawing.Size(452, 28);
+            MenuItem_MagSub.Size = new System.Drawing.Size(488, 28);
             MenuItem_MagSub.Text = "倍率";
             // 
             // MenuItem_MagSub_FitNoMag
@@ -409,7 +411,7 @@
             // 
             toolStripMenuItem1.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem_Sort_FilePath, ToolStripMenuItem_Sort_Filename, ToolStripMenuItem_Sort_Title, toolStripSeparator5, ToolStripMenuItem_Sort_NumPixel, ToolStripMenuItem_AspectRatio, toolStripSeparator6, toolStripMenuItem_Sort_FileSize, ToolStripMenuItem_Sort_FileHash, ToolStripMenuItem_Sort_ID });
             toolStripMenuItem1.Name = "toolStripMenuItem1";
-            toolStripMenuItem1.Size = new System.Drawing.Size(452, 28);
+            toolStripMenuItem1.Size = new System.Drawing.Size(488, 28);
             toolStripMenuItem1.Text = "表示/ソート順";
             // 
             // toolStripMenuItem_Sort_FilePath
@@ -481,13 +483,13 @@
             // toolStripSeparator8
             // 
             toolStripSeparator8.Name = "toolStripSeparator8";
-            toolStripSeparator8.Size = new System.Drawing.Size(449, 6);
+            toolStripSeparator8.Size = new System.Drawing.Size(485, 6);
             // 
             // ToolStripMenuItem_fwd_one
             // 
             ToolStripMenuItem_fwd_one.Name = "ToolStripMenuItem_fwd_one";
             ToolStripMenuItem_fwd_one.ShortcutKeys = System.Windows.Forms.Keys.F9;
-            ToolStripMenuItem_fwd_one.Size = new System.Drawing.Size(452, 28);
+            ToolStripMenuItem_fwd_one.Size = new System.Drawing.Size(488, 28);
             ToolStripMenuItem_fwd_one.Text = "現在の画像の表示位置を一つ前に移動";
             ToolStripMenuItem_fwd_one.Click += ToolStripMenuItem_fwd_one_Click;
             // 
@@ -501,10 +503,57 @@
             // 
             // ツールToolStripMenuItem
             // 
-            ツールToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { sQLTestToolStripMenuItem, toolStripMenuItem_tsv, toolStripMenuItem_Stat, toolStripSeparator4, 選択ToolStripMenuItem });
+            ツールToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { 選択ToolStripMenuItem, toolStripSeparator4, sQLTestToolStripMenuItem, toolStripMenuItem_tsv, toolStripMenuItem_Stat });
             ツールToolStripMenuItem.Name = "ツールToolStripMenuItem";
             ツールToolStripMenuItem.Size = new System.Drawing.Size(79, 27);
             ツールToolStripMenuItem.Text = "ツール(&T)";
+            // 
+            // 選択ToolStripMenuItem
+            // 
+            選択ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem_UnselectAll, ToolStripMenuItem_SelImg, ToolStripMenuItem_SelectedImageMove, ToolStripMenuItem_SelectSameHashValFile, ToolStripMenuItem_slct_NoSameFs, ToolStripMenuItem_slct_NoSameHash });
+            選択ToolStripMenuItem.Name = "選択ToolStripMenuItem";
+            選択ToolStripMenuItem.Size = new System.Drawing.Size(180, 28);
+            選択ToolStripMenuItem.Text = "選択";
+            // 
+            // toolStripMenuItem_UnselectAll
+            // 
+            toolStripMenuItem_UnselectAll.Name = "toolStripMenuItem_UnselectAll";
+            toolStripMenuItem_UnselectAll.Size = new System.Drawing.Size(369, 28);
+            toolStripMenuItem_UnselectAll.Text = "すべての選択を解除";
+            toolStripMenuItem_UnselectAll.Click += toolStripMenuItem_UnselectAll_Click;
+            // 
+            // ToolStripMenuItem_SelImg
+            // 
+            ToolStripMenuItem_SelImg.Name = "ToolStripMenuItem_SelImg";
+            ToolStripMenuItem_SelImg.ShortcutKeys = System.Windows.Forms.Keys.F5;
+            ToolStripMenuItem_SelImg.Size = new System.Drawing.Size(369, 28);
+            ToolStripMenuItem_SelImg.Text = "選択中画像のみ表示(&S)";
+            ToolStripMenuItem_SelImg.Click += ToolStripMenuItem_SelImg_Click;
+            // 
+            // ToolStripMenuItem_SelectedImageMove
+            // 
+            ToolStripMenuItem_SelectedImageMove.Name = "ToolStripMenuItem_SelectedImageMove";
+            ToolStripMenuItem_SelectedImageMove.Size = new System.Drawing.Size(369, 28);
+            ToolStripMenuItem_SelectedImageMove.Text = "選択中の画像を移動";
+            // 
+            // ToolStripMenuItem_SelectSameHashValFile
+            // 
+            ToolStripMenuItem_SelectSameHashValFile.Name = "ToolStripMenuItem_SelectSameHashValFile";
+            ToolStripMenuItem_SelectSameHashValFile.Size = new System.Drawing.Size(369, 28);
+            ToolStripMenuItem_SelectSameHashValFile.Text = "同一ハッシュ値のファイルを選択";
+            ToolStripMenuItem_SelectSameHashValFile.Click += ToolStripMenuItem_SelectSameHashValFile_Click;
+            // 
+            // ToolStripMenuItem_slct_NoSameFs
+            // 
+            ToolStripMenuItem_slct_NoSameFs.Name = "ToolStripMenuItem_slct_NoSameFs";
+            ToolStripMenuItem_slct_NoSameFs.Size = new System.Drawing.Size(369, 28);
+            ToolStripMenuItem_slct_NoSameFs.Text = "同一ファイルサイズがないファイルを非表示に";
+            ToolStripMenuItem_slct_NoSameFs.Click += ToolStripMenuItem_slct_NoSameFs_Click;
+            // 
+            // toolStripSeparator4
+            // 
+            toolStripSeparator4.Name = "toolStripSeparator4";
+            toolStripSeparator4.Size = new System.Drawing.Size(177, 6);
             // 
             // sQLTestToolStripMenuItem
             // 
@@ -525,38 +574,6 @@
             toolStripMenuItem_Stat.Size = new System.Drawing.Size(180, 28);
             toolStripMenuItem_Stat.Text = "統計情報";
             toolStripMenuItem_Stat.Click += toolStripMenuItem_Stat_Click;
-            // 
-            // toolStripSeparator4
-            // 
-            toolStripSeparator4.Name = "toolStripSeparator4";
-            toolStripSeparator4.Size = new System.Drawing.Size(177, 6);
-            // 
-            // 選択ToolStripMenuItem
-            // 
-            選択ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem_UnselectAll, ToolStripMenuItem_SelImg, ToolStripMenuItem_SelectedImageMove, ToolStripMenuItem_SelectSameHashValFile });
-            選択ToolStripMenuItem.Name = "選択ToolStripMenuItem";
-            選択ToolStripMenuItem.Size = new System.Drawing.Size(180, 28);
-            選択ToolStripMenuItem.Text = "選択";
-            // 
-            // toolStripMenuItem_UnselectAll
-            // 
-            toolStripMenuItem_UnselectAll.Name = "toolStripMenuItem_UnselectAll";
-            toolStripMenuItem_UnselectAll.Size = new System.Drawing.Size(289, 28);
-            toolStripMenuItem_UnselectAll.Text = "すべての選択を解除";
-            toolStripMenuItem_UnselectAll.Click += toolStripMenuItem_UnselectAll_Click;
-            // 
-            // ToolStripMenuItem_SelectedImageMove
-            // 
-            ToolStripMenuItem_SelectedImageMove.Name = "ToolStripMenuItem_SelectedImageMove";
-            ToolStripMenuItem_SelectedImageMove.Size = new System.Drawing.Size(289, 28);
-            ToolStripMenuItem_SelectedImageMove.Text = "選択中の画像を移動";
-            // 
-            // ToolStripMenuItem_SelectSameHashValFile
-            // 
-            ToolStripMenuItem_SelectSameHashValFile.Name = "ToolStripMenuItem_SelectSameHashValFile";
-            ToolStripMenuItem_SelectSameHashValFile.Size = new System.Drawing.Size(289, 28);
-            ToolStripMenuItem_SelectSameHashValFile.Text = "同一ハッシュ値のファイルを選択";
-            ToolStripMenuItem_SelectSameHashValFile.Click += ToolStripMenuItem_SelectSameHashValFile_Click;
             // 
             // 設定SToolStripMenuItem
             // 
@@ -630,13 +647,12 @@
             RightPicBox.TabStop = false;
             RightPicBox.Paint += rightPicBox_Paint;
             // 
-            // ToolStripMenuItem_SelImg
+            // ToolStripMenuItem_slct_NoSameHash
             // 
-            ToolStripMenuItem_SelImg.Name = "ToolStripMenuItem_SelImg";
-            ToolStripMenuItem_SelImg.ShortcutKeys = System.Windows.Forms.Keys.F5;
-            ToolStripMenuItem_SelImg.Size = new System.Drawing.Size(289, 28);
-            ToolStripMenuItem_SelImg.Text = "選択中画像のみ表示(&S)";
-            ToolStripMenuItem_SelImg.Click += ToolStripMenuItem_SelImg_Click;
+            ToolStripMenuItem_slct_NoSameHash.Name = "ToolStripMenuItem_slct_NoSameHash";
+            ToolStripMenuItem_slct_NoSameHash.Size = new System.Drawing.Size(369, 28);
+            ToolStripMenuItem_slct_NoSameHash.Text = "同一ハッシュ値がないファイルを非表示に";
+            ToolStripMenuItem_slct_NoSameHash.Click += ToolStripMenuItem_slct_NoSameHash_Click;
             // 
             // PictureForm
             // 
@@ -743,5 +759,7 @@
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_Sort_ID;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_AllImages;
         private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_SelImg;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_slct_NoSameFs;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_slct_NoSameHash;
     }
 }

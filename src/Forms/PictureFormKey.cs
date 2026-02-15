@@ -1,14 +1,13 @@
-﻿using System;
+﻿using PictureManagerApp.src.Lib;
+using PictureManagerApp.src.Model;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-
-using PictureManagerApp.src.Lib;
-using PictureManagerApp.src.Model;
 using static PictureManagerApp.src.Model.FileList;
-
+using PictureManagerApp.src.Forms;
 
 namespace PictureManagerApp
 {
@@ -84,6 +83,8 @@ namespace PictureManagerApp
 
             KeyFuncTbl[Keys.Home] = KeyDownFunc_Home;
             KeyFuncTbl[Keys.End] = KeyDownFunc_End;
+
+            KeyFuncTbl[Keys.Subtract] = KeyDownFunc_TagWindow;
 
             switch (mModel.ThumbViewType)
             {
@@ -359,19 +360,30 @@ namespace PictureManagerApp
                 default:
                     if (NumKeyMap.ContainsKey(e.KeyCode))
                     {
-                        var err = mModel.SetDstStr(NumKeyMap[e.KeyCode]);
-                        if (err)
-                        {
-
-                        }
-                        else
-                        {
-                            mModel.Next();
-                        }
+                        SetDstStr(mModel.GetDstStr(NumKeyMap[e.KeyCode]));
                     }
                     break;
             }
             return true;
+        }
+
+        private void SetDstStr(string str)
+        {
+            mModel.SetDstStr(str);
+            var err = false;
+            if (err)
+            {
+                var text = "err:" + str;
+                var caption = "失敗";
+                MessageBox.Show(text,
+                    caption,
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            else
+            {
+                mModel.Next();
+            }
         }
 
         private bool KeyDownFunc_Del(object sender, KeyEventArgs e)
@@ -415,6 +427,20 @@ namespace PictureManagerApp
                 }
             }
             //Log.trc($"[E]");
+        }
+
+        private bool KeyDownFunc_TagWindow(object sender, KeyEventArgs e)
+        {
+            var f = new TagCandForm();
+            f.ShowDialog();
+
+            var tag = f.GetSelectedTag();
+            if (tag != null)
+            {
+                SetDstStr(tag);
+            }
+
+            return true;
         }
 
         private bool KeyDownFunc_SlideShow(object sender, KeyEventArgs e)

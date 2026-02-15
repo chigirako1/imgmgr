@@ -281,16 +281,18 @@ namespace PictureManagerApp
         {
             var fsize = FONT_SIZE;
             var inc = FONT_SPACE;
-            var x = 0;
-            var y = 300;
+            var spc = fsize + inc;
+            var x = 1000;
+            var y = 1000 + spc * 9;
             var txtbrush = FONT_COLOR;
             using (var fnt = new Font(FONT_NAME, fsize))
             {
-                for (var i = 1U; i <= 9; i++)
+                for (var i = 0U; i < 9; i++)
                 {
-                    var str = mModel.GetDstStr(i);
-                    g.DrawString(i.ToString() + str, fnt, txtbrush, x, y);
-                    y += fsize + inc;
+                    var w = i + 1;
+                    var str = mModel.GetDstStr(w);
+                    g.DrawString($"{w}:{str}", fnt, txtbrush, x, y);
+                    y -= spc;
                 }
             }
         }
@@ -430,7 +432,6 @@ namespace PictureManagerApp
                     break;
             }
         }
-
 
         private void rightPicBox_Paint_thumbnail(PaintEventArgs e, bool main = false)
         {

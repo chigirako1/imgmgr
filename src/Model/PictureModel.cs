@@ -170,6 +170,8 @@ namespace PictureManagerApp.src.Model
             @"D:\dl\AnkPixiv\Twitter-0trash",
             @"D:\dl\AnkPixiv\Twitter--0trash",
 
+            @"D:\dl\AnkPixiv\twitter_sp2",
+
             @"D:\r18\dlPic\pxv",
             @"D:\r18\dlPic\twitter",
 #if DEBUG
@@ -1876,7 +1878,7 @@ namespace PictureManagerApp.src.Model
             return false;
         }
 
-        private void SetDstStr(string dstStr)
+        public void SetDstStr(string dstStr)
         {
             var item = mFileList[mIdx];
             var dststr = "-" + dstStr;
@@ -1956,6 +1958,16 @@ namespace PictureManagerApp.src.Model
         public void MarkSameHashFiles()
         {
             mFileList.MarkSameHashFiles();
+        }
+        
+        public void MarkNoSameFileSize()
+        {
+            mFileList.MarkNoSameFileSize();
+        }
+
+        public void MarkNoSameHashValue()
+        {
+            mFileList.MarkNoSameHashValue();
         }
 
         //---------------------------------------------------------------------
@@ -2070,6 +2082,14 @@ namespace PictureManagerApp.src.Model
             //mMarkCount--;
         }
 
+        public int RemoveAllSelectedFiles()
+        {
+            return mFileList.RemoveAllSelectedFiles();
+        }
+
+        //---------------------------------------------------------------------
+        // 
+        //---------------------------------------------------------------------
         public string WorkingRootPath
         {
             get { return mPath; }

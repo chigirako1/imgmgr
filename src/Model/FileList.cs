@@ -1,12 +1,13 @@
-﻿using System;
+﻿using PictureManagerApp.src.Lib;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Drawing;
 using System.IO;
 using System.Linq;
+using System.Security.Policy;
 using System.Text;
 using System.Text.RegularExpressions;
-using PictureManagerApp.src.Lib;
 using static System.Windows.Forms.VisualStyles.VisualStyleElement.TrackBar;
 
 namespace PictureManagerApp.src.Model
@@ -132,6 +133,11 @@ namespace PictureManagerApp.src.Model
         public void RemoveAt(int index)
         {
             mFileList.RemoveAt(index);
+        }
+
+        public int RemoveAllSelectedFiles()
+        {
+            return mFileList.RemoveAll(p => p.Mark);
         }
 
         public bool Contains(FileItem fitem)
@@ -315,6 +321,58 @@ namespace PictureManagerApp.src.Model
                 parent_dir_save = fitem.DirectoryName;
             }
         }
+        
+        public void MarkNoSameHashValue()
+        {
+            Dictionary<string, List<FileItem>> fs_dic = [];
+
+            foreach (var fitem in mFileList)
+            {
+                var key = fitem.GetFileHash();
+                if (fs_dic.ContainsKey(key))
+                {
+                }
+                else
+                {
+                    fs_dic[key] = new List<FileItem>();
+                }
+                fs_dic[key].Add(fitem);
+            }
+
+            fs_dic = fs_dic.Where(pair => pair.Value.Count <= 1)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            foreach (var x in fs_dic)
+            {
+                x.Value[0].Mark = true;
+            }
+        }
+
+        public void MarkNoSameFileSize()
+        {
+            Dictionary<long, List<FileItem>> fs_dic = [];
+
+            foreach (var fitem in mFileList)
+            {
+                var key = fitem.FileSize;
+                if (fs_dic.ContainsKey(key))
+                {
+                }
+                else
+                {
+                    fs_dic[key] = new List<FileItem>();
+                }
+                fs_dic[key].Add(fitem);
+            }
+
+            fs_dic = fs_dic.Where(pair => pair.Value.Count <= 1)
+                        .ToDictionary(pair => pair.Key, pair => pair.Value);
+
+            foreach (var x in fs_dic)
+            {
+                x.Value[0].Mark = true;
+            }
+        }
 
         public void MarkSameHashFiles()
         {
@@ -326,7 +384,8 @@ namespace PictureManagerApp.src.Model
                 var hash = fitem.GetFileHash();
                 if (hash == hash_save)
                 {
-                    fitem_save.Mark = true;
+                    //fitem_save.Mark = true;
+                    fitem.Mark = true;
                 }
                 else
                 {
@@ -463,14 +522,17 @@ namespace PictureManagerApp.src.Model
             return str;
         }
 
+#if false
         public void WriteStatTsv(string ofilepath)
         {
             List<string> list = new ();
             var fs_a = 0L;
             var fs_b = 0L;
 
+            //TODO: ファイルが開かれているときなど例外の対応
             using (var sw = new StreamWriter(ofilepath, false))
             {
+                //見出し行
                 sw.WriteLine("a");
 
                 foreach (var fitem in mFileList)
@@ -515,6 +577,69 @@ namespace PictureManagerApp.src.Model
                     sw.WriteLine(line);
 
                     list.Clear();
+                }
+            }
+        }
+#endif
+        private void WriteStatTsv_AddList(List<string> list, FileItem fitem)
+        {
+            var filename = Path.GetFileName(fitem.FilePath);
+            var filename_wo_ext = Path.GetFileNameWithoutExtension(fitem.FilePath);
+            list.Add(fitem.FilePath);
+            //list.Add(filename);
+            //list.Add(filename_wo_ext);
+            list.Add(fitem.FileSize.ToString());
+            list.Add(fitem.Mark.ToString());
+        }
+
+        private void WriteStatTsv_WriteLine(List<string> list, StreamWriter sw, long fs_a, long fs_b)
+        {
+            list.Add($"{fs_b * 100 / fs_a}");
+            list.Add($"{fs_a - fs_b}");
+
+            var line = string.Join("\t", list);
+            sw.WriteLine(line);
+
+            list.Clear();
+        }
+
+        public void WriteStatTsv(string ofilepath)
+        {
+            var list = new List<string>();
+
+            //TODO: ファイルが開かれているときなど例外の対応
+            using (var sw = new StreamWriter(ofilepath, false))
+            {
+                //見出し行
+                sw.WriteLine("a");
+
+                var i = 0;
+                var fs_a = 0L;
+                var fs_b = 0L;
+
+                foreach (var fitem in mFileList)
+                {
+                    WriteStatTsv_AddList(list, fitem);
+                    if (i == 0)
+                    {
+                        fs_b = fitem.FileSize;
+                    }
+                    else
+                    {
+                        fs_a = fitem.FileSize;
+                    }
+                    i++;
+
+                    if (i > 1)
+                    {
+                        WriteStatTsv_WriteLine(list, sw, fs_a, fs_b);
+                        i = 0;
+                    }
+                }
+
+                if (list.Count > 0)
+                {
+                    WriteStatTsv_WriteLine(list, sw, fs_a, fs_b);
                 }
             }
         }

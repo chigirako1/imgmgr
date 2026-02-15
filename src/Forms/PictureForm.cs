@@ -1447,6 +1447,7 @@ namespace PictureManagerApp
         private void toolStripMenuItem_UnselectAll_Click(object sender, EventArgs e)
         {
             mModel.UnmarkAll();
+            UpdatePicture();
         }
 
         private void ToolStripMenuItem_FileSel_Click(object sender, EventArgs e)
@@ -1457,6 +1458,7 @@ namespace PictureManagerApp
         private void ToolStripMenuItem_SelectSameHashValFile_Click(object sender, EventArgs e)
         {
             mModel.MarkSameHashFiles();
+            UpdatePicture();
         }
 
         private void contextMenuStrip_pic_Opening(object sender, System.ComponentModel.CancelEventArgs e)
@@ -1480,6 +1482,38 @@ namespace PictureManagerApp
             var picForm = new PictureForm();
             picForm.SetModel(model);
             picForm.ShowDialog();
+        }
+
+        private void ToolStripMenuItem_slct_NoSameFs_Click(object sender, EventArgs e)
+        {
+            mModel.MarkNoSameFileSize();
+
+            var rmv_cnt = mModel.RemoveAllSelectedFiles();
+
+            var caption = "非表示";
+            var text = $"{rmv_cnt}ファイルを非表示にしました";
+            MessageBox.Show(text,
+                caption,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            UpdatePicture();
+        }
+
+        private void ToolStripMenuItem_slct_NoSameHash_Click(object sender, EventArgs e)
+        {
+            mModel.MarkNoSameHashValue();
+
+            var rmv_cnt = mModel.RemoveAllSelectedFiles();
+
+            var caption = "非表示";
+            var text = $"{rmv_cnt}ファイルを非表示にしました";
+            MessageBox.Show(text,
+                caption,
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            UpdatePicture();
         }
     }
 }
