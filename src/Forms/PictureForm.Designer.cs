@@ -91,6 +91,7 @@
             ToolStripMenuItem_SelectedImageMove = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_SelectSameHashValFile = new System.Windows.Forms.ToolStripMenuItem();
             ToolStripMenuItem_slct_NoSameFs = new System.Windows.Forms.ToolStripMenuItem();
+            ToolStripMenuItem_slct_NoSameHash = new System.Windows.Forms.ToolStripMenuItem();
             toolStripSeparator4 = new System.Windows.Forms.ToolStripSeparator();
             sQLTestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             toolStripMenuItem_tsv = new System.Windows.Forms.ToolStripMenuItem();
@@ -105,7 +106,6 @@
             ウィンドウToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ヘルプToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             RightPicBox = new System.Windows.Forms.PictureBox();
-            ToolStripMenuItem_slct_NoSameHash = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)pictureBox).BeginInit();
             contextMenuStrip_pic.SuspendLayout();
             statusStrip.SuspendLayout();
@@ -354,7 +354,7 @@
             // 
             // ToolStripMenuItem_View
             // 
-            ToolStripMenuItem_View.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_SlideShow, MenuItem_FullScreen, toolStripSeparator7, ToolStripMenuItem_ThumbnailOn, MenuItem_MagSub, toolStripMenuItem1, toolStripSeparator8, ToolStripMenuItem_fwd_one, ToolStripMenuItem_AllImages });
+            ToolStripMenuItem_View.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem1, MenuItem_FullScreen, ToolStripMenuItem_SlideShow, toolStripSeparator7, ToolStripMenuItem_ThumbnailOn, MenuItem_MagSub, toolStripSeparator8, ToolStripMenuItem_fwd_one, ToolStripMenuItem_AllImages });
             ToolStripMenuItem_View.Name = "ToolStripMenuItem_View";
             ToolStripMenuItem_View.Size = new System.Drawing.Size(77, 27);
             ToolStripMenuItem_View.Text = "表示(&V)";
@@ -510,7 +510,7 @@
             // 
             // 選択ToolStripMenuItem
             // 
-            選択ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { toolStripMenuItem_UnselectAll, ToolStripMenuItem_SelImg, ToolStripMenuItem_SelectedImageMove, ToolStripMenuItem_SelectSameHashValFile, ToolStripMenuItem_slct_NoSameFs, ToolStripMenuItem_slct_NoSameHash });
+            選択ToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_SelectSameHashValFile, toolStripMenuItem_UnselectAll, ToolStripMenuItem_SelImg, ToolStripMenuItem_SelectedImageMove, ToolStripMenuItem_slct_NoSameFs, ToolStripMenuItem_slct_NoSameHash });
             選択ToolStripMenuItem.Name = "選択ToolStripMenuItem";
             選択ToolStripMenuItem.Size = new System.Drawing.Size(180, 28);
             選択ToolStripMenuItem.Text = "選択";
@@ -549,6 +549,13 @@
             ToolStripMenuItem_slct_NoSameFs.Size = new System.Drawing.Size(369, 28);
             ToolStripMenuItem_slct_NoSameFs.Text = "同一ファイルサイズがないファイルを非表示に";
             ToolStripMenuItem_slct_NoSameFs.Click += ToolStripMenuItem_slct_NoSameFs_Click;
+            // 
+            // ToolStripMenuItem_slct_NoSameHash
+            // 
+            ToolStripMenuItem_slct_NoSameHash.Name = "ToolStripMenuItem_slct_NoSameHash";
+            ToolStripMenuItem_slct_NoSameHash.Size = new System.Drawing.Size(369, 28);
+            ToolStripMenuItem_slct_NoSameHash.Text = "同一ハッシュ値がないファイルを非表示に";
+            ToolStripMenuItem_slct_NoSameHash.Click += ToolStripMenuItem_slct_NoSameHash_Click;
             // 
             // toolStripSeparator4
             // 
@@ -646,13 +653,6 @@
             RightPicBox.TabIndex = 4;
             RightPicBox.TabStop = false;
             RightPicBox.Paint += rightPicBox_Paint;
-            // 
-            // ToolStripMenuItem_slct_NoSameHash
-            // 
-            ToolStripMenuItem_slct_NoSameHash.Name = "ToolStripMenuItem_slct_NoSameHash";
-            ToolStripMenuItem_slct_NoSameHash.Size = new System.Drawing.Size(369, 28);
-            ToolStripMenuItem_slct_NoSameHash.Text = "同一ハッシュ値がないファイルを非表示に";
-            ToolStripMenuItem_slct_NoSameHash.Click += ToolStripMenuItem_slct_NoSameHash_Click;
             // 
             // PictureForm
             // 

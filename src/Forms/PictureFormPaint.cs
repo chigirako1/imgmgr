@@ -690,7 +690,6 @@ namespace PictureManagerApp
         {
             Graphics g = e.Graphics;
 
-            //Log.trc($"Col={Col} Row={Row}");
 
             var tsize = GetThumbnailSize();
             int thumWidth = tsize.Width;
@@ -705,6 +704,8 @@ namespace PictureManagerApp
             int offsetoffset = 0;
             int currpos = 0;
 
+            Log.trc($"### Col={ThumbnailCols} Row={ThumbnailRows} ###");
+
             int r = 0;
             while (r < ThumbnailRows)
             {
@@ -718,6 +719,8 @@ namespace PictureManagerApp
                 List<FileItem> filelist;
                 if (offset == 0)
                 {
+                    //TODO: BUG: 最後のディレクトリのときにoffsetoffsetが不正なので、以降の行の表示がおかしくなる
+
                     filelist = mModel.GetSameDirFileItemList(absIdx, ref offsetoffset, out currpos);
                     if (currpos >= ThumbnailCols)
                     {
@@ -737,11 +740,14 @@ namespace PictureManagerApp
                 {
                     dirtxt = filelist[0].DirectoryName;
                     dirname = mModel.GetRelDirName(filelist[0]);
+
+                    Log.trc($"{r + 1}行目:'{dirname}'[{filelist.Count}]\tstart_i={start_i}/{offset}/{offsetoffset}");
                 }
 
-                int cnt = 0;
+                var cnt = 0;
                 //foreach (FileItem fitem in filelist) {
-                for (int i = start_i; i < filelist.Count; i++)
+                //for (var i = start_i; i < filelist.Count - 1; i++)
+                for (var i = start_i; i < filelist.Count; i++)
                 {
                     var fitem = filelist[i];
 

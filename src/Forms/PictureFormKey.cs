@@ -431,13 +431,16 @@ namespace PictureManagerApp
 
         private bool KeyDownFunc_TagWindow(object sender, KeyEventArgs e)
         {
-            var f = new TagCandForm();
-            f.ShowDialog();
-
-            var tag = f.GetSelectedTag();
-            if (tag != null)
+            var list = mModel.GetCharacterNameList();
+            var f = new TagCandForm(list);
+            var dresult = f.ShowDialog();
+            if (dresult == DialogResult.OK)
             {
-                SetDstStr(tag);
+                var tag = f.GetSelectedTag();
+                if (tag != null && tag != "")
+                {
+                    SetDstStr(tag);
+                }
             }
 
             return true;

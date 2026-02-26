@@ -611,7 +611,8 @@ namespace PictureManagerApp.src.Model
             using (var sw = new StreamWriter(ofilepath, false))
             {
                 //見出し行
-                sw.WriteLine("a");
+                var line = string.Join("\t", ["a","b","c","d","e","f", "g", "h"]);
+                sw.WriteLine(line);
 
                 var i = 0;
                 var fs_a = 0L;

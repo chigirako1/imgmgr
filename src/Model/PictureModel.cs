@@ -1,4 +1,5 @@
-﻿using System;
+﻿using PictureManagerApp.src.Lib;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Eventing.Reader;
@@ -10,14 +11,12 @@ using System.Net.WebSockets;
 using System.Reflection;
 using System.Runtime.Intrinsics.X86;
 using System.Security.Policy;
+using System.Text;
 using System.Windows.Forms;
 using System.Windows.Forms.VisualStyles;
-
-using PictureManagerApp.src.Lib;
-
-using static System.Windows.Forms.LinkLabel;
 using static PictureManagerApp.src.Lib.PicEvalRow;
 using static PictureManagerApp.src.Model.FileList;
+using static System.Windows.Forms.LinkLabel;
 
 namespace PictureManagerApp.src.Model
 {
@@ -198,6 +197,8 @@ namespace PictureManagerApp.src.Model
         //private SORT_TYPE mSortType;
         private FileList mFileList;
         public DATA_SOURCE_TYPE mDataSrcType { get; private set;}
+
+        private List<string> mCharacterNameList;
 
         private int mIdx = -1;
         private DateTime? mDtFrom;
@@ -1735,9 +1736,11 @@ namespace PictureManagerApp.src.Model
         //毎回これやるのはいくらなんでも馬鹿すぎる
         public List<FileItem> GetSameDirFileItemList(int idx, ref int offsetoffset, out int currpos)
         {
+            var logout = false;
             var fi = GetFileItem(idx);
 
-            Log.trc($"idx={idx}");
+            if (logout) Log.trc($"idx={idx}");
+
             var startIdx = idx - 1;
             if (startIdx < 0)
             {
@@ -1760,7 +1763,7 @@ namespace PictureManagerApp.src.Model
                     }
                 }
             }
-            Log.trc($"startIdx={startIdx}");
+            if (logout) Log.trc($"startIdx={startIdx}\t'{fi.FilePath}'");
 
             var endIdx = idx;
             for (int i = idx + 1; i < mFileList.Count; i++)
@@ -1769,7 +1772,7 @@ namespace PictureManagerApp.src.Model
                 var fi2 = GetFileItem(i);
                 if (fi.DirectoryName != fi2.DirectoryName)
                 {
-                    endIdx = i;
+                    //endIdx = i;
                     break;
                 }
                 else
@@ -1777,7 +1780,7 @@ namespace PictureManagerApp.src.Model
                     endIdx = i;
                 }
             }
-            Log.trc($"endIdx={endIdx}");
+            if (logout) Log.trc($"endIdx={endIdx}");
 
             List<FileItem> filelist = new List<FileItem>();
             //for (int i = startIdx; i >= 0 && i < endIdx; i++)
@@ -1785,7 +1788,7 @@ namespace PictureManagerApp.src.Model
             {
                 filelist.Add(GetFileItem(i));
             }
-            Log.trc($"size={filelist.Count}");
+            if (logout) Log.trc($"size={filelist.Count}");
 
             currpos = idx - startIdx;
 
@@ -2179,7 +2182,40 @@ namespace PictureManagerApp.src.Model
                 {
                 }
             }
+        }
 
+        public List<string> GetCharacterNameList()
+        {
+            if (mCharacterNameList == null)
+            {
+                var filepath = @"D:\data\src\ror\myapp\public\chara.tsv";
+                mCharacterNameList = ReadSimpleTsv(filepath);
+            }
+            return mCharacterNameList;
+        }
+
+        private List<string> ReadSimpleTsv(string filePath)
+        {
+            var list = new List<string>();
+
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = new StreamReader(fs))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = line.Split('\t');
+                    // values[0], values[1]... でアクセス
+
+                    var fullname = values[4] + values[5];
+                    if (fullname != "")
+                    {
+                        list.Add(fullname);
+                    }
+                }
+            }
+
+            return list;
         }
 
         //=====================================================================
