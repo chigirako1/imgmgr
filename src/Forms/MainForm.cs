@@ -1,23 +1,24 @@
-﻿using System;
-using System.Data.SQLite;
+﻿using PictureManagerApp.src.Forms;
+using PictureManagerApp.src.Lib;
+using PictureManagerApp.src.Model;
+using System;
+using System.Collections.Generic;
 using System.Data;
+using System.Data.Common;
+using System.Data.SQLite;
 using System.Drawing;
 using System.Drawing.Drawing2D;
 using System.IO;
 using System.Linq;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 using System.Text.RegularExpressions;
 using System.Windows.Forms;
-using PictureManagerApp.src.Lib;
-using PictureManagerApp.src.Model;
-using static System.Windows.Forms.VisualStyles.VisualStyleElement;
-using System.Data.Common;
-using System.Runtime.CompilerServices;
-using System.Collections.Generic;
+using static PictureManagerApp.src.Lib.PicEvalRow;
 using static PictureManagerApp.src.Lib.TsvRow;
 using static System.Net.WebRequestMethods;
 using static System.Runtime.InteropServices.JavaScript.JSType;
-using static PictureManagerApp.src.Lib.PicEvalRow;
+using static System.Windows.Forms.VisualStyles.VisualStyleElement;
 
 namespace PictureManagerApp
 {
@@ -31,7 +32,7 @@ namespace PictureManagerApp
         private const int DGV_COL_IDX_PAGE_NOW = 3;
         private const int DGV_COL_IDX_PERCENT = 4;
 
-        
+
         private static readonly string[] SP_WORDS = [
             "-w2x",
             PictureModel.CONV_IV,//"-iv",
@@ -1051,5 +1052,10 @@ namespace PictureManagerApp
             numUD_MaxFilesize.Value += 10;
         }
 
+        private void ToolStripMenuItem_Combine_Click(object sender, EventArgs e)
+        {
+            var form = new CombineForm();
+            form.ShowDialog();
+        }
     }
 }

@@ -440,6 +440,9 @@ namespace PictureManagerApp
                 if (tag != null && tag != "")
                 {
                     SetDstStr(tag);
+
+                    //TODO: 使用された値をテンキーで設定できるようにする(最新順、使用頻度順)
+                    //SetNumkeyString(1, tag)
                 }
             }
 

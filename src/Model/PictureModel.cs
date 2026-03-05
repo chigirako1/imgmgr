@@ -1847,17 +1847,24 @@ namespace PictureManagerApp.src.Model
                     mNumkeyStrings[i] = i.ToString();
                 }
             }
-
-            var strs = numkey_strings.Split(":");
-            if (strs.Length < 9)
+            else
             {
-                Log.err("!!!");
-            }
+                var strs = numkey_strings.Split(":");
+                if (strs.Length < 9)
+                {
+                    Log.err("!!!");
+                }
 
-            for (var i = 0; i < 9; i++)
-            {
-                mNumkeyStrings[i] = strs[i];
+                for (var i = 0; i < 9; i++)
+                {
+                    mNumkeyStrings[i] = strs[i];
+                }
             }
+        }
+
+        public void SetNumkeyString(int idx, string str)
+        {
+            mNumkeyStrings[idx] = str;
         }
 
         public string GetDstStr(uint number)
@@ -1893,6 +1900,40 @@ namespace PictureManagerApp.src.Model
             {
                 item.DestinationStr = dststr;
             }
+        }
+
+        public List<string> GetCharacterNameList()
+        {
+            if (mCharacterNameList == null)
+            {
+                var filepath = @"D:\data\src\ror\myapp\public\chara.tsv";
+                mCharacterNameList = ReadSimpleTsv(filepath);
+            }
+            return mCharacterNameList;
+        }
+
+        private List<string> ReadSimpleTsv(string filePath)
+        {
+            var list = new List<string>();
+
+            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
+            using (var reader = new StreamReader(fs))
+            {
+                while (!reader.EndOfStream)
+                {
+                    var line = reader.ReadLine();
+                    var values = line.Split('\t');
+                    // values[0], values[1]... でアクセス
+
+                    var fullname = values[4] + values[5];
+                    if (fullname != "")
+                    {
+                        list.Add(fullname);
+                    }
+                }
+            }
+
+            return list;
         }
 
         //---------------------------------------------------------------------
@@ -2182,40 +2223,6 @@ namespace PictureManagerApp.src.Model
                 {
                 }
             }
-        }
-
-        public List<string> GetCharacterNameList()
-        {
-            if (mCharacterNameList == null)
-            {
-                var filepath = @"D:\data\src\ror\myapp\public\chara.tsv";
-                mCharacterNameList = ReadSimpleTsv(filepath);
-            }
-            return mCharacterNameList;
-        }
-
-        private List<string> ReadSimpleTsv(string filePath)
-        {
-            var list = new List<string>();
-
-            using (FileStream fs = new FileStream(filePath, FileMode.Open, FileAccess.Read, FileShare.ReadWrite))
-            using (var reader = new StreamReader(fs))
-            {
-                while (!reader.EndOfStream)
-                {
-                    var line = reader.ReadLine();
-                    var values = line.Split('\t');
-                    // values[0], values[1]... でアクセス
-
-                    var fullname = values[4] + values[5];
-                    if (fullname != "")
-                    {
-                        list.Add(fullname);
-                    }
-                }
-            }
-
-            return list;
         }
 
         //=====================================================================

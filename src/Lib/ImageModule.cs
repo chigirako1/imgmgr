@@ -656,5 +656,45 @@ namespace PictureManagerApp.src.Lib
                 g.DrawString(txt, fnt, fcolor, x, y);
             }
         }
+
+        public static Image VerticalCombine(List<Image> images,bool adjust)
+        {
+            if (images == null || images.Count == 0) return null;
+
+            // 1. 結合後のサイズを計算する
+            // 幅は最大幅に合わせ、高さはすべての合計にする
+            int maxWidth = images.Max(img => img.Width);
+            int totalHeight = images.Sum(img => img.Height);
+
+            // 2. 出力用の空のビットマップを作成
+            Bitmap combinedBitmap = new Bitmap(maxWidth, totalHeight);
+
+            using (Graphics g = Graphics.FromImage(combinedBitmap))
+            {
+                // 背景を白（または透明）で塗りつぶす（任意）
+                g.Clear(Color.White);
+
+                // 3. 各画像を順番に描画していく
+                int currentY = 0;
+                foreach (var img in images)
+                {
+                    if (adjust)
+                    {
+                        // 横幅をmaxWidthに強制的に引き伸ばして描画する場合
+                        g.DrawImage(img, 0, currentY, maxWidth, img.Height);
+                    }
+                    else
+                    {
+                        // 元のサイズを維持して描画
+                        g.DrawImage(img, 0, currentY, img.Width, img.Height);
+                    }
+
+                    // 次の画像の開始位置を更新
+                    currentY += img.Height;
+                }
+            }
+
+            return combinedBitmap;
+        }
     }
 }

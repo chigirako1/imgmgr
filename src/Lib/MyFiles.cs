@@ -17,7 +17,62 @@ namespace PictureManagerApp.src.Lib
         {
             return System.Environment.GetFolderPath(Environment.SpecialFolder.DesktopDirectory);
         }
-        
+
+        /// <summary>
+        /// ファイルパスの末尾に "1" を追加します。
+        /// </summary>
+        /// <param name="filePath">元のファイルパス (例: c:/hoge/hoge.txt)</param>
+        /// <returns>加工後のファイルパス (例: c:/hoge/hoge1.txt)</returns>
+        public static string AppendOneToFileName(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath))
+                return filePath;
+
+            // ディレクトリ、ファイル名（拡張子なし）、拡張子を分離
+            string directory = Path.GetDirectoryName(filePath);
+            string fileNameWithoutExtension = Path.GetFileNameWithoutExtension(filePath);
+            string extension = Path.GetExtension(filePath);
+
+            // 新しいファイル名を構築
+            string newFileName = $"{fileNameWithoutExtension}1{extension}";
+
+            // 再び結合してフルパスにする
+            return Path.Combine(directory, newFileName);
+        }
+
+        /// <summary>
+        /// ファイルが存在する場合、末尾に(1), (2)...と連番を付与してユニークなパスを返します。
+        /// </summary>
+        public static string GetUniqueFilePath(string filePath)
+        {
+            if (string.IsNullOrWhiteSpace(filePath)) return filePath;
+
+            // ファイルが存在しなければ、そのままのパスを返す
+            if (!File.Exists(filePath))
+            {
+                return filePath;
+            }
+
+            string directory = Path.GetDirectoryName(filePath) ?? "";
+            string fileNameWithoutExt = Path.GetFileNameWithoutExtension(filePath);
+            string extension = Path.GetExtension(filePath);
+
+            int count = 1;
+            string newPath = filePath;
+
+            // ファイルが存在する間、数値を増やし続ける
+            while (File.Exists(newPath))
+            {
+                // 例: hoge(1).txt, hoge(2).txt ...
+                // お好みに合わせて $"{fileNameWithoutExt}{count}{extension}" などに変更可能です
+                string newFileName = $"{fileNameWithoutExt}({count}){extension}";
+                newPath = Path.Combine(directory, newFileName);
+                count++;
+            }
+
+            return newPath;
+        }
+
         public static string PathCombine(string a, string b)
         {
             return System.IO.Path.Combine(a, b);

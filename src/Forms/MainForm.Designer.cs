@@ -91,6 +91,8 @@
             btnOpenExplorer = new System.Windows.Forms.Button();
             btnGroupListStart = new System.Windows.Forms.Button();
             btnPathCopy = new System.Windows.Forms.Button();
+            toolStripSeparator1 = new System.Windows.Forms.ToolStripSeparator();
+            ToolStripMenuItem_Combine = new System.Windows.Forms.ToolStripMenuItem();
             tabControl.SuspendLayout();
             tabPageAttr.SuspendLayout();
             ((System.ComponentModel.ISupportInitialize)numUD_MinFilesize).BeginInit();
@@ -680,7 +682,7 @@
             // 
             // ツールTToolStripMenuItem
             // 
-            ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_AddPath, ToolStripMenuItem_SelPicShow, ToolStripMenuItem_SameHashFile, toolStripMenuItem_TsvRead, ToolStripMenuItem_SelStt });
+            ツールTToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] { ToolStripMenuItem_AddPath, ToolStripMenuItem_SelPicShow, ToolStripMenuItem_SameHashFile, toolStripMenuItem_TsvRead, ToolStripMenuItem_SelStt, toolStripSeparator1, ToolStripMenuItem_Combine });
             ツールTToolStripMenuItem.Name = "ツールTToolStripMenuItem";
             ツールTToolStripMenuItem.Size = new System.Drawing.Size(79, 27);
             ツールTToolStripMenuItem.Text = "ツール(&T)";
@@ -781,6 +783,18 @@
             btnPathCopy.Text = "パスをコピー(&C)";
             btnPathCopy.UseVisualStyleBackColor = true;
             btnPathCopy.Click += btnPathCopy_Click;
+            // 
+            // toolStripSeparator1
+            // 
+            toolStripSeparator1.Name = "toolStripSeparator1";
+            toolStripSeparator1.Size = new System.Drawing.Size(266, 6);
+            // 
+            // ToolStripMenuItem_Combine
+            // 
+            ToolStripMenuItem_Combine.Name = "ToolStripMenuItem_Combine";
+            ToolStripMenuItem_Combine.Size = new System.Drawing.Size(269, 28);
+            ToolStripMenuItem_Combine.Text = "画像連結";
+            ToolStripMenuItem_Combine.Click += ToolStripMenuItem_Combine_Click;
             // 
             // MainForm
             // 
@@ -900,6 +914,8 @@
         private System.Windows.Forms.RadioButton radioBtn_PicOrinet_Custom;
         private System.Windows.Forms.Button btnFileSizeChg;
         private System.Windows.Forms.Button btnPathCopy;
+        private System.Windows.Forms.ToolStripSeparator toolStripSeparator1;
+        private System.Windows.Forms.ToolStripMenuItem ToolStripMenuItem_Combine;
     }
 }
 
